@@ -3,11 +3,12 @@ extends Container
 var _block := false
 var _checking_children := false
 var _tracked_lists : Array[TrackList] = []
+var _view_owner : TrackList
 
 
 func _ready() -> void:
-	child_entered_tree.connect(check_children)
-	child_exiting_tree.connect(check_children)
+	child_entered_tree.connect(check_children.unbind(1))
+	child_exiting_tree.connect(check_children.unbind(1))
 	
 	_check_children()
 	
@@ -18,16 +19,17 @@ func _ready() -> void:
 				break
 
 func hide_kindred(list : TrackList) -> void:
-	if not _block:
-		_block = true
-		
-		if list.visible:
+	if list.visible:
+		if not _block:
+			_block = true
+			
+			_view_owner = list
 			for child in get_children():
 				if child is TrackList:
 					if child != list and child.visible:
 						child.hide()
-		
-		_block = false
+			
+			_block = false
 
 func check_children() -> void:
 	if not _checking_children:
@@ -41,11 +43,16 @@ func _check_children() -> void:
 		if child is TrackList:
 			var list := child as TrackList
 			if not list.visibility_changed.is_connected(hide_kindred):
-				
 				list.visibility_changed.connect(hide_kindred.bind(list))
+			
+			if not list in _tracked_lists:
+				_tracked_lists.append(list)
 				
-				if not list in _tracked_lists:
-					_tracked_lists.append(list)
+				if list.visible:
+					if not is_instance_valid(_view_owner):
+						hide_kindred(list)
+					elif list != _view_owner:
+						list.hide()
 	
 	for list in _tracked_lists.duplicate():
 		if not is_instance_valid(list) or list.get_parent() != self:
