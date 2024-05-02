@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="2_g0k8f"]
 [ext_resource type="FontFile" uid="uid://dagfcdeco83pk" path="res://gui/main.fontdata" id="5_7t7tn"]
 
-[node name="TrackList" type="Control"]
+[node name="TrackList" type="Control" node_paths=PackedStringArray("_list")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -15,6 +15,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
 script = ExtResource("1_k8p78")
+_list = NodePath("HBoxContainer/List")
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 

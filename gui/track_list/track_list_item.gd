@@ -1,3 +1,4 @@
+#class_name TrackListItem
 extends Control
 
 signal scroll_progress_changed(progress : float)
@@ -218,23 +219,6 @@ func _on_source_data_changed() -> void:
 
 func _on_drawed_track_changed(_what : int) -> void:
 	queue_redraw()
-
-func focus_on_current_track(on_cursor := false) -> void:
-	if player and source and player.current_track:
-		var track_index := source.get_tracks().find(player.current_track)
-		if track_index >= 0:
-			var cursor_line : int = -1
-			if on_cursor and has_point(get_local_mouse_position()):
-				## ищем номер строки под курсором
-				cursor_line = get_line_from_position(get_local_mouse_position().y)
-				assert(cursor_line >= 0)
-			
-			if cursor_line >= 0:
-				## центруем под курсор
-				scroll_offset = track_index - cursor_line
-			else:
-				## центруем по центру вертикали
-				scroll_offset = track_index - int(get_max_lines() / 2.0)
 
 func select_track(track : Dictionary) -> void:
 	if source and track in source.get_tracks():

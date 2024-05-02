@@ -1,20 +1,21 @@
 #class_name Header
 extends Button
 
+signal close_pressed
+
 var list : TrackList:
 	set(value):
 		if value != list:
 			if list:
-				list.visible_name_changed.disconnect(set_visible_name)
+				list.visible_name_changed.disconnect(set_title)
 			if value:
-				value.visible_name_changed.connect(set_visible_name)
-				set_visible_name(value.get_visible_name())
+				value.visible_name_changed.connect(set_title)
+				set_title(value.get_visible_name())
 			
 			list = value
 
 
-func _init(p_list : TrackList) -> void:
-	list = p_list
+func _init() -> void:
 	flat = true
 	text_overrun_behavior = TextServer.OVERRUN_TRIM_CHAR
 
@@ -24,18 +25,9 @@ func _gui_input(event: InputEvent) -> void:
 			if not event.is_pressed():
 				if Rect2(Vector2(), size).has_point(event.position):
 					if event.button_index == MOUSE_BUTTON_MIDDLE:
-						if list:
-							list.queue_free()
+						close_pressed.emit()
 
-func _pressed() -> void:
-	list.visible = true
-
-func _get_drag_data(_at_position: Vector2) -> Variant:
-	if list:
-		return list._get_drag_data(Vector2.INF)
-	return
-
-func set_visible_name(value : String) -> void:
+func set_title(value : String) -> void:
 	if not value:
 		value = 'No name.'
 	if value != text:

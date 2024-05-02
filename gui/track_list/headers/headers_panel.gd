@@ -1,3 +1,4 @@
+#class_name HeadersPanel
 extends HBoxContainer
 
 const Header = preload('header.gd')
@@ -40,7 +41,6 @@ const TRACK_LIST = preload('../track_list.tscn')
 
 var _headers : Array[Header] = []
 var _updating := false
-#var _headers_minimum_size : float = 0
 
 @onready var _headers_parent := %Headers as Container
 @onready var _headers_scroll := %HeadersScroll as ScrollContainer
@@ -50,9 +50,6 @@ var _updating := false
 @onready var _add_button_1 := %AddButton1 as BaseButton
 @onready var _add_button_2 := %AddButton2 as BaseButton
 
-
-#func _init() -> void:
-	#add_theme_color_override('lel', Color.WHITE)
 
 func _ready() -> void:
 	_headers_scroll_bar.focus_mode = Control.FOCUS_NONE
@@ -67,6 +64,38 @@ func update() -> void:
 	if not _updating:
 		_updating = true
 		_update.call_deferred()
+
+#func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	#if data is Dictionary:
+		#if 'header' in data and data.header is Header:
+			#return data.header.list != null
+		#
+		#if 'player' in data and data.player is Player:
+			#return true
+		#
+		#if 'source' in data and data.source is DataSource:
+			#return true
+	#return false
+#
+#func _get_drag_data(at_position: Vector2, data := {}) -> Variant:
+	#return
+
+#func _drop_data(at_position: Vector2, data: Variant) -> void:
+	#pass
+
+func _on_header_can_drop_data(at_position: Vector2, data: Variant, header : Header) -> bool:
+	return false
+
+func _on_header_get_drag_data(at_position: Vector2, header : Header) -> Variant:
+	if header in _headers:
+		if is_instance_valid(header.list) and header.list.get_parent() == lists_parent:
+			var data := header.list._get_drag_data(Vector2(INF, INF)) as Dictionary
+			data.header = header
+			return data
+	return
+
+func _on_header_drop_data(at_position: Vector2, data: Variant, header : Header) -> void:
+	pass
 
 func _on_headers_pre_sort_children() -> void:
 	var last_position : float = 0.0
@@ -91,11 +120,32 @@ func _on_headers_pre_sort_children() -> void:
 func _on_add_button_pressed() -> void:
 	if lists_parent:
 		var list := TRACK_LIST.instantiate() as TrackList
+		
 		if default_source:
 			list.source = default_source.get_ordered()
+		
 		if default_player:
 			list.player = default_player
+		
+		list.focus_track_on_ready = true
+		
 		lists_parent.add_child.call_deferred(list)
+
+func _on_header_pressed(header : Header) -> void:
+	if is_instance_valid(header.list):
+		header.list.show()
+
+func _on_header_close_pressed(header : Header) -> void:
+	if is_instance_valid(header.list):
+		if header.list.visible:
+			if _headers.size() > 1:
+				var header_index := _headers.find(header)
+				assert(header_index != -1)
+				if header_index == _headers.size() - 1:
+					_on_header_pressed(_headers[header_index - 1])
+				else:
+					_on_header_pressed(_headers[header_index + 1])
+		header.list.queue_free()
 
 func _update_add_buttons_visible() -> void:
 	_add_button_1.visible = not _headers_scroll_bar.visible
@@ -116,7 +166,14 @@ func _update() -> void:
 			_header_remove(header)
 
 func _header_create(list : TrackList) -> void:
-	var header := Header.new(list)
+	var header := Header.new()
+	header.list = list
+	if list.source and list.source.get_not_ordered() is DataBase:
+		header.set_title('Source')
+	header.set_drag_forwarding(_on_header_get_drag_data.bind(header),
+			_on_header_can_drop_data.bind(header), _on_header_drop_data.bind(header))
+	header.close_pressed.connect(_on_header_close_pressed.bind(header))
+	header.pressed.connect(_on_header_pressed.bind(header))
 	_headers.append(header)
 	_headers_parent.add_child(header)
 

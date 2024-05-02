@@ -11,12 +11,6 @@ func _ready() -> void:
 	child_exiting_tree.connect(check_children.unbind(1))
 	
 	_check_children()
-	
-	for child in get_children():
-		if child is TrackList:
-			if child.visible:
-				hide_kindred(child)
-				break
 
 func hide_kindred(list : TrackList) -> void:
 	if list.visible:
@@ -42,6 +36,7 @@ func _check_children() -> void:
 	for child in get_children():
 		if child is TrackList:
 			var list := child as TrackList
+			
 			if not list.visibility_changed.is_connected(hide_kindred):
 				list.visibility_changed.connect(hide_kindred.bind(list))
 			
@@ -54,11 +49,18 @@ func _check_children() -> void:
 					elif list != _view_owner:
 						list.hide()
 	
-	for list in _tracked_lists.duplicate():
-		if not is_instance_valid(list) or list.get_parent() != self:
-			
+	var i := 0
+	while i < _tracked_lists.size():
+		var list := _tracked_lists[i]
+		
+		if not is_instance_valid(list):
+			_tracked_lists.remove_at(i)
+		
+		elif list.get_parent() != self:
+			assert(list.visibility_changed.is_connected(hide_kindred))
 			if list.visibility_changed.is_connected(hide_kindred):
 				list.visibility_changed.disconnect(hide_kindred)
-			
-			if list in _tracked_lists:
-				_tracked_lists.erase(list)
+			_tracked_lists.remove_at(i)
+		
+		else:
+			i += 1

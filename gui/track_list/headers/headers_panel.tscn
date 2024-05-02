@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://gst32mqk0avy"]
 
 [ext_resource type="Theme" uid="uid://dvmqmhg68m40n" path="res://gui/track_list/headers/no_scroll_bar.theme" id="1_tm4vf"]
-[ext_resource type="Script" path="res://gui/track_list/headers/track_lists_header.gd" id="2_ofo3w"]
+[ext_resource type="Script" path="res://gui/track_list/headers/headers_panel.gd" id="2_ofo3w"]
 [ext_resource type="Script" path="res://gui/track_list/headers/add_button.gd" id="3_x7gql"]
 
 [node name="TrackListsHeader" type="HBoxContainer"]
@@ -10,6 +10,7 @@ anchor_right = 1.0
 grow_horizontal = 2
 size_flags_horizontal = 3
 size_flags_vertical = 0
+mouse_filter = 0
 theme = ExtResource("1_tm4vf")
 theme_override_constants/separation = 0
 script = ExtResource("2_ofo3w")
@@ -21,6 +22,7 @@ layout_mode = 2
 [node name="HBoxContainer" type="HBoxContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
+mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="HeadersScroll" type="ScrollContainer" parent="HBoxContainer"]
@@ -32,11 +34,13 @@ vertical_scroll_mode = 0
 
 [node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/HeadersScroll"]
 layout_mode = 2
+mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="Headers" type="Container" parent="HBoxContainer/HeadersScroll/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
+mouse_filter = 2
 
 [node name="AddButton1" type="Button" parent="HBoxContainer/HeadersScroll/HBoxContainer"]
 unique_name_in_owner = true
@@ -53,6 +57,7 @@ visible = false
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 focus_mode = 0
+mouse_filter = 2
 text = "+"
 flat = true
 script = ExtResource("3_x7gql")

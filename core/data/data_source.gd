@@ -78,12 +78,14 @@ func get_root() -> DataBase:
 func get_ordered() -> DataSourceOrdered:
 	if self is DataSourceOrdered:
 		return self
-	var ordered : DataSourceOrdered
+	
 	if not _ordered.get_ref():
-		ordered = DataSourceOrdered.new(self)
+		var ordered := DataSourceOrdered.new(self)
 		append_child(ordered)
 		_ordered = weakref(ordered)
-	return ordered
+		return ordered
+	
+	return _ordered.get_ref()
 
 func get_not_ordered() -> DataSource:
 	var ret : DataSource = self as DataSource
@@ -114,6 +116,7 @@ func append_child(child : DataSource) -> void:
 			i += 1
 		else:
 			_children.remove_at(i)
+	
 	if not finded:
 		_children.append(weakref(child))
 
