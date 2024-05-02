@@ -1,0 +1,45 @@
+[gd_scene load_steps=4 format=3 uid="uid://d14jad0a07fdo"]
+
+[ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_k8p78"]
+[ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="2_g0k8f"]
+[ext_resource type="FontFile" uid="uid://dagfcdeco83pk" path="res://gui/main.fontdata" id="5_7t7tn"]
+
+[node name="TrackList" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+script = ExtResource("1_k8p78")
+metadata/_edit_lock_ = true
+metadata/_edit_group_ = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="List" type="Control" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+focus_mode = 2
+script = ExtResource("2_g0k8f")
+_font = ExtResource("5_7t7tn")
+
+[node name="VScrollBar" type="VScrollBar" parent="HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 1.0
+
+[connection signal="gui_input" from="HBoxContainer/List" to="." method="_on_list_gui_input"]
+[connection signal="scroll_progress_changed" from="HBoxContainer/List" to="HBoxContainer/VScrollBar" method="set_value_no_signal"]
+[connection signal="value_changed" from="HBoxContainer/VScrollBar" to="HBoxContainer/List" method="set_scroll_progress"]

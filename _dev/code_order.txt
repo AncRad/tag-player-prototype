@@ -1,0 +1,31 @@
+@tool
+class_name
+extends
+
+signals
+constants script
+enums
+constants
+static variables
+@export variables
+public variables
+@onready public variables
+private variables
+@onready private variables
+
+built-in virtual _init method
+built-in virtual _notification method
+built-in virtual _enter_tree method
+built-in virtual _exit_tree method
+built-in virtual _ready method
+built-in virtual methods
+public redefinition methods
+private redefinition methods
+public _on_* methods (for signals)
+private _on_* methods (for signals)
+public methods
+private methods
+public static methods
+private static methods
+
+subclasses

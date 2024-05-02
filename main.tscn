@@ -1,0 +1,79 @@
+[gd_scene load_steps=12 format=3 uid="uid://cwjb1imduvk04"]
+
+[ext_resource type="Script" path="res://user.gd" id="1_778hk"]
+[ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_gjybe"]
+[ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
+[ext_resource type="Script" path="res://core/data/data_source_ordered.gd" id="2_0i73g"]
+[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="3_4desn"]
+[ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
+[ext_resource type="PackedScene" uid="uid://gst32mqk0avy" path="res://gui/track_list/headers/track_lists_header.tscn" id="7_bja7c"]
+[ext_resource type="Script" path="res://gui/track_list/track_lists.gd" id="8_h4ryr"]
+[ext_resource type="PackedScene" uid="uid://d14jad0a07fdo" path="res://gui/track_list/track_list.tscn" id="8_qj3vf"]
+
+[sub_resource type="Resource" id="Resource_ilqxx"]
+script = ExtResource("2_0i73g")
+inverted = false
+source = ExtResource("3_4desn")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jke7m"]
+bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
+
+[node name="Main" type="Node"]
+
+[node name="DataBaseHolder" parent="." instance=ExtResource("1_gjybe")]
+load_on_ready = true
+update_on_process = true
+handle_files_dropped = true
+handle_close_requested = true
+
+[node name="User" type="Node" parent="." node_paths=PackedStringArray("player")]
+script = ExtResource("1_778hk")
+player = NodePath("../Player")
+
+[node name="Player" type="AudioStreamPlayer" parent="."]
+script = ExtResource("1_if8um")
+current_source = SubResource("Resource_ilqxx")
+
+[node name="GUI" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+metadata/_edit_lock_ = true
+
+[node name="Panel" type="Panel" parent="GUI"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jke7m")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="PlayerPanel" parent="GUI/VBoxContainer" node_paths=PackedStringArray("player") instance=ExtResource("5_h583o")]
+layout_mode = 2
+player = NodePath("../../../Player")
+
+[node name="TrackListsHeader" parent="GUI/VBoxContainer" node_paths=PackedStringArray("lists_parent", "default_player") instance=ExtResource("7_bja7c")]
+layout_mode = 2
+lists_parent = NodePath("../TrackLists")
+default_source = SubResource("Resource_ilqxx")
+default_player = NodePath("../../../Player")
+
+[node name="TrackLists" type="MarginContainer" parent="GUI/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("8_h4ryr")
+
+[node name="TrackList1" parent="GUI/VBoxContainer/TrackLists" node_paths=PackedStringArray("player") instance=ExtResource("8_qj3vf")]
+layout_mode = 2
+source = SubResource("Resource_ilqxx")
+player = NodePath("../../../../Player")
