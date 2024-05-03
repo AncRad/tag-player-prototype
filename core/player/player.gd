@@ -115,7 +115,7 @@ func can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 		if 'source' in data and data.source is DataSource:
 			return true
 		
-		if 'player' in data and data.player is Player and data.player.current_source and data.player != self:
+		if 'player' in data and data.player is Player and data.player != self and data.player.current_source:
 			return true
 		
 		if 'track' in data and data.track is Dictionary:

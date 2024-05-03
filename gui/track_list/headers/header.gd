@@ -8,11 +8,17 @@ var list : TrackList:
 		if value != list:
 			if list:
 				list.visible_name_changed.disconnect(set_title)
-			if value:
-				value.visible_name_changed.connect(set_title)
-				set_title(value.get_visible_name())
 			
 			list = value
+			
+			if list:
+				list.visible_name_changed.connect(set_title)
+				set_title(list.visible_name)
+	get:
+		if is_instance_valid(list):
+			return list
+		else:
+			return null
 
 
 func _init() -> void:

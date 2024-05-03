@@ -23,6 +23,12 @@ const TrackListItem = preload("track_list_item.gd")
 
 @export var focus_track_on_ready := false
 
+@export var visible_name : String = "":
+	set(value):
+		if value != visible_name:
+			visible_name = value
+			visible_name_changed.emit(visible_name)
+
 var _selection_action_modifiers_mask : KeyModifierMask
 var _selection_echo : bool = false
 var _selection_echo_tracks_keys := {}
@@ -133,5 +139,3 @@ func focus_on_current_track(on_cursor := false) -> void:
 				## центруем по центру вертикали
 				_list.scroll_offset = track_index - int(_list.get_max_lines() / 2.0)
 
-func get_visible_name() -> String:
-	return ""
