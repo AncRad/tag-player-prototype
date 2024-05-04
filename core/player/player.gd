@@ -1,5 +1,6 @@
 class_name Player
 extends AudioStreamPlayer
+## Player
 
 signal track_changed(current_track: Dictionary)
 signal playing_changed(playing: bool)

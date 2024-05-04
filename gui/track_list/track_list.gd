@@ -1,5 +1,7 @@
 class_name TrackList
 extends Control
+## TrackList
+
 
 signal visible_name_changed(visible_name : String)
 
@@ -33,18 +35,36 @@ var _selection_action_modifiers_mask : KeyModifierMask
 var _selection_echo : bool = false
 var _selection_echo_tracks_keys := {}
 
-@onready var _list := %List as TrackListItem
+var _list : TrackListItem
+var _find : LineEdit
+var _find_panel : Control
 
 
-func _ready() -> void:
-	_selection_action_modifiers_mask = InputMap.action_get_events("track_list_select_modifer")[0].get_modifiers_mask()
-	
-	if _list:
-		_list.player = player
-		_list.source = source
-	
-	if focus_track_on_ready:
-		focus_on_current_track(false)
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_SCENE_INSTANTIATED:
+			_selection_action_modifiers_mask = InputMap.action_get_events("track_list_select_modifer")[0].get_modifiers_mask()
+			
+			_list = %TrackListItem as TrackListItem
+			_find = %FindLineEdit as LineEdit
+			_find_panel = %FindPanel as Control
+			
+			_list.player = player
+			_list.source = source
+			
+			_find.set_block_signals(true)
+			_find.text = ''
+			if source:
+				var not_orederd := source.get_not_ordered()
+				if not_orederd is DataSourceFiltered:
+					var filter := not_orederd.name_filter as String
+					_find.text = filter.replace('**', ' ').replace('*', '')
+				
+			_find.set_block_signals(false)
+			
+			
+			if focus_track_on_ready:
+				focus_on_current_track(false)
 
 func _get_drag_data(at_position: Vector2) -> Variant:
 	var data := {}
@@ -63,7 +83,7 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	
 	return data
 
-func _on_list_gui_input(event : InputEvent) -> void:
+func _on_track_list_item_gui_input(event : InputEvent) -> void:
 	if not _list.has_focus():
 		_list.grab_focus()
 	
@@ -74,6 +94,18 @@ func _on_list_gui_input(event : InputEvent) -> void:
 	elif event.is_action("track_list_select_all"):
 		if source:
 			_list.select_all()
+	
+	elif event.is_action("track_list_start_find"):
+		if source:
+			var not_ordered := source.get_not_ordered()
+			
+			if not not_ordered is DataSourceFiltered:
+				not_ordered = DataSourceFiltered.new(not_ordered)
+				source = not_ordered.get_ordered()
+				_find.text = not_ordered.name_filter.replace('**', ' ').replace('*', '')
+			
+			_find_panel.show()
+			_find.grab_focus()
 	
 	elif _selection_echo:
 		if event is InputEventMouse:
@@ -91,7 +123,7 @@ func _on_list_gui_input(event : InputEvent) -> void:
 						_selection_echo = false
 						_selection_echo_tracks_keys = {}
 	
-	elif event.is_pressed() and not event.is_echo():
+	elif event.is_pressed():
 		if event is InputEventMouseButton:
 			
 			if event.double_click:
@@ -121,6 +153,9 @@ func _on_list_gui_input(event : InputEvent) -> void:
 					_list.scroll_offset += 1
 				elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 					_list.scroll_offset -= 1
+
+func _on_find_line_edit_text_changed(new_text: String) -> void:
+	pass # Replace with function body.
 
 func focus_on_current_track(on_cursor := false) -> void:
 	if _list.source and _list.player and _list.player.current_track:

@@ -1,3 +1,4 @@
+class_name TrackListSwitcher
 extends Container
 
 var _block := false
@@ -33,6 +34,7 @@ func check_children() -> void:
 func _check_children() -> void:
 	_checking_children = false
 	
+	var new_view_owner : TrackList
 	for child in get_children():
 		if child is TrackList:
 			var list := child as TrackList
@@ -44,10 +46,9 @@ func _check_children() -> void:
 				_tracked_lists.append(list)
 				
 				if list.visible:
-					if not is_instance_valid(_view_owner):
-						hide_kindred(list)
-					elif list != _view_owner:
-						list.hide()
+					new_view_owner = list
+	if new_view_owner:
+		hide_kindred(new_view_owner)
 	
 	var i := 0
 	while i < _tracked_lists.size():

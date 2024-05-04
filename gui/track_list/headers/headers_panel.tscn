@@ -4,45 +4,51 @@
 [ext_resource type="Script" path="res://gui/track_list/headers/headers_panel.gd" id="2_ofo3w"]
 [ext_resource type="Script" path="res://gui/track_list/headers/add_button.gd" id="3_x7gql"]
 
-[node name="HeadersPanel" type="HBoxContainer"]
+[node name="HeadersPanel" type="MarginContainer"]
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
 size_flags_horizontal = 3
-size_flags_vertical = 0
 mouse_filter = 0
 theme = ExtResource("1_tm4vf")
-theme_override_constants/separation = 0
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
 script = ExtResource("2_ofo3w")
 
-[node name="BorderLeft" type="Control" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="BorderLeft" type="Control" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="HeadersScroll" type="ScrollContainer" parent="HBoxContainer"]
+[node name="HeadersScroll" type="ScrollContainer" parent="HBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme = ExtResource("1_tm4vf")
 vertical_scroll_mode = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/HeadersScroll"]
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/HBoxContainer/HeadersScroll"]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="Headers" type="Container" parent="HBoxContainer/HeadersScroll/HBoxContainer"]
+[node name="Headers" type="Container" parent="HBoxContainer/HBoxContainer/HeadersScroll/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 
-[node name="AddButton1" type="Button" parent="HBoxContainer/HeadersScroll/HBoxContainer"]
+[node name="AddButton1" type="Button" parent="HBoxContainer/HBoxContainer/HeadersScroll/HBoxContainer"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
@@ -51,21 +57,20 @@ text = "+"
 flat = true
 script = ExtResource("3_x7gql")
 
-[node name="AddButton2" type="Button" parent="HBoxContainer"]
+[node name="AddButton2" type="Button" parent="HBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(28, 0)
 layout_mode = 2
 focus_mode = 0
-mouse_filter = 2
 text = "+"
 flat = true
 script = ExtResource("3_x7gql")
 
-[node name="BorderRight" type="Control" parent="."]
+[node name="BorderRight" type="Control" parent="HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[connection signal="pre_sort_children" from="HBoxContainer/HeadersScroll/HBoxContainer/Headers" to="." method="_on_headers_pre_sort_children"]
-[connection signal="pressed" from="HBoxContainer/HeadersScroll/HBoxContainer/AddButton1" to="." method="_on_add_button_pressed"]
-[connection signal="pressed" from="HBoxContainer/AddButton2" to="." method="_on_add_button_pressed"]
+[connection signal="pre_sort_children" from="HBoxContainer/HBoxContainer/HeadersScroll/HBoxContainer/Headers" to="." method="_on_headers_pre_sort_children"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/HeadersScroll/HBoxContainer/AddButton1" to="." method="_on_add_button_pressed"]
+[connection signal="pressed" from="HBoxContainer/HBoxContainer/AddButton2" to="." method="_on_add_button_pressed"]

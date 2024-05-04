@@ -1,5 +1,6 @@
-#class_name Header
+class_name Header
 extends Button
+## Header
 
 signal close_pressed
 

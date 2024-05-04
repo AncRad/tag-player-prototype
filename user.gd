@@ -16,7 +16,7 @@ func _notification(what: int) -> void:
 		
 		NOTIFICATION_CRASH:
 			print('NOTIFICATION_CRASH')
-			assert(false)
+			assert(false, 'NOTIFICATION_CRASH')
 
 
 func _ready() -> void:

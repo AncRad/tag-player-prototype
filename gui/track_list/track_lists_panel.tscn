@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://0vb8gt8or8x0"]
+
+[ext_resource type="PackedScene" uid="uid://gst32mqk0avy" path="res://gui/track_list/headers/headers_panel.tscn" id="1_nj01v"]
+[ext_resource type="Script" path="res://gui/track_list/track_lists_panel.gd" id="1_ocu65"]
+[ext_resource type="PackedScene" uid="uid://c8dfuqx52bgsy" path="res://gui/track_list/track_list_switcher.tscn" id="2_k2arx"]
+
+[node name="TrackListsPanel" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("1_ocu65")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HeadersPanel" parent="VBoxContainer" node_paths=PackedStringArray("lists_parent") instance=ExtResource("1_nj01v")]
+unique_name_in_owner = true
+layout_mode = 2
+lists_parent = NodePath("../TrackListSwitcher")
+
+[node name="TrackListSwitcher" parent="VBoxContainer" instance=ExtResource("2_k2arx")]
+unique_name_in_owner = true
+layout_mode = 2
