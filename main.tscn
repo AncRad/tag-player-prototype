@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=10 format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" path="res://user.gd" id="1_778hk"]
 [ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_gjybe"]
@@ -7,32 +7,14 @@
 [ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="3_4desn"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
 [ext_resource type="PackedScene" uid="uid://0vb8gt8or8x0" path="res://gui/track_list/track_lists_panel.tscn" id="8_ddmat"]
-[ext_resource type="Script" path="res://core/data/data_source_filtered.gd" id="8_ued20"]
-
-[sub_resource type="Resource" id="Resource_1njwx"]
-script = ExtResource("8_ued20")
-name_filter = ""
-tag_names_filter = Array[String]([])
-source = ExtResource("3_4desn")
 
 [sub_resource type="Resource" id="Resource_3dmth"]
 script = ExtResource("2_0i73g")
 inverted = false
-source = SubResource("Resource_1njwx")
+source = ExtResource("3_4desn")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jke7m"]
 bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
-
-[sub_resource type="Resource" id="Resource_5ik1a"]
-script = ExtResource("8_ued20")
-name_filter = ""
-tag_names_filter = Array[String]([])
-source = SubResource("Resource_1njwx")
-
-[sub_resource type="Resource" id="Resource_ml451"]
-script = ExtResource("2_0i73g")
-inverted = false
-source = SubResource("Resource_5ik1a")
 
 [node name="Main" type="Node"]
 
@@ -80,11 +62,11 @@ size_flags_vertical = 3
 
 [node name="TrackListsPanel" parent="GUI/VBoxContainer/HBoxContainer" node_paths=PackedStringArray("default_player") instance=ExtResource("8_ddmat")]
 layout_mode = 2
-default_source = SubResource("Resource_ml451")
+default_source = SubResource("Resource_3dmth")
 default_player = NodePath("../../../../Player")
 
 [node name="TrackListsPanel2" parent="GUI/VBoxContainer/HBoxContainer" node_paths=PackedStringArray("default_player") instance=ExtResource("8_ddmat")]
 visible = false
 layout_mode = 2
-default_source = SubResource("Resource_ml451")
+default_source = SubResource("Resource_3dmth")
 default_player = NodePath("../../../../Player")

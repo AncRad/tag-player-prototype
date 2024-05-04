@@ -10,10 +10,21 @@ const TrackListItem = preload("track_list_item.gd")
 @export var source : DataSource:
 	set(value):
 		if value != source:
+			if source:
+				var not_oredered := source.get_not_ordered()
+				if not_oredered is DataSourceFiltered:
+					not_oredered.filters_changed.disconnect(_on_source_filters_changed)
+			
 			source = value
 			
 			if _list:
 				_list.source = source
+			
+			if source:
+				var not_oredered := source.get_not_ordered()
+				if not_oredered is DataSourceFiltered:
+					not_oredered.filters_changed.connect(_on_source_filters_changed)
+					_on_source_filters_changed()
 
 @export var player : Player:
 	set(value):
@@ -31,13 +42,15 @@ const TrackListItem = preload("track_list_item.gd")
 			visible_name = value
 			visible_name_changed.emit(visible_name)
 
+var _list : TrackListItem
+var _find : LineEdit
+var _find_panel : Control
+
+var _sync_filters := false
 var _selection_action_modifiers_mask : KeyModifierMask
 var _selection_echo : bool = false
 var _selection_echo_tracks_keys := {}
 
-var _list : TrackListItem
-var _find : LineEdit
-var _find_panel : Control
 
 
 func _notification(what: int) -> void:
@@ -52,16 +65,9 @@ func _notification(what: int) -> void:
 			_list.player = player
 			_list.source = source
 			
-			_find.set_block_signals(true)
-			_find.text = ''
 			if source:
-				var not_orederd := source.get_not_ordered()
-				if not_orederd is DataSourceFiltered:
-					var filter := not_orederd.name_filter as String
-					_find.text = filter.replace('**', ' ').replace('*', '')
-				
-			_find.set_block_signals(false)
-			
+				if source is DataSourceFiltered:
+					_on_source_filters_changed()
 			
 			if focus_track_on_ready:
 				focus_on_current_track(false)
@@ -87,75 +93,112 @@ func _on_track_list_item_gui_input(event : InputEvent) -> void:
 	if not _list.has_focus():
 		_list.grab_focus()
 	
-	if event.is_action("track_list_current_track_focus"):
-		## фокусировка списка на запущенном треке
-		focus_on_current_track(true)
+	## начать поиск
+	if event.is_action("track_list_start_find"):
+		if not event.is_echo() and event.is_pressed():
+			accept_event()
+			if source:
+				var not_ordered := source.get_not_ordered()
+				if not not_ordered is DataSourceFiltered:
+					not_ordered = DataSourceFiltered.new(not_ordered)
+					source = not_ordered.get_ordered()
+				assert(not_ordered is DataSourceFiltered)
+				
+				_on_source_filters_changed()
+				_find_panel.show()
+				_find.grab_focus()
+				_find.caret_column = _find.text.length()
 	
+	## фокус на текущем треке проигрывателя
+	elif event.is_action("track_list_current_track_focus"):
+		if event.is_pressed():
+			accept_event()
+			focus_on_current_track(true)
+	
+	## выделить все
 	elif event.is_action("track_list_select_all"):
-		if source:
-			_list.select_all()
+		if not event.is_echo() and event.is_pressed():
+			accept_event()
+			if source:
+				if _list._selected_tracks_keys.size() == source.size():
+					_list.deselect_all()
+				else:
+					_list.select_all()
 	
-	elif event.is_action("track_list_start_find"):
-		if source:
-			var not_ordered := source.get_not_ordered()
+	elif event is InputEventMouse:
+		## продолжение массового выделения
+		if _selection_echo:
+			if event is InputEventMouseMotion:
+				if _list.has_point(event.position):
+					accept_event()
+					var track := _list.get_track_from_position(event.position.y)
+					if track and not track.key in _selection_echo_tracks_keys:
+						_selection_echo_tracks_keys[track.key] = true
+						if not _list.deselect_track(track):
+							_list.select_track(track)
+						_list.queue_redraw()
 			
-			if not not_ordered is DataSourceFiltered:
-				not_ordered = DataSourceFiltered.new(not_ordered)
-				source = not_ordered.get_ordered()
-				_find.text = not_ordered.name_filter.replace('**', ' ').replace('*', '')
-			
-			_find_panel.show()
-			_find.grab_focus()
-	
-	elif _selection_echo:
-		if event is InputEventMouse:
-			if _list.has_point(event.position):
-				var track := _list.get_track_from_position(event.position.y)
-				if track and not track.key in _selection_echo_tracks_keys:
-					_selection_echo_tracks_keys[track.key] = true
-					if not _list.deselect_track(track):
-						_list.select_track(track)
-					_list.queue_redraw()
-			
-			if event is InputEventMouseButton:
+			## остановка массового выделения
+			elif event is InputEventMouseButton:
 				if event.button_index == MOUSE_BUTTON_LEFT:
 					if not event.is_pressed():
+						accept_event()
 						_selection_echo = false
 						_selection_echo_tracks_keys = {}
 	
-	elif event.is_pressed():
-		if event is InputEventMouseButton:
-			
-			if event.double_click:
+		elif event is InputEventMouseButton:
+			if event.is_pressed() and _list.has_point(event.position):
 				## запуск трека из списка мышкой
-				if event.button_index == MOUSE_BUTTON_LEFT:
-					if player and _list.has_point(event.position):
-						var track := _list.get_track_from_position(event.position.y)
-						if track:
-							player.pplay(0, track, source)
-			
-			else:
-				## выделение трека из списка мышкой, начало массового выделения
-				if event.button_index == MOUSE_BUTTON_LEFT:
-					if event.get_modifiers_mask() & _selection_action_modifiers_mask:
-						if _list.has_point(event.position):
+				if event.double_click:
+					if event.button_index == MOUSE_BUTTON_LEFT:
+						accept_event()
+						if player:
+							var track := _list.get_track_from_position(event.position.y)
+							if track:
+								player.pplay(0, track, source)
+				
+				else:
+					## скоролл списка
+					if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+						accept_event()
+						_list.scroll_offset += 1
+					elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+						accept_event()
+						_list.scroll_offset -= 1
+					
+					## выделение трека из списка, начало массового выделения
+					elif event.button_index == MOUSE_BUTTON_LEFT:
+						if event.get_modifiers_mask() & _selection_action_modifiers_mask:
+							accept_event()
+							_selection_echo = true ## начало массового выделения
 							var track := _list.get_track_from_position(event.position.y)
 							if track:
 								if not _list.deselect_track(track):
 									_list.select_track(track)
 								
-								## начало массового выделения
 								_selection_echo_tracks_keys = {track.key : true}
-							_selection_echo = true 
-				
-				## скоролл списка
-				elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-					_list.scroll_offset += 1
-				elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
-					_list.scroll_offset -= 1
 
-func _on_find_line_edit_text_changed(new_text: String) -> void:
-	pass # Replace with function body.
+func _on_find_line_edit_text_changed(_new_text: String) -> void:
+	if not _sync_filters and _find:
+		_sync_filters = true
+		
+		var not_ordered := source.get_not_ordered()
+		assert(not_ordered is DataSourceFiltered)
+		if not_ordered is DataSourceFiltered:
+			not_ordered.name_filter = '*%s*' % '**'.join(_find.text.split(' ', false))
+		
+		_sync_filters = false
+
+func _on_source_filters_changed() -> void:
+	if not _sync_filters and _find:
+		_sync_filters = true
+		
+		var not_ordered := source.get_not_ordered()
+		assert(not_ordered is DataSourceFiltered)
+		if not_ordered is DataSourceFiltered:
+			_find.text = ' '.join(not_ordered.name_filter.split('*', false))
+		
+		_sync_filters = false
 
 func focus_on_current_track(on_cursor := false) -> void:
 	if _list.source and _list.player and _list.player.current_track:

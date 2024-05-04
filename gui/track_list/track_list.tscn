@@ -29,6 +29,7 @@ theme_override_constants/separation = 0
 
 [node name="FindPanel" type="HBoxContainer" parent="VBoxContainer"]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
 [node name="Control" type="Control" parent="VBoxContainer/FindPanel"]

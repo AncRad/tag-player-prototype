@@ -1,20 +1,25 @@
 class_name DataSourceFiltered
 extends DataSource
 
+signal filters_changed
+
 @export var name_filter : String:
 	set(value):
 		name_filter = value
 		changes_up()
+		filters_changed.emit()
 
 @export var tag_names_filter : Array[String] = []:
 	set(value):
 		tag_names_filter = value
 		changes_up()
+		filters_changed.emit()
 
 var tags_filter : Array[Dictionary] = []:
 	set(value):
 		tags_filter = value
 		changes_up()
+		filters_changed.emit()
 
 var tracks_filtered : Array[Dictionary] = []
 

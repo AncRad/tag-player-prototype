@@ -11,6 +11,11 @@ signal scroll_progress_changed(progress : float)
 			if value:
 				value.data_changed.connect(_on_source_data_changed)
 			
+			for track : Dictionary in _drawed_tracks_keys.values():
+				if track.notification.is_connected(_on_drawed_track_changed):
+					track.notification.disconnect(_on_drawed_track_changed)
+				else:
+					assert(false)
 			source = value
 			_drawed_player_track_index = -1
 			_drawed_tracks_keys = {}
@@ -166,12 +171,6 @@ func select_track(track : Dictionary) -> void:
 				queue_redraw()
 		_selected_tracks_keys[track.key] = track
 
-func select_all() -> void:
-	if source:
-		for track in source.get_tracks():
-			_selected_tracks_keys[track.key] = track
-		queue_redraw()
-
 func deselect_track(track : Dictionary) -> bool:
 	if _selected_tracks_keys.erase(track.key):
 		if track.key in _drawed_tracks_keys:
@@ -179,6 +178,12 @@ func deselect_track(track : Dictionary) -> bool:
 		return true
 	else:
 		return false
+
+func select_all() -> void:
+	if source:
+		for track in source.get_tracks():
+			_selected_tracks_keys[track.key] = track
+		queue_redraw()
 
 func deselect_all() -> void:
 	if _selected_tracks_keys:
