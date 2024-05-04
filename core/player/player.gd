@@ -27,8 +27,11 @@ func pplay(offset := 0, track := current_track, source := current_source) -> voi
 		if new_stream and new_stream.get_length():
 			stream = new_stream
 			play()
+			get_window().title = current_track.file_name
 		else:
 			stream = null
+			current_track = {}
+			get_window().title = ProjectSettings.get_setting('application/config/name', 'TagPlayer') as String
 			## TODO: добавить обработку ощибки загрузки
 		track_changed.emit(current_track)
 		playing_changed.emit(playing)

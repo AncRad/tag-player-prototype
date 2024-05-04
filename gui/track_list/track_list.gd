@@ -67,9 +67,10 @@ func _notification(what: int) -> void:
 			if source:
 				if source is DataSourceFiltered:
 					_on_source_filters_changed()
-			
-			if focus_track_on_ready:
-				focus_on_current_track(false)
+
+func _ready() -> void:
+	if focus_track_on_ready:
+		focus_on_current_track(false)
 
 func _get_drag_data(at_position: Vector2) -> Variant:
 	var data := {}
@@ -189,6 +190,7 @@ func _on_find_line_edit_text_changed(_new_text: String) -> void:
 		if not_ordered is DataSourceFiltered:
 			not_ordered.name_filter = '*%s*' % '**'.join(_find.text.split(' ', false))
 		
+		visible_name = _find.text
 		_sync_filters = false
 
 func _on_source_filters_changed() -> void:
@@ -200,6 +202,7 @@ func _on_source_filters_changed() -> void:
 		if not_ordered is DataSourceFiltered:
 			_find.text = ' '.join(not_ordered.name_filter.split('*', false))
 		
+		visible_name = _find.text
 		_sync_filters = false
 
 func focus_on_current_track(on_cursor := false) -> void:

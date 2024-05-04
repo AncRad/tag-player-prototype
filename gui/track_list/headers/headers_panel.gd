@@ -4,17 +4,6 @@ extends Control
 
 const TRACK_LIST = preload('../track_list.tscn')
 
-#@export var input_probe: InputProbe:
-	#set(value):
-		#if value != input_probe:
-			#if input_probe:
-				#input_probe.unhandled_input.connect(_on_probe_unhandled_input)
-			#
-			#input_probe = value
-			#
-			#if input_probe:
-				#input_probe.unhandled_input.disconnect(_on_probe_unhandled_input)
-
 @export var lists_parent: TrackListSwitcher:
 	set(value):
 		if value != lists_parent:
@@ -108,21 +97,16 @@ func _unhandled_key_input(event: InputEvent) -> void:
 					if current_list and current_list.source and current_list.player:
 						source = current_list.source
 						player = current_list.player
-						if _list_to_header(current_list):
-							to_header_index = _headers.find(_list_to_header(current_list)) + 1
+						var header_index := _headers.find(_get_header_for_list(current_list))
+						if header_index != -1:
+							to_header_index = header_index + 1
 					
 					## создаем трек лист
 					if source and player:
-						var list := TRACK_LIST.instantiate() as TrackList
-						list.source = DataSourceFiltered.new(source.get_not_ordered()).get_ordered()
-						list.player = player
-						lists_parent.add_child(list)
-						
+						var list := _create_track_list(DataSourceFiltered.new(source.get_not_ordered()).get_ordered(), player)
+						list.focus_on_current_track()
 						## создаем заголовок
-						var new_header := _header_create(list)
-						_headers.insert(mini(to_header_index, _headers.size()), new_header)
-						_headers_parent.add_child(new_header)
-						
+						_header_create(list, to_header_index)
 						list.gui_start_find()
 
 func _get_drag_data(_at_position: Vector2, item: Object = null) -> Variant:
@@ -144,12 +128,11 @@ func _get_drag_data(_at_position: Vector2, item: Object = null) -> Variant:
 	else:
 		data.from = self
 		if default_source:
-			if item == _add_button_1 or item == _add_button_2:
-				data.source = default_source
-			else:
-				data.source = default_source
+			#if item == _add_button_1 or item == _add_button_2:
+			data.source = default_source
 		if default_player:
-			data.palyer = default_player
+			#if item == _add_button_1 or item == _add_button_2:
+			data.player = default_player
 	
 	if data:
 		return data
@@ -183,19 +166,10 @@ func _on_headers_pre_sort_children() -> void:
 func _on_add_button_pressed() -> void:
 	if lists_parent:
 		## создаем трек лист
-		var list := TRACK_LIST.instantiate() as TrackList
-		if default_source:
-			list.source = default_source.get_ordered()
-		if default_player:
-			list.player = default_player
-		list.focus_track_on_ready = true
-		list.visible_name = 'NoName%d' % list.get_instance_id()
-		lists_parent.add_child(list)
-		
+		var list := _create_track_list(default_source.get_ordered(), default_player)
+		list.focus_on_current_track()
 		## создаем заголовок
-		var new_header := _header_create(list)
-		_headers.append(new_header)
-		_headers_parent.add_child(new_header)
+		_header_create(list)
 
 func _on_header_pressed(header: Header) -> void:
 	if is_instance_valid(header.list):
@@ -220,14 +194,14 @@ func update() -> void:
 		_update.call_deferred()
 
 ## Обрабатывает события drag & drop.[br]
-## Если [param item] is [Header] собственный, то используется для вычисления позиции новой [Header]
-## из [param data.from], иначе для вычисления используется [param to_position].[br]
+## Если [param item] is [Header] собственный, то используется для вычисления позиции новой [Header],
+## иначе для вычисления используется [param to_position].[br]
 ## Параметр [param data] принимает словарь с даннымии.[br]
 ## Метод выполняет только одно действие по условию из списка в этом порядке:[br]
 ## 1. [param item] собственная кнопка добавления - будет создан и присвоен новый [TrackList] с копией [DataSource].[br]
 ## 2. [param data.from] is [Header] - источник, если свой [Header], то будет перемещен,
 ## если чужой то будет украден и присвоен [TrackList] из [member Header.list];[br]
-## 3. [param data.list] is [TrackList] - будет украден и присвоен этот [TrackList];[br]
+## 3. [param data.track_list] is [TrackList] - будет украден и присвоен этот [TrackList];[br]
 ## 4. [param data.source] is [DataSource] и [param data.player] is [Player] - будет создан и присвоен
 ## новый [TrackList] с этим данными.[br]
 ## Если [param test] == [param true], то метод можно воспринимать как константный - никакую логику не выполняет, только вовращает
@@ -262,10 +236,12 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 				## но Player и DataSource из TrackList в приоритете перед Player и DataSource из data
 				source = list.source
 				player = list.player
+			if source:
+				source = DataSourceFiltered.new(source.get_not_ordered()) ## создаем новый источник
 			header = null ## игнорируем
 			list = null ## игнорируем
 		
-		## вычисляем целевой индекс
+		## вычисляем целевой индекс заголовка
 		if to_header:
 			to_index = _headers.find(to_header)
 		else:
@@ -283,53 +259,39 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 					_headers_parent.queue_sort()
 				return true
 			
-			elif is_instance_valid(header.list): ## если у чежого заголовка есть трек лист
-				if not test:
-					## воруем трек лист
-					if header.list.get_parent():
-						header.list.get_parent().remove_child(header.list)
-					lists_parent.add_child(header.list)
-					
-					## создаем заголовок
-					var new_header := _header_create(list)
-					_headers.insert(mini(to_index, _headers.size()), new_header)
-					_headers_parent.add_child(new_header)
-				return true
+			elif is_instance_valid(lists_parent): ## если можем создавать трек листы
+				if is_instance_valid(header.list): ## если у чужого заголовка есть трек лист
+					if not test:
+						## воруем трек лист
+						assert(header.list != lists_parent)
+						if header.list.get_parent():
+							header.list.get_parent().remove_child(header.list)
+						lists_parent.add_child(header.list)
+						## создаем заголовок
+						_header_create(list, to_index)
+					return true
+		
+		elif is_instance_valid(lists_parent): ## если можем создавать трек листы
+			if list: ## если есть трек лист
+				if lists_parent != list.get_parent(): ## если трек лист чужой
+					if not test:
+						## воруем трек лист
+						if header.list.get_parent():
+							header.list.get_parent().remove_child(header.list)
+						lists_parent.add_child(header.list)
+						## создаем заголовок
+						_header_create(list, to_index)
+					return true
 			
-			else:
-				return false
-		
-		elif list: ## если есть трек лист
-			if not test:
-				## воруем трек лист
-				if header.list.get_parent():
-					header.list.get_parent().remove_child(header.list)
-				lists_parent.add_child(header.list)
-				
-				## создаем заголовок
-				var new_header := _header_create(list)
-				_headers.insert(mini(to_index, _headers.size()), new_header)
-				_headers_parent.add_child(new_header)
-			return true
-		
-		else: ## если нет трек листа
-			if source and player: ## если есть проигрыватель и источник
-				if not test:
-					## создаем трек лист
-					list = TRACK_LIST.instantiate() as TrackList
-					if to_add_button:
-						list.source = DataSourceFiltered.new(source.get_not_ordered()).get_ordered()
-						#list.hide()
-					else:
-						list.source = source.get_ordered()
-					list.player = player
-					lists_parent.add_child(list)
-					
-					## создаем заголовок
-					var new_header := _header_create(list)
-					_headers.insert(mini(to_index, _headers.size()), new_header)
-					_headers_parent.add_child(new_header)
-				return true
+			else: ## если нет трек листа
+				if source and player: ## если есть проигрыватель и источник
+					if not test:
+						## создаем трек лист
+						list = _create_track_list(source.get_ordered(), player)
+						list.focus_on_current_track()
+						## создаем заголовок
+						_header_create(list, to_index)
+					return true
 	return false
 
 
@@ -347,16 +309,14 @@ func _update() -> void:
 		for child in lists_parent.get_children():
 			if child is TrackList:
 				var list := child as TrackList
-				if not _list_to_header(list):
-					var header := _header_create(list)
-					_headers_parent.add_child(header)
-					_headers.append(header)
+				if not _get_header_for_list(list):
+					_header_create(list)
 	
 	for header in _headers.duplicate():
 		if not lists_parent or not is_instance_valid(header.list) or header.list.get_parent() != lists_parent:
 			_header_remove(header)
 
-func _header_create(list: TrackList) -> Header:
+func _header_create(list: TrackList, index : int = _headers.size()) -> Header:
 	var header := Header.new()
 	header.list = list
 	header.set_title(list.visible_name)
@@ -365,15 +325,17 @@ func _header_create(list: TrackList) -> Header:
 	header.close_pressed.connect(_on_header_close_pressed.bind(header))
 	header.pressed.connect(_on_header_pressed.bind(header))
 	
+	_headers.insert(mini(index, _headers.size()), header)
+	_headers_parent.add_child(header)
+	
 	return header
 
 func _header_remove(header: Header) -> void:
-	assert(header)
 	_headers.erase(header)
 	_headers_parent.remove_child(header)
 	header.queue_free()
 
-func _list_to_header(list: TrackList) -> Header:
+func _get_header_for_list(list: TrackList) -> Header:
 	for header in _headers:
 		if header.list == list:
 			return header
@@ -381,3 +343,13 @@ func _list_to_header(list: TrackList) -> Header:
 
 func _has_header(header: Header) -> bool:
 	return header in _headers
+
+func _create_track_list(source := default_source, player := default_player) -> TrackList:
+	assert(is_instance_valid(lists_parent))
+	var list := TRACK_LIST.instantiate() as TrackList
+	list.source = source
+	list.player = player
+	list.visible_name = 'NoName%d' % list.get_instance_id()
+	list.focus_track_on_ready = true
+	lists_parent.add_child(list)
+	return list

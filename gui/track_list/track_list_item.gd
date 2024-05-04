@@ -53,20 +53,18 @@ var _strings_separation : int = 2
 
 
 func _draw() -> void:
-	if not _font:
+	if not _font: ## TODO: отобразить ошибку
 		return
 	
-	if not source: ## BAD
-		
-		
+	if not source: ## TODO: реализовать пустоту
 		return
 	
 	var debug_time := Time.get_ticks_usec()
 	
 	var tracks := source.get_tracks()
 	
-	if scroll_offset > get_max_scroll_offset():
-		set_scroll_offset(get_max_scroll_offset())
+	if scroll_offset > get_scroll_max_offset():
+		set_scroll_offset(get_scroll_max_offset())
 	
 	var begin := mini(tracks.size(), scroll_offset)
 	var end := mini(begin + get_max_lines(), tracks.size())
@@ -164,6 +162,7 @@ func _on_source_data_changed() -> void:
 func _on_drawed_track_changed(_what : int) -> void:
 	queue_redraw()
 
+
 func select_track(track : Dictionary) -> void:
 	if source and track in source.get_tracks():
 		if not track.key in _selected_tracks_keys:
@@ -190,6 +189,10 @@ func deselect_all() -> void:
 		_selected_tracks_keys = {}
 		queue_redraw()
 
+func get_selection() -> Dictionary:
+	assert(false)
+	return {}
+
 
 func has_point(point : Vector2) -> bool:
 	return Rect2(Vector2(), size).has_point(point)
@@ -212,7 +215,7 @@ func get_track_from_position(position_y : float) -> Dictionary:
 	return track
 
 func set_scroll_offset(value : int) -> void:
-	value = clampi(value, 0, get_max_scroll_offset())
+	value = clampi(value, 0, get_scroll_max_offset())
 	if value != scroll_offset:
 		scroll_offset = value
 		scroll_progress_changed.emit(get_scroll_grogress())
@@ -221,31 +224,12 @@ func set_scroll_offset(value : int) -> void:
 func set_scroll_progress(value : float) -> void:
 	value = clampf(value, 0, 1)
 	if value != get_scroll_grogress():
-		scroll_offset = int(value * float(get_max_scroll_offset()))
+		scroll_offset = int(value * float(get_scroll_max_offset()))
 
 func get_scroll_grogress() -> float:
-	return clampf(float(scroll_offset) / float(get_max_scroll_offset()), 0, 1)
+	return clampf(float(scroll_offset) / float(get_scroll_max_offset()), 0, 1)
 
-func get_max_scroll_offset() -> int:
+func get_scroll_max_offset() -> int:
 	if source:
 		return maxi(0, source.size() - get_max_lines())
 	return 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

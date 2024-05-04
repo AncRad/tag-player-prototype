@@ -18,7 +18,6 @@ func _notification(what: int) -> void:
 			print('NOTIFICATION_CRASH')
 			assert(false, 'NOTIFICATION_CRASH')
 
-
 func _ready() -> void:
 	if saving_current_track:
 		load_current_track.call_deferred()

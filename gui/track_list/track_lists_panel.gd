@@ -1,13 +1,6 @@
+class_name TrackListsPanel
 extends MarginContainer
 
-
-@export var default_source : DataSource:
-	set(value):
-		if value != default_source:
-			default_source = value
-			
-			if headers_panel:
-				headers_panel.default_source = default_source
 
 @export var default_player : Player:
 	set(value):
@@ -17,8 +10,15 @@ extends MarginContainer
 			if headers_panel:
 				headers_panel.default_player = default_player
 
+@export var default_source : DataSource:
+	set(value):
+		if value != default_source:
+			default_source = value
+			
+			if headers_panel:
+				headers_panel.default_source = default_source
+
 var headers_panel : HeadersPanel
-#var track_list_switcher : TrackListSwitcher
 
 
 func _notification(what: int) -> void:

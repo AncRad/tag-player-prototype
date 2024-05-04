@@ -1,3 +1,4 @@
+class_name PlayerPanel
 extends MarginContainer
 
 const PlayerButtons = preload('player_buttons.gd')
@@ -18,21 +19,22 @@ const PlayerButtons = preload('player_buttons.gd')
 
 var _grabbed : bool
 
-@onready var _progress_bar := %ProgressBar as ProgressBar
-@onready var _player_buttons := %PlayerButtons as PlayerButtons
+var _progress_bar : ProgressBar
+var _player_buttons : PlayerButtons
 
 
 func _notification(what : int) -> void:
 	match what:
+		NOTIFICATION_SCENE_INSTANTIATED:
+			_progress_bar = %ProgressBar
+			_player_buttons = %PlayerButtons
+			
+			_player_buttons.player = player
+			update_drag_callback()
+			set_progress(0)
+		
 		NOTIFICATION_VISIBILITY_CHANGED, NOTIFICATION_WM_WINDOW_FOCUS_OUT:
 			_grabbed = false
-
-func _ready() -> void:
-	_player_buttons.player = player
-	update_drag_callback()
-
-func _enter_tree() -> void:
-	set_progress(0)
 
 func _on_progress_bar_gui_input(event : InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -72,5 +74,3 @@ func update_drag_callback() -> void:
 			_progress_bar.set_drag_forwarding(Callable(), player.can_drop_data, player.drop_data)
 		else:
 			_progress_bar.set_drag_forwarding(Callable(), Callable(), Callable())
-
-

@@ -36,6 +36,6 @@ func _gui_input(event: InputEvent) -> void:
 
 func set_title(value : String) -> void:
 	if not value:
-		value = 'No name.'
+		value = 'No name'
 	if value != text:
 		text = value
