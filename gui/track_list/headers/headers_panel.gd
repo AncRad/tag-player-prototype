@@ -4,7 +4,18 @@ extends Control
 
 const TRACK_LIST = preload('../track_list.tscn')
 
-@export var lists_parent: Control:
+#@export var input_probe: InputProbe:
+	#set(value):
+		#if value != input_probe:
+			#if input_probe:
+				#input_probe.unhandled_input.connect(_on_probe_unhandled_input)
+			#
+			#input_probe = value
+			#
+			#if input_probe:
+				#input_probe.unhandled_input.disconnect(_on_probe_unhandled_input)
+
+@export var lists_parent: TrackListSwitcher:
 	set(value):
 		if value != lists_parent:
 			if lists_parent:
@@ -81,10 +92,38 @@ func _notification(what: int) -> void:
 			_add_button_2.set_drag_forwarding(_get_drag_data.bind(_add_button_2), _can_drop_data.bind(_add_button_2),
 					_drop_data.bind(_add_button_2))
 
-func update() -> void:
-	if not _updating:
-		_updating = true
-		_update.call_deferred()
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event.is_action('track_list_create_find_list', true):
+		if not event.is_echo() and event.is_pressed():
+			var focus_owner := get_viewport().gui_get_focus_owner()
+			if lists_parent and focus_owner and lists_parent.is_ancestor_of(focus_owner):
+				get_viewport().set_input_as_handled()
+				
+				if lists_parent:
+					var to_header_index := _headers.size()
+					var source := default_source
+					var player := default_player
+					
+					var current_list := lists_parent.get_view_owner()
+					if current_list and current_list.source and current_list.player:
+						source = current_list.source
+						player = current_list.player
+						if _list_to_header(current_list):
+							to_header_index = _headers.find(_list_to_header(current_list)) + 1
+					
+					## создаем трек лист
+					if source and player:
+						var list := TRACK_LIST.instantiate() as TrackList
+						list.source = DataSourceFiltered.new(source.get_not_ordered()).get_ordered()
+						list.player = player
+						lists_parent.add_child(list)
+						
+						## создаем заголовок
+						var new_header := _header_create(list)
+						_headers.insert(mini(to_header_index, _headers.size()), new_header)
+						_headers_parent.add_child(new_header)
+						
+						list.gui_start_find()
 
 func _get_drag_data(_at_position: Vector2, item: Object = null) -> Variant:
 	var data := {}
@@ -121,6 +160,64 @@ func _can_drop_data(at_position: Vector2, data: Variant, item: Object = null) ->
 
 func _drop_data(to_position: Vector2, data: Variant, item: Object = null) -> void:
 	drop_data(to_position, data, item, false)
+
+func _on_headers_pre_sort_children() -> void:
+	var last_position: float = 0.0
+	var font := get_theme_font('font', 'Button')
+	var font_size := get_theme_font_size('font_size', 'Button')
+	var font_height: float = font.get_height(font_size)
+	for i in _headers.size():
+		var header := _headers[i]
+		#var list := header.list
+		var trimmed_length := font.get_string_size(header.text, HORIZONTAL_ALIGNMENT_LEFT, max_header_width, font_size).x
+		var rect := Rect2(last_position, 0, trimmed_length, font_height)
+		_headers_parent.fit_child_in_rect(header, rect)
+		assert(header.size.x <= trimmed_length)
+		last_position = rect.end.x + headers_separation
+	
+	if _headers.size():
+		last_position -= headers_separation
+	
+	_headers_parent.custom_minimum_size = Vector2(last_position, font_height)
+
+func _on_add_button_pressed() -> void:
+	if lists_parent:
+		## создаем трек лист
+		var list := TRACK_LIST.instantiate() as TrackList
+		if default_source:
+			list.source = default_source.get_ordered()
+		if default_player:
+			list.player = default_player
+		list.focus_track_on_ready = true
+		list.visible_name = 'NoName%d' % list.get_instance_id()
+		lists_parent.add_child(list)
+		
+		## создаем заголовок
+		var new_header := _header_create(list)
+		_headers.append(new_header)
+		_headers_parent.add_child(new_header)
+
+func _on_header_pressed(header: Header) -> void:
+	if is_instance_valid(header.list):
+		header.list.show()
+
+func _on_header_close_pressed(header: Header) -> void:
+	if is_instance_valid(header.list) and header.list.get_parent() == lists_parent:
+		if header.list.visible:
+			if _headers.size() > 1:
+				var header_index := _headers.find(header)
+				assert(header_index != -1)
+				if header_index == _headers.size() - 1:
+					_on_header_pressed(_headers[header_index - 1])
+				else:
+					_on_header_pressed(_headers[header_index + 1])
+		header.list.queue_free()
+
+
+func update() -> void:
+	if not _updating:
+		_updating = true
+		_update.call_deferred()
 
 ## Обрабатывает события drag & drop.[br]
 ## Если [param item] is [Header] собственный, то используется для вычисления позиции новой [Header]
@@ -235,57 +332,6 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 				return true
 	return false
 
-func _on_headers_pre_sort_children() -> void:
-	var last_position: float = 0.0
-	var font := get_theme_font('font', 'Button')
-	var font_size := get_theme_font_size('font_size', 'Button')
-	var font_height: float = font.get_height(font_size)
-	for i in _headers.size():
-		var header := _headers[i]
-		#var list := header.list
-		var trimmed_length := font.get_string_size(header.text, HORIZONTAL_ALIGNMENT_LEFT, max_header_width, font_size).x
-		var rect := Rect2(last_position, 0, trimmed_length, font_height)
-		_headers_parent.fit_child_in_rect(header, rect)
-		assert(header.size.x <= trimmed_length)
-		last_position = rect.end.x + headers_separation
-	
-	if _headers.size():
-		last_position -= headers_separation
-	
-	_headers_parent.custom_minimum_size = Vector2(last_position, font_height)
-
-func _on_add_button_pressed() -> void:
-	if lists_parent:
-		## создаем трек лист
-		var list := TRACK_LIST.instantiate() as TrackList
-		if default_source:
-			list.source = default_source.get_ordered()
-		if default_player:
-			list.player = default_player
-		list.focus_track_on_ready = true
-		list.visible_name = 'NoName%d' % list.get_instance_id()
-		lists_parent.add_child(list)
-		
-		## создаем заголовок
-		var new_header := _header_create(list)
-		_headers.append(new_header)
-		_headers_parent.add_child(new_header)
-
-func _on_header_pressed(header: Header) -> void:
-	if is_instance_valid(header.list):
-		header.list.show()
-
-func _on_header_close_pressed(header: Header) -> void:
-	if is_instance_valid(header.list) and header.list.get_parent() == lists_parent:
-		if header.list.visible:
-			if _headers.size() > 1:
-				var header_index := _headers.find(header)
-				assert(header_index != -1)
-				if header_index == _headers.size() - 1:
-					_on_header_pressed(_headers[header_index - 1])
-				else:
-					_on_header_pressed(_headers[header_index + 1])
-		header.list.queue_free()
 
 func _update_add_buttons_visible() -> void:
 	if _headers:

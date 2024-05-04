@@ -31,6 +31,11 @@ func check_children() -> void:
 		_checking_children = true
 		_check_children.call_deferred()
 
+func get_view_owner() -> TrackList:
+	if is_instance_valid(_view_owner):
+		return _view_owner
+	return null
+
 func _check_children() -> void:
 	_checking_children = false
 	

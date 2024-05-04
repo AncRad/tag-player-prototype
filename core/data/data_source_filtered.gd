@@ -5,9 +5,10 @@ signal filters_changed
 
 @export var name_filter : String:
 	set(value):
-		name_filter = value
-		changes_up()
-		filters_changed.emit()
+		if value != name_filter:
+			name_filter = value
+			changes_up()
+			filters_changed.emit()
 
 @export var tag_names_filter : Array[String] = []:
 	set(value):

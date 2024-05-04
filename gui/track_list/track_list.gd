@@ -52,7 +52,6 @@ var _selection_echo : bool = false
 var _selection_echo_tracks_keys := {}
 
 
-
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED:
@@ -89,34 +88,37 @@ func _get_drag_data(at_position: Vector2) -> Variant:
 	
 	return data
 
+func gui_start_find() -> void:
+	if source:
+		var not_ordered := source.get_not_ordered()
+		if not not_ordered is DataSourceFiltered:
+			not_ordered = DataSourceFiltered.new(not_ordered)
+			source = not_ordered.get_ordered()
+		assert(not_ordered is DataSourceFiltered)
+		
+		_on_source_filters_changed()
+		_find_panel.show()
+		_find.grab_focus()
+		_find.caret_column = _find.text.length()
+
 func _on_track_list_item_gui_input(event : InputEvent) -> void:
 	if not _list.has_focus():
 		_list.grab_focus()
 	
 	## начать поиск
-	if event.is_action("track_list_start_find"):
+	if event.is_action("track_list_start_find", true):
 		if not event.is_echo() and event.is_pressed():
 			accept_event()
-			if source:
-				var not_ordered := source.get_not_ordered()
-				if not not_ordered is DataSourceFiltered:
-					not_ordered = DataSourceFiltered.new(not_ordered)
-					source = not_ordered.get_ordered()
-				assert(not_ordered is DataSourceFiltered)
-				
-				_on_source_filters_changed()
-				_find_panel.show()
-				_find.grab_focus()
-				_find.caret_column = _find.text.length()
+			gui_start_find()
 	
 	## фокус на текущем треке проигрывателя
-	elif event.is_action("track_list_current_track_focus"):
+	elif event.is_action("track_list_current_track_focus", true):
 		if event.is_pressed():
 			accept_event()
 			focus_on_current_track(true)
 	
 	## выделить все
-	elif event.is_action("track_list_select_all"):
+	elif event.is_action("track_list_select_all", true):
 		if not event.is_echo() and event.is_pressed():
 			accept_event()
 			if source:
