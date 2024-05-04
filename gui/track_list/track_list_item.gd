@@ -85,19 +85,41 @@ func _draw() -> void:
 		_drawed_tracks_keys[track.key] = track
 		
 		var text : String = track.file_name
+		
+		
+		var root := source.get_root()
+		if root:
+			#var compare = func (a : Dictionary, b : Dictionary):
+					#return a.track_key2priority[track.key] > b.track_key2priority[track.key]
+			var tags : Array[Dictionary] = root.track_to_tags(track)
+			var first_tags : Array[Dictionary] = []
+			var second_tags : Array[Dictionary] = []
+			var third_tags : Array[Dictionary] = []
+			for tag in tags:
+				if tag.track_key2priority[track.key] < 10:
+					first_tags.append(tag)
+				elif tag.track_key2priority[track.key] < 35:
+					second_tags.append(tag)
+				elif tag.track_key2priority[track.key] < 60:
+					third_tags.append(tag)
+		
+		
 		var rect_pos_y := (font_height + _strings_separation) * line_count
 		var rect := Rect2(Vector2(0, rect_pos_y), Vector2(size.x, font_height))
-		var pos := Vector2(0, (font_height + _strings_separation) * line_count + font_height - descent)
+		var text_rect := rect.grow_individual(-2, 0, -2, 0)
+		var text_pos := Vector2(text_rect.position.x, (font_height + _strings_separation) * line_count + font_height - descent)
 		var color : Color = Color.WHITE.darkened(0.5)
 		
 		if track.key in _selected_tracks_keys:
-			draw_rect(rect, Color(0.3,0.3,0.6).darkened(0.75), true)
+			draw_rect(rect, Color.WHITE.darkened(0.7), true)
+			color = Color.WHITE.darkened(0.4).darkened(1)
 		
 		if player and player.current_track == track:
-			color = color.lightened(0.5)
+			color = Color.WHITE.darkened(0.2)
 			_drawed_player_track_index = begin + line_count
 		
-		draw_string(_font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, size.x, _font_size, color, TextServer.JUSTIFICATION_NONE)
+		draw_string(_font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, text_rect.size.x, _font_size, color,
+				TextServer.JUSTIFICATION_NONE)
 		
 		if track.key in tracks_to_disconnect_keys:
 			tracks_to_disconnect_keys.erase(track.key)

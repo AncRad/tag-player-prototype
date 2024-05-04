@@ -32,6 +32,7 @@ func _init(p_source : DataSource = null):
 func _update() -> void:
 	if not _updated or source and not source._updated:
 		_filter()
+		changes_up()
 
 func get_tracks() -> Array[Dictionary]:
 	return tracks_filtered
@@ -62,8 +63,8 @@ func _filter() -> void:
 		data_changed.emit()
 
 static func filter_by_tags(input : Array[Dictionary], p_filter : Array[Dictionary]) -> Array[Dictionary]:
-	var out : Array[Dictionary] = []
 	if p_filter:
+		var out : Array[Dictionary] = []
 		for track in input:
 			var all := true
 			for tag in p_filter:
@@ -72,16 +73,14 @@ static func filter_by_tags(input : Array[Dictionary], p_filter : Array[Dictionar
 					break
 			if all:
 				out.append(track)
-	else:
-		out = input
-	return out
+		return out
+	return input
 
 static func filter_by_name(input : Array[Dictionary], p_filter : String) -> Array[Dictionary]:
-	var out : Array[Dictionary] = []
 	if p_filter:
+		var out : Array[Dictionary] = []
 		for track in input:
 			if track.file_name.matchn(p_filter):
 				out.append(track)
-	else:
-		out = input
-	return out
+		return out
+	return input

@@ -19,11 +19,10 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func changes_up(up : int = 1) -> void:
+	assert(up >= 0)
 	if up >= 0:
 		_updated = false
 		changes += up
-	else:
-		assert(up >= 0)
 
 func update() -> void:
 	if not _updated or source and not source._updated:
@@ -36,7 +35,8 @@ func update() -> void:
 		data_changed.emit()
 
 func _update() -> void:
-	pass
+	if not _updated or source and not source._updated:
+		changes_up()
 
 func set_source(value : DataSource) -> void:
 	if value != source:

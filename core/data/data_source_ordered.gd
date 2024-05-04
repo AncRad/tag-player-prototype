@@ -16,12 +16,13 @@ func _init(p_source : DataSource = null):
 
 func _update() -> void:
 	if not _updated or source and not source._updated:
-		sort()
+		_sort()
+		changes_up()
 
 func get_tracks() -> Array[Dictionary]:
 	return tracks_ordered
 
-func sort() -> void:
+func _sort() -> void:
 	var new_order : Array[Dictionary] = []
 	if source:
 		new_order = source.get_tracks().duplicate()

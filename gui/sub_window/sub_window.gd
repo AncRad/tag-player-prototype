@@ -1,3 +1,4 @@
+class_name SubWindow
 extends Window
 
 @export var accept_close := true

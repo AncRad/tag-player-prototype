@@ -51,7 +51,7 @@ func check_children() -> void:
 		_check_children.call_deferred()
 
 func get_view_owner() -> Control:
-	if is_instance_valid(view_owner):
+	if is_instance_valid(view_owner) and view_owner.get_parent() == self:
 		return view_owner
 	return null
 

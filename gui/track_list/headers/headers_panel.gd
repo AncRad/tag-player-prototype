@@ -178,6 +178,7 @@ func _on_header_close_pressed(header: Header) -> void:
 		if header.list.visible and _headers.size() > 1:
 			var header_index := _headers.find(header)
 			assert(header_index != -1)
+			## WARNING: нужно проверять is_instance_valid(_headers[xxx].list)
 			if header_index == _headers.size() - 1:
 				lists_parent.set_view_owner(_headers[header_index - 1].list)
 			else:
@@ -311,7 +312,12 @@ func _update() -> void:
 	
 	for header in _headers.duplicate():
 		if not lists_parent or not is_instance_valid(header.list) or header.list.get_parent() != lists_parent:
+			var header_index := _headers.find(header)
 			_header_remove(header)
+			if lists_parent:
+				if not lists_parent.get_view_owner() and _headers:
+					## WARNING: нужно проверять is_instance_valid(_headers[xxx].list)
+					lists_parent.set_view_owner(_headers[clamp(header_index, 0, _headers.size() - 1)].list)
 
 func _header_create(list: TrackList, index : int = _headers.size()) -> Header:
 	var header := Header.new()
@@ -319,8 +325,9 @@ func _header_create(list: TrackList, index : int = _headers.size()) -> Header:
 	header.set_title(list.visible_name)
 	header.set_drag_forwarding(_get_drag_data.bind(header), _can_drop_data.bind(header), _drop_data.bind(header))
 	
-	header.close_pressed.connect(_on_header_close_pressed.bind(header))
 	header.pressed.connect(_on_header_pressed.bind(header))
+	header.close_pressed.connect(_on_header_close_pressed.bind(header))
+	header.title_changed.connect(_headers_parent.queue_sort.unbind(1))
 	
 	_headers.insert(mini(index, _headers.size()), header)
 	_headers_parent.add_child(header)

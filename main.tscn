@@ -1,8 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=9 format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" path="res://user.gd" id="1_778hk"]
 [ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_gjybe"]
 [ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
+[ext_resource type="Script" path="res://gui/outside_drop_handler.gd" id="4_74hdh"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="4_crg0x"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
 [ext_resource type="PackedScene" uid="uid://0vb8gt8or8x0" path="res://gui/track_list/track_lists_panel.tscn" id="8_ddmat"]
@@ -12,19 +13,24 @@ bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
 
 [node name="Main" type="Node"]
 
+[node name="Player" type="AudioStreamPlayer" parent="."]
+script = ExtResource("1_if8um")
+current_source = ExtResource("4_crg0x")
+
 [node name="DataBaseHolder" parent="." instance=ExtResource("1_gjybe")]
 load_on_ready = true
 update_on_process = true
 handle_files_dropped = true
 handle_close_requested = true
 
+[node name="OutsideDropHandler" type="Node" parent="." node_paths=PackedStringArray("default_player")]
+script = ExtResource("4_74hdh")
+default_player = NodePath("../Player")
+default_source = ExtResource("4_crg0x")
+
 [node name="User" type="Node" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("1_778hk")
 player = NodePath("../Player")
-
-[node name="Player" type="AudioStreamPlayer" parent="."]
-script = ExtResource("1_if8um")
-current_source = ExtResource("4_crg0x")
 
 [node name="GUI" type="MarginContainer" parent="."]
 anchors_preset = 15

@@ -3,6 +3,7 @@ extends Button
 ## Header
 
 signal close_pressed
+signal title_changed(title : String)
 
 var list : TrackList:
 	set(value):
@@ -40,3 +41,4 @@ func set_title(value : String) -> void:
 		value = 'No name'
 	if value != text:
 		text = value
+		title_changed.emit(text)
