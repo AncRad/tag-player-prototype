@@ -32,6 +32,7 @@ func _gui_input(event: InputEvent) -> void:
 			if not event.is_pressed():
 				if Rect2(Vector2(), size).has_point(event.position):
 					if event.button_index == MOUSE_BUTTON_MIDDLE:
+						accept_event()
 						close_pressed.emit()
 
 func set_title(value : String) -> void:

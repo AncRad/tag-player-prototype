@@ -2,7 +2,6 @@ class_name TrackList
 extends Control
 ## TrackList
 
-
 signal visible_name_changed(visible_name : String)
 
 const TrackListItem = preload("track_list_item.gd")

@@ -2,6 +2,7 @@
 extends Control
 
 signal scroll_progress_changed(progress : float)
+signal selection_changed
 
 @export var source : DataSource:
 	set(value):
@@ -158,6 +159,13 @@ func _on_player_track_changed(_track) -> void:
 
 func _on_source_data_changed() -> void:
 	queue_redraw()
+	var remaining := {}
+	for track in source.get_tracks():
+		if track.key in _selected_tracks_keys:
+			remaining[track.key] = track
+	if remaining.size() != _selected_tracks_keys.size():
+		_selected_tracks_keys = remaining
+		selection_changed.emit()
 
 func _on_drawed_track_changed(_what : int) -> void:
 	queue_redraw()
@@ -166,32 +174,37 @@ func _on_drawed_track_changed(_what : int) -> void:
 func select_track(track : Dictionary) -> void:
 	if source and track in source.get_tracks():
 		if not track.key in _selected_tracks_keys:
+			_selected_tracks_keys[track.key] = track
 			if track.key in _drawed_tracks_keys:
 				queue_redraw()
-		_selected_tracks_keys[track.key] = track
+			selection_changed.emit()
 
 func deselect_track(track : Dictionary) -> bool:
 	if _selected_tracks_keys.erase(track.key):
 		if track.key in _drawed_tracks_keys:
 			queue_redraw()
+		selection_changed.emit()
 		return true
 	else:
 		return false
 
 func select_all() -> void:
 	if source:
+		_selected_tracks_keys.clear()
 		for track in source.get_tracks():
 			_selected_tracks_keys[track.key] = track
 		queue_redraw()
+		selection_changed.emit()
 
 func deselect_all() -> void:
 	if _selected_tracks_keys:
 		_selected_tracks_keys = {}
 		queue_redraw()
+		selection_changed.emit()
 
 func get_selection() -> Dictionary:
 	assert(false)
-	return {}
+	return _selected_tracks_keys
 
 
 func has_point(point : Vector2) -> bool:

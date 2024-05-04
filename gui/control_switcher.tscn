@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=3 uid="uid://c8dfuqx52bgsy"]
 
-[ext_resource type="Script" path="res://gui/track_list/track_list_switcher.gd" id="1_thdpm"]
+[ext_resource type="Script" path="res://gui/control_switcher.gd" id="1_wy4tm"]
 
-[node name="TrackListSwitcher" type="MarginContainer"]
+[node name="ControlSwitcher" type="MarginContainer"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -14,4 +14,4 @@ theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
-script = ExtResource("1_thdpm")
+script = ExtResource("1_wy4tm")

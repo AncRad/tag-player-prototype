@@ -4,18 +4,16 @@ extends Control
 
 const TRACK_LIST = preload('../track_list.tscn')
 
-@export var lists_parent: TrackListSwitcher:
+@export var lists_parent: ControlSwitcher:
 	set(value):
 		if value != lists_parent:
 			if lists_parent:
-				lists_parent.child_entered_tree.disconnect(update)
-				lists_parent.child_exiting_tree.disconnect(update)
+				lists_parent.lists_changed.disconnect(update)
 			
 			lists_parent = value
 			
 			if lists_parent:
-				lists_parent.child_entered_tree.connect(update.unbind(1))
-				lists_parent.child_exiting_tree.connect(update.unbind(1))
+				lists_parent.lists_changed.connect(update)
 			
 			update()
 
@@ -173,18 +171,17 @@ func _on_add_button_pressed() -> void:
 
 func _on_header_pressed(header: Header) -> void:
 	if is_instance_valid(header.list):
-		header.list.show()
+		lists_parent.set_view_owner(header.list)
 
 func _on_header_close_pressed(header: Header) -> void:
 	if is_instance_valid(header.list) and header.list.get_parent() == lists_parent:
-		if header.list.visible:
-			if _headers.size() > 1:
-				var header_index := _headers.find(header)
-				assert(header_index != -1)
-				if header_index == _headers.size() - 1:
-					_on_header_pressed(_headers[header_index - 1])
-				else:
-					_on_header_pressed(_headers[header_index + 1])
+		if header.list.visible and _headers.size() > 1:
+			var header_index := _headers.find(header)
+			assert(header_index != -1)
+			if header_index == _headers.size() - 1:
+				lists_parent.set_view_owner(_headers[header_index - 1].list)
+			else:
+				lists_parent.set_view_owner(_headers[header_index + 1].list)
 		header.list.queue_free()
 
 
@@ -263,7 +260,7 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 				if is_instance_valid(header.list): ## если у чужого заголовка есть трек лист
 					if not test:
 						## воруем трек лист
-						assert(header.list != lists_parent)
+						assert(header.list.get_parent() != lists_parent)
 						if header.list.get_parent():
 							header.list.get_parent().remove_child(header.list)
 						lists_parent.add_child(header.list)

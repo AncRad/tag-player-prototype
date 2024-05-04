@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://gst32mqk0avy" path="res://gui/track_list/headers/headers_panel.tscn" id="1_nj01v"]
 [ext_resource type="Script" path="res://gui/track_list/track_lists_panel.gd" id="1_ocu65"]
-[ext_resource type="PackedScene" uid="uid://c8dfuqx52bgsy" path="res://gui/track_list/track_list_switcher.tscn" id="2_k2arx"]
+[ext_resource type="PackedScene" uid="uid://c8dfuqx52bgsy" path="res://gui/control_switcher.tscn" id="2_k2arx"]
 
 [node name="TrackListsPanel" type="MarginContainer"]
 anchors_preset = 15
