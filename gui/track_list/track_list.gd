@@ -33,13 +33,13 @@ const TrackListItem = preload("track_list_item.gd")
 			if _list:
 				_list.player = player
 
-@export var focus_track_on_ready := false
-
 @export var visible_name : String = "":
 	set(value):
 		if value != visible_name:
 			visible_name = value
 			visible_name_changed.emit(visible_name)
+
+@export var focus_track_on_ready := false
 
 var _list : TrackListItem
 var _find : LineEdit
@@ -49,6 +49,8 @@ var _sync_filters := false
 var _selection_action_modifiers_mask : KeyModifierMask
 var _selection_echo : bool = false
 var _selection_echo_tracks_keys := {}
+var _selection_data_source := WeakRef.new()
+var _updating_selection_data_source := false
 
 
 func _notification(what: int) -> void:
@@ -62,6 +64,8 @@ func _notification(what: int) -> void:
 			
 			_list.player = player
 			_list.source = source
+			_list.set_drag_forwarding(_track_list_item_get_drag_data, Callable(), Callable())
+			_list.selection_changed.connect(_on_selection_changed)
 			
 			if source:
 				if source is DataSourceFiltered:
@@ -71,22 +75,29 @@ func _ready() -> void:
 	if focus_track_on_ready:
 		focus_on_current_track(false)
 
-func _get_drag_data(at_position: Vector2) -> Variant:
+func _track_list_item_get_drag_data(at_position: Vector2) -> Variant:
 	var data := {}
-	data.from = self
 	
-	if source:
-		data.source = source
-	
-	if player:
-		data.player = player
-	
-	if _list:
+	if not _selection_echo:
+		data.from = self
+		data.track_list = self
+		
+		if source:
+			data.source = source
+		
+		if player:
+			data.player = player
+		
 		var track := _list.get_track_from_position(at_position.y)
 		if track:
 			data.track = track
+			
+			if track.key in _list.get_selection():
+				data.tracks = _list.get_selection().duplicate()
 	
-	return data
+	if data:
+		return data
+	return null
 
 func gui_start_find() -> void:
 	if source:
@@ -122,7 +133,7 @@ func _on_track_list_item_gui_input(event : InputEvent) -> void:
 		if not event.is_echo() and event.is_pressed():
 			accept_event()
 			if source:
-				if _list._selected_tracks_keys.size() == source.size():
+				if _list.get_selection().size() == source.size():
 					_list.deselect_all()
 				else:
 					_list.select_all()
@@ -204,6 +215,11 @@ func _on_source_filters_changed() -> void:
 		visible_name = _find.text
 		_sync_filters = false
 
+func _on_selection_changed() -> void:
+	if not _updating_selection_data_source:
+		_updating_selection_data_source = true
+		_update_selection_data_source.call_deferred()
+
 func focus_on_current_track(on_cursor := false) -> void:
 	if _list.source and _list.player and _list.player.current_track:
 		var track_index := source.get_tracks().find(player.current_track)
@@ -221,3 +237,18 @@ func focus_on_current_track(on_cursor := false) -> void:
 				## центруем по центру вертикали
 				_list.scroll_offset = track_index - int(_list.get_max_lines() / 2.0)
 
+func get_selection_data_source() -> DataSourceList:
+	if not _selection_data_source.get_ref():
+		var selection_ds := DataSourceList.new()
+		_selection_data_source = weakref(selection_ds)
+		_update_selection_data_source()
+		return selection_ds
+	return _selection_data_source.get_ref()
+
+func _update_selection_data_source() -> void:
+	_updating_selection_data_source = false
+	
+	if _selection_data_source.get_ref():
+		var selection_ds := _selection_data_source.get_ref() as DataSourceList
+		selection_ds.clear()
+		selection_ds.append_array(_list.get_selection_array())

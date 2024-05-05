@@ -31,8 +31,8 @@ func _init() -> void:
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED:
-			player_panel = %PlayerPanel as PlayerPanel
-			track_list_panel = %TrackListsPanel as TrackListsPanel
+			player_panel = $SubWindowGUI/VBoxContainer/PlayerPanel as PlayerPanel
+			track_list_panel = $SubWindowGUI/VBoxContainer/TrackListsPanel as TrackListsPanel
 			
 			player_panel.player = default_player
 			track_list_panel.default_player = default_player

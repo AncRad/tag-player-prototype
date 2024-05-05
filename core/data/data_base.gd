@@ -65,11 +65,12 @@ func tag_remove(tag : Dictionary) -> void:
 	changes_up()
 
 func tag_track(track : Dictionary, tag : Dictionary, priority := 0) -> void:
-	tag.track_key2priority[track.key] = priority
-	track_to_tags(track).append(tag)
-	track.notification.emit(TAGGED)
-	tag.notification.emit(TAGGED)
-	changes_up()
+	if not track.key in tag.track_key2priority:
+		tag.track_key2priority[track.key] = priority
+		track_to_tags(track).append(tag)
+		track.notification.emit(TAGGED)
+		tag.notification.emit(TAGGED)
+		changes_up()
 
 func untag_track(track : Dictionary, tag : Dictionary) -> void:
 	tag.track_key2priority.erase(track.key)

@@ -274,9 +274,9 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 				if lists_parent != list.get_parent(): ## если трек лист чужой
 					if not test:
 						## воруем трек лист
-						if header.list.get_parent():
-							header.list.get_parent().remove_child(header.list)
-						lists_parent.add_child(header.list)
+						if list.get_parent():
+							list.get_parent().remove_child(list)
+						lists_parent.add_child(list)
 						## создаем заголовок
 						_header_create(list, to_index)
 					return true

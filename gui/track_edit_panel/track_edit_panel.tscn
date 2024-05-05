@@ -1,0 +1,69 @@
+[gd_scene load_steps=4 format=3 uid="uid://1gufy5i4x3ms"]
+
+[ext_resource type="Script" path="res://gui/track_edit_panel/track_tags_list.gd" id="1_24tnx"]
+[ext_resource type="Script" path="res://gui/track_edit_panel/tag_find_line_edit.gd" id="1_c2tvv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xig57"]
+bg_color = Color(0.07, 0.07, 0.07, 1)
+
+[node name="TrackEditPanel" type="MarginContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 31.0
+grow_horizontal = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TrackNameLabel" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 0
+clip_text = true
+
+[node name="TrackTagsList" type="HFlowContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 15
+script = ExtResource("1_24tnx")
+
+[node name="TagFindLineEdit" type="LineEdit" parent="VBoxContainer/TrackTagsList"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_neighbor_bottom = NodePath("Tree")
+focus_next = NodePath("Tree")
+placeholder_text = "add tag"
+expand_to_text_length = true
+flat = true
+caret_blink = true
+script = ExtResource("1_c2tvv")
+
+[node name="Tree" type="Tree" parent="VBoxContainer/TrackTagsList/TagFindLineEdit"]
+unique_name_in_owner = true
+visible = false
+top_level = true
+layout_mode = 1
+offset_left = 175.0
+offset_top = 112.0
+offset_right = 373.0
+offset_bottom = 245.0
+focus_neighbor_top = NodePath(".")
+focus_next = NodePath("..")
+theme_override_styles/panel = SubResource("StyleBoxFlat_xig57")
+hide_folding = true
+hide_root = true
+scroll_horizontal_enabled = false
+
+[connection signal="focus_entered" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_focus_entered"]
+[connection signal="focus_exited" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_focus_exited"]
+[connection signal="tag_create_pressed" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList" method="_on_tag_find_line_edit_tag_create_pressed"]
+[connection signal="tag_selected" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList" method="_on_tag_find_line_edit_tag_selected"]
+[connection signal="text_changed" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_text_changed" unbinds=1]
+[connection signal="text_submitted" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList" method="_on_tag_find_line_edit_text_submitted"]
+[connection signal="visibility_changed" from="VBoxContainer/TrackTagsList/TagFindLineEdit" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_visibility_changed"]
+[connection signal="focus_entered" from="VBoxContainer/TrackTagsList/TagFindLineEdit/Tree" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_tree_focus_entered"]
+[connection signal="focus_exited" from="VBoxContainer/TrackTagsList/TagFindLineEdit/Tree" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_tree_focus_exited"]
+[connection signal="item_activated" from="VBoxContainer/TrackTagsList/TagFindLineEdit/Tree" to="VBoxContainer/TrackTagsList/TagFindLineEdit" method="_on_tree_item_activated"]

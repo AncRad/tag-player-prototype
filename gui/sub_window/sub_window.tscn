@@ -1,48 +1,24 @@
-[gd_scene load_steps=7 format=3 uid="uid://cou6gjmbrscb2"]
+[gd_scene load_steps=4 format=3 uid="uid://cou6gjmbrscb2"]
 
 [ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_tamvn"]
 [ext_resource type="Script" path="res://gui/sub_window/sub_window.gd" id="1_uo88k"]
-[ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="2_d44i0"]
-[ext_resource type="PackedScene" uid="uid://0vb8gt8or8x0" path="res://gui/track_list/track_lists_panel.tscn" id="3_jf1xb"]
-[ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="4_ofgqq"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_obkqp"]
-bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
+[ext_resource type="PackedScene" uid="uid://bbsa6ubaa8ieu" path="res://gui/sub_window/sub_window_gui.tscn" id="3_an4ea"]
 
 [node name="SubWindow" type="Window"]
 disable_3d = true
+position = Vector2i(0, 36)
 size = Vector2i(600, 400)
 script = ExtResource("1_uo88k")
 
 [node name="DataBaseHolder" parent="." instance=ExtResource("1_tamvn")]
 handle_files_dropped = true
 
-[node name="GUI" type="MarginContainer" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/margin_left = 0
-theme_override_constants/margin_top = 0
-theme_override_constants/margin_right = 0
-theme_override_constants/margin_bottom = 0
-metadata/_edit_lock_ = true
+[node name="SubWindowGUI" parent="." instance=ExtResource("3_an4ea")]
 
-[node name="Panel" type="Panel" parent="GUI"]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_obkqp")
+[node name="PlayerPanel" parent="SubWindowGUI/VBoxContainer" index="0"]
+visible = true
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
-layout_mode = 2
-theme_override_constants/separation = 0
+[node name="TagList" parent="SubWindowGUI/VBoxContainer" index="2"]
+visible = true
 
-[node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("2_d44i0")]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-
-[node name="TrackListsPanel" parent="GUI/VBoxContainer" instance=ExtResource("3_jf1xb")]
-unique_name_in_owner = true
-layout_mode = 2
-default_source = ExtResource("4_ofgqq")
+[editable path="SubWindowGUI"]

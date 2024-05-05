@@ -12,15 +12,15 @@ signal selection_changed
 			if value:
 				value.data_changed.connect(_on_source_data_changed)
 			
-			for track : Dictionary in _drawed_tracks_keys.values():
+			for track : Dictionary in _drawed_tracks.values():
 				if track.notification.is_connected(_on_drawed_track_changed):
 					track.notification.disconnect(_on_drawed_track_changed)
 				else:
 					assert(false)
 			source = value
 			_drawed_player_track_index = -1
-			_drawed_tracks_keys = {}
-			_selected_tracks_keys = {}
+			_drawed_tracks = {}
+			_selected_tracks = {}
 			
 			queue_redraw()
 
@@ -41,8 +41,8 @@ signal selection_changed
 var scroll_offset : int = 0: set = set_scroll_offset
 
 var _drawed_player_track_index : int = -1
-var _drawed_tracks_keys := {}
-var _selected_tracks_keys := {}
+var _drawed_tracks := {}
+var _selected_tracks := {}
 
 ## test
 @export var _font : Font
@@ -73,16 +73,16 @@ func _draw() -> void:
 	var font_height : int = get_font_height()
 	var descent := int(_font.get_descent(_font_size))
 	
-	var tracks_to_disconnect_keys := _drawed_tracks_keys
+	var tracks_to_disconnect := _drawed_tracks
 	var line_count : int = 0
 	_drawed_player_track_index = -1
-	_drawed_tracks_keys = {}
+	_drawed_tracks = {}
 	#var root := source.get_root()
 	
 	while line_count < end - begin:
 		var track := tracks[begin + line_count]
 		
-		_drawed_tracks_keys[track.key] = track
+		_drawed_tracks[track.key] = track
 		
 		var text : String = track.file_name
 		
@@ -110,7 +110,7 @@ func _draw() -> void:
 		var text_pos := Vector2(text_rect.position.x, (font_height + _strings_separation) * line_count + font_height - descent)
 		var color : Color = Color.WHITE.darkened(0.5)
 		
-		if track.key in _selected_tracks_keys:
+		if track.key in _selected_tracks:
 			draw_rect(rect, Color.WHITE.darkened(0.7), true)
 			color = Color.WHITE.darkened(0.4).darkened(1)
 		
@@ -121,8 +121,8 @@ func _draw() -> void:
 		draw_string(_font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, text_rect.size.x, _font_size, color,
 				TextServer.JUSTIFICATION_NONE)
 		
-		if track.key in tracks_to_disconnect_keys:
-			tracks_to_disconnect_keys.erase(track.key)
+		if track.key in tracks_to_disconnect:
+			tracks_to_disconnect.erase(track.key)
 		else:
 			if not track.notification.is_connected(_on_drawed_track_changed):
 				track.notification.connect(_on_drawed_track_changed)
@@ -148,7 +148,7 @@ func _draw() -> void:
 		## debug
 		#draw_line(Vector2(0, pos.y), Vector2(size.x, pos.y), Color.PALE_VIOLET_RED)
 	
-	for track : Dictionary in tracks_to_disconnect_keys.values():
+	for track : Dictionary in tracks_to_disconnect.values():
 		if track.notification.is_connected(_on_drawed_track_changed):
 			track.notification.disconnect(_on_drawed_track_changed)
 		else:
@@ -183,10 +183,10 @@ func _on_source_data_changed() -> void:
 	queue_redraw()
 	var remaining := {}
 	for track in source.get_tracks():
-		if track.key in _selected_tracks_keys:
+		if track.key in _selected_tracks:
 			remaining[track.key] = track
-	if remaining.size() != _selected_tracks_keys.size():
-		_selected_tracks_keys = remaining
+	if remaining.size() != _selected_tracks.size():
+		_selected_tracks = remaining
 		selection_changed.emit()
 
 func _on_drawed_track_changed(_what : int) -> void:
@@ -195,15 +195,15 @@ func _on_drawed_track_changed(_what : int) -> void:
 
 func select_track(track : Dictionary) -> void:
 	if source and track in source.get_tracks():
-		if not track.key in _selected_tracks_keys:
-			_selected_tracks_keys[track.key] = track
-			if track.key in _drawed_tracks_keys:
+		if not track.key in _selected_tracks:
+			_selected_tracks[track.key] = track
+			if track.key in _drawed_tracks:
 				queue_redraw()
 			selection_changed.emit()
 
 func deselect_track(track : Dictionary) -> bool:
-	if _selected_tracks_keys.erase(track.key):
-		if track.key in _drawed_tracks_keys:
+	if _selected_tracks.erase(track.key):
+		if track.key in _drawed_tracks:
 			queue_redraw()
 		selection_changed.emit()
 		return true
@@ -212,21 +212,25 @@ func deselect_track(track : Dictionary) -> bool:
 
 func select_all() -> void:
 	if source:
-		_selected_tracks_keys.clear()
+		_selected_tracks.clear()
 		for track in source.get_tracks():
-			_selected_tracks_keys[track.key] = track
+			_selected_tracks[track.key] = track
 		queue_redraw()
 		selection_changed.emit()
 
 func deselect_all() -> void:
-	if _selected_tracks_keys:
-		_selected_tracks_keys = {}
+	if _selected_tracks:
+		_selected_tracks = {}
 		queue_redraw()
 		selection_changed.emit()
 
 func get_selection() -> Dictionary:
-	assert(false)
-	return _selected_tracks_keys
+	return _selected_tracks
+
+func get_selection_array() -> Array[Dictionary]:
+	var selection : Array[Dictionary] = []
+	selection.assign(_selected_tracks.values())
+	return selection
 
 
 func has_point(point : Vector2) -> bool:

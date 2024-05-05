@@ -21,6 +21,10 @@ func set_source(value : DataSource) -> void:
 func get_tracks() -> Array[Dictionary]:
 	return _tracks
 
+#func _update() -> void:
+	#if not _updated or source and not source._updated:
+		#changes_up()
+
 func append(track : Dictionary, merge := false) -> void:
 	if not merge or not track in _tracks:
 		_tracks.append(track)
@@ -41,3 +45,7 @@ func append_array(p_tracks : Array[Dictionary], merge := false) -> void:
 func erase(track : Dictionary) -> void:
 	track.erase(track)
 	changes_up()
+
+func clear() -> void:
+	changes_up(_tracks.size())
+	_tracks.clear()
