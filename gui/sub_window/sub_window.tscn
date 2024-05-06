@@ -1,23 +1,14 @@
-[gd_scene load_steps=4 format=3 uid="uid://cou6gjmbrscb2"]
+[gd_scene load_steps=4 format=3 uid="uid://bq2wcpuubhdiw"]
 
-[ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_tamvn"]
 [ext_resource type="Script" path="res://gui/sub_window/sub_window.gd" id="1_uo88k"]
-[ext_resource type="PackedScene" uid="uid://bbsa6ubaa8ieu" path="res://gui/sub_window/sub_window_gui.tscn" id="3_an4ea"]
+[ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="2_wgxe5"]
+[ext_resource type="PackedScene" uid="uid://bbsa6ubaa8ieu" path="res://gui/sub_window/sub_window_gui.tscn" id="3_y0aun"]
 
 [node name="SubWindow" type="Window"]
-disable_3d = true
-position = Vector2i(0, 36)
 size = Vector2i(600, 400)
 script = ExtResource("1_uo88k")
 
-[node name="DataBaseHolder" parent="." instance=ExtResource("1_tamvn")]
-handle_files_dropped = true
+[node name="DataBaseHolder" parent="." instance=ExtResource("2_wgxe5")]
 
-[node name="SubWindowGUI" parent="." instance=ExtResource("3_an4ea")]
+[node name="SubWindowGUI" parent="." instance=ExtResource("3_y0aun")]
 unique_name_in_owner = true
-
-[connection signal="default_player_changed" from="." to="SubWindowGUI/VBoxContainer/PlayerPanel" method="set_player"]
-[connection signal="default_player_changed" from="." to="SubWindowGUI/VBoxContainer/TrackListsPanel" method="set_default_player"]
-[connection signal="default_source_changed" from="." to="SubWindowGUI/VBoxContainer/TrackListsPanel" method="set_default_source"]
-
-[editable path="SubWindowGUI"]

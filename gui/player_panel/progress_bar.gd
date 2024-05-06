@@ -1,7 +1,7 @@
-class_name PlayerProgressBar
+class_name PlaybackProgressBar
 extends ProgressBar
 
-@export var player : Player: set = set_player
+@export var playback : Playback: set = set_playback
 
 @export var size_y_master : Control:
 	set(val):
@@ -37,7 +37,7 @@ func _gui_input(event : InputEvent) -> void:
 					if not event.is_pressed():
 						_grabbed = false
 						value = clampf(event.position.x / size.x, 0, 1)
-						player.set_progress(value)
+						playback.set_progress(value)
 				
 				else:
 					if event.is_pressed():
@@ -56,17 +56,17 @@ func _on_size_y_master_resized() -> void:
 		if custom_minimum_size.y != size_y_master.size.y:
 			custom_minimum_size.y = size_y_master.size.y
 
-func set_player(p_value : Player) -> void:
-	if p_value != player:
-		if player:
-			player.progress_changed.disconnect(set_progress)
+func set_playback(p_value : Playback) -> void:
+	if p_value != playback:
+		if playback:
+			playback.progress_changed.disconnect(set_progress)
 			set_drag_forwarding(Callable(), Callable(), Callable())
 		
-		player = p_value
+		playback = p_value
 		
-		if player:
+		if playback:
 			p_value.progress_changed.connect(set_progress)
-			set_drag_forwarding(Callable(), player.can_drop_data, player.drop_data)
+			set_drag_forwarding(Callable(), playback.can_drop_data, playback.drop_data)
 
 func set_progress(progress : float) -> void:
 	if not _grabbed:

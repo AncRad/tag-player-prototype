@@ -13,7 +13,7 @@ var player : Player:
 					player = value
 					player.finished.connect(play_next)
 
-@export var current_source: DataSource
+@export var current_source: DataSource = preload('res://core/data_base.tres')
 var current_track: Dictionary
 var progress_on_pause: float = 0
 
@@ -75,6 +75,11 @@ func play_prev() -> void:
 	if current_source:
 		play(-1)
 
+
+func is_playing() -> bool:
+	if player:
+		return player.playing
+	return false
 
 func get_length() -> float:
 	if player.stream:

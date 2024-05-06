@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://gst32mqk0avy"]
+[gd_scene load_steps=6 format=3 uid="uid://gst32mqk0avy"]
 
 [ext_resource type="Theme" uid="uid://dvmqmhg68m40n" path="res://gui/track_list/headers/no_scroll_bar.theme" id="1_tm4vf"]
 [ext_resource type="Script" path="res://gui/track_list/headers/headers_panel.gd" id="2_ofo3w"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="3_jdlpu"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_k5hn1"]
 [ext_resource type="Script" path="res://gui/track_list/headers/add_button.gd" id="3_x7gql"]
 
 [node name="HeadersPanel" type="MarginContainer"]
@@ -17,6 +18,7 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 script = ExtResource("2_ofo3w")
+default_playback = ExtResource("3_k5hn1")
 default_source = ExtResource("3_jdlpu")
 
 [node name="HBoxContainer" type="HBoxContainer" parent="."]

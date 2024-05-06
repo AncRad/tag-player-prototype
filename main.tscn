@@ -1,14 +1,13 @@
-[gd_scene load_steps=11 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=10 format=3 uid="uid://cwjb1imduvk04"]
 
-[ext_resource type="Script" path="res://user.gd" id="1_778hk"]
 [ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
-[ext_resource type="Script" path="res://core/data_base_holder.gd" id="3_e6hot"]
-[ext_resource type="Script" path="res://gui/outside_drop_handler.gd" id="4_74hdh"]
-[ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="4_crg0x"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_nwl3h"]
+[ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="3_plvy5"]
+[ext_resource type="PackedScene" uid="uid://bgmvonyggitjj" path="res://user.tscn" id="4_m655p"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
+[ext_resource type="Script" path="res://gui/outside_drop_handler.gd" id="5_n4582"]
 [ext_resource type="PackedScene" uid="uid://1gufy5i4x3ms" path="res://gui/track_edit_panel/track_edit_panel.tscn" id="7_4oxst"]
 [ext_resource type="PackedScene" uid="uid://0vb8gt8or8x0" path="res://gui/track_list/track_lists_panel.tscn" id="8_ddmat"]
-[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="8_ym74g"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jke7m"]
 bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
@@ -17,19 +16,16 @@ bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
 
 [node name="Player" type="AudioStreamPlayer" parent="."]
 script = ExtResource("1_if8um")
-current_source = ExtResource("4_crg0x")
+playback = ExtResource("2_nwl3h")
 
-[node name="DataBaseHolder" type="Node" parent="."]
-process_priority = 1
-script = ExtResource("3_e6hot")
+[node name="DataBaseHolder" parent="." instance=ExtResource("3_plvy5")]
 load_on_ready = true
 update_on_process = true
 handle_files_dropped = true
 handle_close_requested = true
+metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"load_on_ready", &"handle_close_requested"]
 
-[node name="User" type="Node" parent="." node_paths=PackedStringArray("player")]
-script = ExtResource("1_778hk")
-player = NodePath("../Player")
+[node name="User" parent="." instance=ExtResource("4_m655p")]
 
 [node name="GUI" type="MarginContainer" parent="."]
 anchors_preset = 15
@@ -43,10 +39,8 @@ theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 metadata/_edit_lock_ = true
 
-[node name="OutsideDropHandler" type="Node" parent="GUI" node_paths=PackedStringArray("default_player")]
-script = ExtResource("4_74hdh")
-default_player = NodePath("../../Player")
-default_source = ExtResource("4_crg0x")
+[node name="OutsideDropHandler" type="Node" parent="GUI"]
+script = ExtResource("5_n4582")
 
 [node name="Panel" type="Panel" parent="GUI"]
 layout_mode = 2
@@ -56,21 +50,13 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_jke7m")
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PlayerPanel" parent="GUI/VBoxContainer" node_paths=PackedStringArray("player") instance=ExtResource("5_h583o")]
+[node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("5_h583o")]
 layout_mode = 2
-player = NodePath("../../../Player")
 
 [node name="TrackEditPanel" parent="GUI/VBoxContainer" instance=ExtResource("7_4oxst")]
 layout_mode = 2
 
-[node name="TrackTagsList" parent="GUI/VBoxContainer/TrackEditPanel/VBoxContainer" index="1"]
-root_db = ExtResource("8_ym74g")
-
-[node name="TagFindLineEdit" parent="GUI/VBoxContainer/TrackEditPanel/VBoxContainer/TrackTagsList" index="0"]
-root_db = ExtResource("8_ym74g")
-
-[node name="TrackListsPanel" parent="GUI/VBoxContainer" node_paths=PackedStringArray("default_player") instance=ExtResource("8_ddmat")]
+[node name="TrackListsPanel" parent="GUI/VBoxContainer" instance=ExtResource("8_ddmat")]
 layout_mode = 2
-default_player = NodePath("../../../Player")
 
 [editable path="GUI/VBoxContainer/TrackEditPanel"]

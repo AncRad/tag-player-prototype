@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3 uid="uid://bgmvonyggitjj"]
+
+[ext_resource type="Script" path="res://user.gd" id="1_ck2vv"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_uiafd"]
+
+[node name="User" type="Node"]
+script = ExtResource("1_ck2vv")
+playback = ExtResource("2_uiafd")

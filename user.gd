@@ -1,6 +1,6 @@
 extends Node
 
-@export var player : Player
+@export var playback : Playback
 @export var saving_current_track := true
 
 var _last_save_time : int = 0
@@ -30,20 +30,20 @@ func _process(_delta: float) -> void:
 func save_current_track() -> void:
 	var file := FileAccess.open('%s/current_track' % OS.get_user_data_dir(), FileAccess.WRITE)
 	if file:
-		if player:
-			if player.current_track:
-				file.store_string(var_to_str({current_track = [player.current_track.key, player.get_progress()]}))
+		if playback:
+			if playback.current_track:
+				file.store_string(var_to_str({current_track = [playback.current_track.key, playback.get_progress()]}))
 	file.flush()
 
 func load_current_track() -> void:
-	if player and player.current_source:
+	if playback and playback.current_source:
 		var st := FileAccess.get_file_as_string('%s/current_track' % OS.get_user_data_dir())
 		if st and str_to_var(st) is Dictionary:
 			var dict := str_to_var(st) as Dictionary
 			if 'current_track' in dict and dict.current_track is Array:
 				var ar := dict.current_track as Array
 				if ar.size() == 2 and ar[0] is int and ar[1] is float:
-					var track := player.current_source.get_root().key_to_track(ar[0])
+					var track := playback.current_source.get_root().key_to_track(ar[0])
 					if track:
-						player.pplay(0, track)
-						player.set_progress(ar[1])
+						playback.play(0, track)
+						playback.set_progress(ar[1])

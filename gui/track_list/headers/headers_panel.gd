@@ -17,7 +17,7 @@ const TRACK_LIST = preload('../track_list.tscn')
 			
 			update()
 
-@export var default_player : Player: set = set_default_player
+@export var default_playback : Playback: set = set_default_playback
 
 @export var default_source : DataSource: set = set_default_source
 
@@ -86,19 +86,19 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				if lists_parent:
 					var to_header_index := _headers.size()
 					var source := default_source
-					var player := default_player
+					var playback := default_playback
 					
 					var current_list := lists_parent.get_view_owner()
-					if current_list and current_list.source and current_list.player:
+					if current_list and current_list.source and current_list.playback:
 						source = current_list.source
-						player = current_list.player
+						playback = current_list.playback
 						var header_index := _headers.find(_get_header_for_list(current_list))
 						if header_index != -1:
 							to_header_index = header_index + 1
 					
 					## создаем трек лист
-					if source and player:
-						var list := _create_track_list(DataSourceFiltered.new(source.get_not_ordered()).get_ordered(), player)
+					if source and playback:
+						var list := _create_track_list(DataSourceFiltered.new(source.get_not_ordered()).get_ordered(), playback)
 						list.focus_on_current_track()
 						## создаем заголовок
 						_header_create(list, to_header_index)
@@ -117,17 +117,17 @@ func _get_drag_data(_at_position: Vector2, item: Object = null) -> Variant:
 			data.track_list = header.list
 			if header.list.source:
 				data.source = header.list.source
-			if header.list.player:
-				data.player = header.list.player
+			if header.list.playback:
+				data.playback = header.list.playback
 	
 	else:
 		data.from = self
 		if default_source:
 			#if item == _add_button_1 or item == _add_button_2:
 			data.source = default_source
-		if default_player:
+		if default_playback:
 			#if item == _add_button_1 or item == _add_button_2:
-			data.player = default_player
+			data.playback = default_playback
 	
 	if data:
 		return data
@@ -161,7 +161,7 @@ func _on_headers_pre_sort_children() -> void:
 func _on_add_button_pressed() -> void:
 	if lists_parent:
 		## создаем трек лист
-		var list := _create_track_list(default_source.get_ordered(), default_player)
+		var list := _create_track_list(default_source.get_ordered(), default_playback)
 		list.focus_on_current_track()
 		## создаем заголовок
 		_header_create(list)
@@ -197,7 +197,7 @@ func update() -> void:
 ## 2. [param data.from] is [Header] - источник, если свой [Header], то будет перемещен,
 ## если чужой то будет украден и присвоен [TrackList] из [member Header.list];[br]
 ## 3. [param data.track_list] is [TrackList] - будет украден и присвоен этот [TrackList];[br]
-## 4. [param data.source] is [DataSource] и [param data.player] is [Player] - будет создан и присвоен
+## 4. [param data.source] is [DataSource] и [param data.playback] is [Playback] - будет создан и присвоен
 ## новый [TrackList] с этим данными.[br]
 ## Если [param test] == [param true], то метод можно воспринимать как константный - никакую логику не выполняет, только вовращает
 ## [param true] или [param false], можно использовать вместо [member _can_drop_data].[br]
@@ -215,22 +215,22 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 		var list := G.validate(data.get('track_list'), TrackList) as TrackList
 		## DataSource из data
 		var source := G.validate(data.get('source'), DataSource) as DataSource
-		## Player из data
-		var player := G.validate(data.get('player'), Player) as Player
+		## Playback из data
+		var playback := G.validate(data.get('playback'), Playback) as Playback
 		
 		## не позволяем сбрасывать Header в самого себя
 		if header and header == to_header:
 			return false
 		
-		## если data была сброшена на кнопку AddButton, то игнорируем все кроме source и player
+		## если data была сброшена на кнопку AddButton, то игнорируем все кроме source и playback
 		if to_add_button:
 			if header:
 				## но TrackList из Header в приоритете перед TrackList из data
 				list = header.list
 			if list:
-				## но Player и DataSource из TrackList в приоритете перед Player и DataSource из data
+				## но Playback и DataSource из TrackList в приоритете перед Playback и DataSource из data
 				source = list.source
-				player = list.player
+				playback = list.playback
 			if source:
 				source = DataSourceFiltered.new(source.get_not_ordered()) ## создаем новый источник
 			header = null ## игнорируем
@@ -279,18 +279,18 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 					return true
 			
 			else: ## если нет трек листа
-				if source and player: ## если есть проигрыватель и источник
+				if source and playback: ## если есть проигрыватель и источник
 					if not test:
 						## создаем трек лист
-						list = _create_track_list(source.get_ordered(), player)
+						list = _create_track_list(source.get_ordered(), playback)
 						list.focus_on_current_track()
 						## создаем заголовок
 						_header_create(list, to_index)
 					return true
 	return false
 
-func set_default_player(value : Player) -> void:
-	default_player = value
+func set_default_playback(value : Playback) -> void:
+	default_playback = value
 
 func set_default_source(value : DataSource):
 	default_source = value
@@ -351,11 +351,11 @@ func _get_header_for_list(list: TrackList) -> Header:
 func _has_header(header: Header) -> bool:
 	return header in _headers
 
-func _create_track_list(source := default_source, player := default_player) -> TrackList:
+func _create_track_list(source := default_source, playback := default_playback) -> TrackList:
 	assert(is_instance_valid(lists_parent))
 	var list := TRACK_LIST.instantiate() as TrackList
 	list.source = source
-	list.player = player
+	list.playback = playback
 	list.visible_name = 'NoName%d' % list.get_instance_id()
 	list.focus_track_on_ready = true
 	lists_parent.add_child(list)

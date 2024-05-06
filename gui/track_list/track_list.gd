@@ -25,13 +25,13 @@ const TrackListItem = preload("track_list_item.gd")
 					not_oredered.filters_changed.connect(_on_source_filters_changed)
 					_on_source_filters_changed()
 
-@export var player : Player:
+@export var playback : Playback:
 	set(value):
-		if value != player:
-			player = value
+		if value != playback:
+			playback = value
 			
 			if _list:
-				_list.player = player
+				_list.playback = playback
 
 @export var visible_name : String = "":
 	set(value):
@@ -62,7 +62,7 @@ func _notification(what: int) -> void:
 			_find = %FindLineEdit as LineEdit
 			_find_panel = %FindPanel as Control
 			
-			_list.player = player
+			_list.playback = playback
 			_list.source = source
 			_list.set_drag_forwarding(_track_list_item_get_drag_data, Callable(), Callable())
 			_list.selection_changed.connect(_on_selection_changed)
@@ -85,8 +85,8 @@ func _track_list_item_get_drag_data(at_position: Vector2) -> Variant:
 		if source:
 			data.source = source
 		
-		if player:
-			data.player = player
+		if playback:
+			data.playback = playback
 		
 		var track := _list.get_track_from_position(at_position.y)
 		if track:
@@ -165,10 +165,10 @@ func _on_track_list_item_gui_input(event : InputEvent) -> void:
 				if event.double_click:
 					if event.button_index == MOUSE_BUTTON_LEFT:
 						accept_event()
-						if player:
+						if playback:
 							var track := _list.get_track_from_position(event.position.y)
 							if track:
-								player.pplay(0, track, source)
+								playback.play(0, track, source)
 				
 				else:
 					## скоролл списка
@@ -221,8 +221,8 @@ func _on_selection_changed() -> void:
 		_update_selection_data_source.call_deferred()
 
 func focus_on_current_track(on_cursor := false) -> void:
-	if _list.source and _list.player and _list.player.current_track:
-		var track_index := source.get_tracks().find(player.current_track)
+	if _list.source and _list.playback and _list.playback.current_track:
+		var track_index := source.get_tracks().find(playback.current_track)
 		if track_index >= 0:
 			var cursor_line : int = -1
 			if on_cursor and _list.has_point(_list.get_local_mouse_position()):

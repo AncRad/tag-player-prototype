@@ -1,5 +1,5 @@
 @tool
-class_name PlayerButton
+class_name PlaybackButton
 extends Button
 
 enum Mode {Play, Pause, PlayPause, Stop, PlayPrev, PlayNext}
@@ -18,10 +18,13 @@ const STRINGS = {
 		if value != mode:
 			mode = value
 			text = STRINGS[mode]
-			if player:
-				set_play_pause_button_playing(player.playing)
+			
+			if Engine.is_editor_hint(): return
+			
+			if playback:
+				set_play_pause_button_playing(playback.is_playing())
 
-@export var player : Player: set = set_player
+@export var playback : Playback: set = set_playback
 
 
 func _notification(what: int) -> void:
@@ -36,49 +39,49 @@ func _notification(what: int) -> void:
 			custom_minimum_size = Vector2.ONE * rect.size[rect.size.max_axis_index()]
 
 func _pressed() -> void:
-	if player:
+	if playback:
 		match mode:
 			Mode.Play:
-				player.pplay()
+				playback.play()
 			
 			Mode.Pause:
-				player.ppause()
+				playback.pause()
 			
 			Mode.PlayPause:
-				player.pplay_pause()
+				playback.play_pause()
 			
 			Mode.Stop:
-				player.pstop()
+				playback.stop()
 			
 			Mode.PlayPrev:
-				player.pplay_prev()
+				playback.play_prev()
 			
 			Mode.PlayNext:
-				player.pplay_next()
+				playback.play_next()
 
 #func _get_drag_data(_at_position) -> Variant:
 	#var data := {}
 	#
-	#if player:
-		#data = player.get_drag_data(_at_position)
+	#if playback:
+		#data = playback.get_drag_data(_at_position)
 	#
 	#if data:
 		#data.from = self
 		#return data
 	#return false
 
-func set_player(value : Player) -> void:
-	if value != player:
-		if player:
-			player.playing_changed.disconnect(set_play_pause_button_playing)
+func set_playback(value : Playback) -> void:
+	if value != playback:
+		if playback and not Engine.is_editor_hint():
+			playback.playing_changed.disconnect(set_play_pause_button_playing)
 			set_drag_forwarding(Callable(), Callable(), Callable())
 		
-		player = value
+		playback = value
 		
-		if player:
-			player.playing_changed.connect(set_play_pause_button_playing)
-			set_drag_forwarding(player.get_drag_data, player.can_drop_data, player.drop_data)
-			set_play_pause_button_playing(player.playing)
+		if playback and not Engine.is_editor_hint():
+			playback.playing_changed.connect(set_play_pause_button_playing)
+			set_drag_forwarding(playback.get_drag_data, playback.can_drop_data, playback.drop_data)
+			set_play_pause_button_playing(playback.is_playing())
 
 func set_play_pause_button_playing(playing : bool) -> void:
 	if mode == Mode.PlayPause:
@@ -87,4 +90,4 @@ func set_play_pause_button_playing(playing : bool) -> void:
 		else:
 			text = STRINGS[Mode.Play]
 
-## TODO: сделай возмущенный ответ на серию кликов по кнопкам 
+## TODO: сделай реакцию на длинную серию кликов по кнопкам 

@@ -18,29 +18,29 @@ signal selection_changed
 				else:
 					assert(false)
 			source = value
-			_drawed_player_track_index = -1
+			_drawed_playback_track_index = -1
 			_drawed_tracks = {}
 			_selected_tracks = {}
 			
 			queue_redraw()
 
-@export var player : Player:
+@export var playback : Playback:
 	set(value):
-		if value != player:
-			if player:
-				player.track_changed.disconnect(_on_player_track_changed)
+		if value != playback:
+			if playback:
+				playback.track_changed.disconnect(_on_playback_track_changed)
 			
-			player = value
+			playback = value
 			
-			if player:
-				player.track_changed.connect(_on_player_track_changed)
+			if playback:
+				playback.track_changed.connect(_on_playback_track_changed)
 			
 			queue_redraw()
 
 #@export_range(0, 100, 1, "or_greater")
 var scroll_offset : int = 0: set = set_scroll_offset
 
-var _drawed_player_track_index : int = -1
+var _drawed_playback_track_index : int = -1
 var _drawed_tracks := {}
 var _selected_tracks := {}
 
@@ -75,7 +75,7 @@ func _draw() -> void:
 	
 	var tracks_to_disconnect := _drawed_tracks
 	var line_count : int = 0
-	_drawed_player_track_index = -1
+	_drawed_playback_track_index = -1
 	_drawed_tracks = {}
 	#var root := source.get_root()
 	
@@ -114,9 +114,9 @@ func _draw() -> void:
 			draw_rect(rect, Color.WHITE.darkened(0.7), true)
 			color = Color.WHITE.darkened(0.4).darkened(1)
 		
-		if player and player.current_track == track:
+		if playback and playback.current_track == track:
 			color = Color.WHITE.darkened(0.2)
-			_drawed_player_track_index = begin + line_count
+			_drawed_playback_track_index = begin + line_count
 		
 		draw_string(_font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, text_rect.size.x, _font_size, color,
 				TextServer.JUSTIFICATION_NONE)
@@ -160,13 +160,13 @@ func _draw() -> void:
 		var debug_string := "%4d draws %4d мкс" % [get_meta("draws"), debug_time]
 		draw_string(_font, Vector2(size.x - 110, 12), debug_string, HORIZONTAL_ALIGNMENT_RIGHT, -1, 10, Color(1,1,1,0.9))
 
-func _on_player_track_changed(_track) -> void:
-	if player and source:
+func _on_playback_track_changed(_track) -> void:
+	if playback and source:
 		var begin := scroll_offset
 		var end := begin + get_max_lines()
 		
-		var old_track_line := _drawed_player_track_index
-		var new_track_line := source.get_tracks().find(player.current_track)
+		var old_track_line := _drawed_playback_track_index
+		var new_track_line := source.get_tracks().find(playback.current_track)
 		var visible_befor := old_track_line >= begin and old_track_line < end
 		var visible_now := new_track_line >= begin and new_track_line < end
 		

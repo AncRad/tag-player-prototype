@@ -1,18 +1,18 @@
 extends Control
 
-signal player_changed(player : Player)
+signal playback_changed(playback : Playback)
 
-@export var player : Player: set = set_player
+@export var playback : Playback: set = set_playback
 
 func _ready() -> void:
-	player_changed.emit(player)
+	playback_changed.emit(playback)
 
-func set_player(value : Player) -> void:
-		player = value
+func set_playback(value : Playback) -> void:
+		playback = value
 		
-		if player:
-			set_drag_forwarding(player.get_drag_data, player.can_drop_data, player.drop_data)
+		if playback:
+			set_drag_forwarding(playback.get_drag_data, playback.can_drop_data, playback.drop_data)
 		else:
 			set_drag_forwarding(Callable(), Callable(), Callable())
 		
-		player_changed.emit(player)
+		playback_changed.emit(playback)
