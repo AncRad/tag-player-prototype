@@ -1,8 +1,8 @@
 [gd_scene load_steps=11 format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" path="res://user.gd" id="1_778hk"]
-[ext_resource type="PackedScene" uid="uid://cpbuoxdsm8dng" path="res://core/data_base_holder.tscn" id="1_gjybe"]
 [ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
+[ext_resource type="Script" path="res://core/data_base_holder.gd" id="3_e6hot"]
 [ext_resource type="Script" path="res://gui/outside_drop_handler.gd" id="4_74hdh"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="4_crg0x"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
@@ -19,7 +19,9 @@ bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
 script = ExtResource("1_if8um")
 current_source = ExtResource("4_crg0x")
 
-[node name="DataBaseHolder" parent="." instance=ExtResource("1_gjybe")]
+[node name="DataBaseHolder" type="Node" parent="."]
+process_priority = 1
+script = ExtResource("3_e6hot")
 load_on_ready = true
 update_on_process = true
 handle_files_dropped = true
@@ -70,6 +72,5 @@ root_db = ExtResource("8_ym74g")
 [node name="TrackListsPanel" parent="GUI/VBoxContainer" node_paths=PackedStringArray("default_player") instance=ExtResource("8_ddmat")]
 layout_mode = 2
 default_player = NodePath("../../../Player")
-default_source = ExtResource("4_crg0x")
 
 [editable path="GUI/VBoxContainer/TrackEditPanel"]

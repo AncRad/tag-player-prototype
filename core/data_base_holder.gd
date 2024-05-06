@@ -1,6 +1,6 @@
 extends Node
 
-@export var data_base : DataBase
+@export var data_base : DataBase = preload('res://core/data_base.tres')
 @export var load_on_ready : bool = false
 @export var update_on_process : bool = false
 @export var handle_files_dropped : bool = false
