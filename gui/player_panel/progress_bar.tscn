@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://handaig80i0n"]
+
+[ext_resource type="Script" path="res://gui/player_panel/progress_bar.gd" id="1_jbl7q"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ing0u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1m6xs"]
+
+[node name="ProgressBar" type="ProgressBar"]
+custom_minimum_size = Vector2(0, 38)
+theme_override_styles/background = SubResource("StyleBoxEmpty_ing0u")
+theme_override_styles/fill = SubResource("StyleBoxFlat_1m6xs")
+max_value = 1.0
+step = 0.0
+value = 0.4845
+show_percentage = false
+script = ExtResource("1_jbl7q")

@@ -1,15 +1,15 @@
 [gd_scene load_steps=5 format=3 uid="uid://cp0o32wj18o0x"]
 
 [ext_resource type="Script" path="res://gui/player_panel/player_panel.gd" id="1_spd74"]
+[ext_resource type="Theme" uid="uid://slh6t1d4eoop" path="res://gui/player_panel/player_buttons.theme" id="2_kdfki"]
 [ext_resource type="PackedScene" uid="uid://dhly8qeol4gu6" path="res://gui/player_panel/player_buttons.tscn" id="2_poe4l"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ing0u"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1m6xs"]
+[ext_resource type="PackedScene" uid="uid://handaig80i0n" path="res://gui/player_panel/progress_bar.tscn" id="5_ku0cc"]
 
 [node name="PlayerPanel" type="MarginContainer"]
-offset_right = 373.0
-offset_bottom = 76.0
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 72.0
+grow_horizontal = 2
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
@@ -22,6 +22,7 @@ theme_override_constants/separation = 0
 
 [node name="Buttons" type="HBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
+theme = ExtResource("2_kdfki")
 theme_override_constants/separation = 0
 
 [node name="Left" type="HBoxContainer" parent="VBoxContainer/Buttons"]
@@ -29,25 +30,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="PlayerButtons" parent="VBoxContainer/Buttons" instance=ExtResource("2_poe4l")]
-unique_name_in_owner = true
 layout_mode = 2
 
-[node name="End" type="HBoxContainer" parent="VBoxContainer/Buttons"]
+[node name="Right" type="HBoxContainer" parent="VBoxContainer/Buttons"]
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 2
 
-[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 38)
+[node name="ProgressBar" parent="VBoxContainer" node_paths=PackedStringArray("size_y_master") instance=ExtResource("5_ku0cc")]
 layout_mode = 2
-theme_override_styles/background = SubResource("StyleBoxEmpty_ing0u")
-theme_override_styles/fill = SubResource("StyleBoxFlat_1m6xs")
-max_value = 1.0
-step = 0.0
-value = 0.4845
-show_percentage = false
+size_y_master = NodePath("../Buttons/PlayerButtons")
 
-[connection signal="resized" from="VBoxContainer/Buttons/PlayerButtons" to="." method="progress_bar_update_custom_minimum_size"]
-[connection signal="gui_input" from="VBoxContainer/ProgressBar" to="." method="_on_progress_bar_gui_input"]
-[connection signal="resized" from="VBoxContainer/ProgressBar" to="." method="_on_progress_bar_resized"]
+[connection signal="player_changed" from="." to="VBoxContainer/ProgressBar" method="set_player"]

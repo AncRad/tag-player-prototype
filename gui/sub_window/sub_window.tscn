@@ -14,11 +14,10 @@ script = ExtResource("1_uo88k")
 handle_files_dropped = true
 
 [node name="SubWindowGUI" parent="." instance=ExtResource("3_an4ea")]
+unique_name_in_owner = true
 
-[node name="PlayerPanel" parent="SubWindowGUI/VBoxContainer" index="0"]
-visible = true
-
-[node name="TagList" parent="SubWindowGUI/VBoxContainer" index="2"]
-visible = true
+[connection signal="default_player_changed" from="." to="SubWindowGUI/VBoxContainer/PlayerPanel" method="set_player"]
+[connection signal="default_player_changed" from="." to="SubWindowGUI/VBoxContainer/TrackListsPanel" method="set_default_player"]
+[connection signal="default_source_changed" from="." to="SubWindowGUI/VBoxContainer/TrackListsPanel" method="set_default_source"]
 
 [editable path="SubWindowGUI"]

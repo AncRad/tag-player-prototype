@@ -17,12 +17,9 @@ const TRACK_LIST = preload('../track_list.tscn')
 			
 			update()
 
-@export var default_source: DataSource
+@export var default_player : Player: set = set_default_player
 
-@export var default_player: Player:
-	set(value):
-		if value != default_player:
-			default_player = value
+@export var default_source : DataSource: set = set_default_source
 
 @export_range(0, 30, 0.5, 'or_greater') var sight_border: int = 15:
 	set(value):
@@ -291,6 +288,12 @@ func drop_data(to_position: Vector2, data: Variant, item: Object = null, test :=
 						_header_create(list, to_index)
 					return true
 	return false
+
+func set_default_player(value : Player) -> void:
+	default_player = value
+
+func set_default_source(value : DataSource):
+	default_source = value
 
 
 func _update_add_buttons_visible() -> void:

@@ -1,29 +1,26 @@
-class_name TrackListsPanel
 extends MarginContainer
 
+signal default_player_changed(default_player : Player)
+signal default_source_changed(default_source : Player)
 
-@export var default_player : Player:
-	set(value):
-		if value != default_player:
-			default_player = value
-			
-			if headers_panel:
-				headers_panel.default_player = default_player
+@export var default_player : Player: set = set_default_player
 
-@export var default_source : DataSource:
-	set(value):
-		if value != default_source:
-			default_source = value
-			
-			if headers_panel:
-				headers_panel.default_source = default_source
-
-var headers_panel : HeadersPanel
+@export var default_source : DataSource: set = set_default_source
 
 
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED:
-			headers_panel = %HeadersPanel as HeadersPanel
-			headers_panel.default_player = default_player
-			headers_panel.default_source = default_source
+			default_player_changed.emit(default_player)
+			default_source_changed.emit(default_source)
+
+func _ready() -> void:
+	_notification(NOTIFICATION_SCENE_INSTANTIATED)
+
+func set_default_player(value : Player) -> void:
+	default_player = value
+	default_player_changed.emit(default_player)
+
+func set_default_source(value : DataSource):
+	default_source = value
+	default_source_changed.emit(default_source)

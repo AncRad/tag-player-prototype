@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://tmk0xgu3rhtn"]
+
+[ext_resource type="Script" path="res://gui/player_panel/player_button.gd" id="1_o5p8g"]
+
+[node name="PlayerButton" type="Button"]
+offset_right = 13.0
+offset_bottom = 23.0
+focus_mode = 0
+text = "▷"
+flat = true
+script = ExtResource("1_o5p8g")

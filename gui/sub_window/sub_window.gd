@@ -1,28 +1,14 @@
 class_name SubWindow
 extends Window
 
+signal default_player_changed(default_player : Player)
+signal default_source_changed(default_source : Player)
+
 @export var accept_close := true
 
-@export var default_player : Player:
-	set(value):
-		if value != default_player:
-			default_player = value
-			
-			if player_panel:
-				player_panel.player = default_player
-			if track_list_panel:
-				track_list_panel.default_player = default_player
+@export var default_player : Player: set = set_default_player
 
-@export var default_source : DataSource:
-	set(value):
-		if value != default_source:
-			default_source = value
-			
-			if track_list_panel:
-				track_list_panel.default_source = default_source
-
-var player_panel : PlayerPanel
-var track_list_panel : TrackListsPanel
+@export var default_source : DataSource: set = set_default_source
 
 
 func _init() -> void:
@@ -31,13 +17,20 @@ func _init() -> void:
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED:
-			player_panel = $SubWindowGUI/VBoxContainer/PlayerPanel as PlayerPanel
-			track_list_panel = $SubWindowGUI/VBoxContainer/TrackListsPanel as TrackListsPanel
-			
-			player_panel.player = default_player
-			track_list_panel.default_player = default_player
-			track_list_panel.default_source = default_source
+			default_player_changed.emit(default_player)
+			default_source_changed.emit(default_source)
+
+func _ready() -> void:
+	_notification(NOTIFICATION_SCENE_INSTANTIATED)
 
 func _on_close_requested() -> void:
 	if accept_close:
 		queue_free()
+
+func set_default_player(value : Player) -> void:
+	default_player = value
+	default_player_changed.emit(default_player)
+
+func set_default_source(value : DataSource):
+	default_source = value
+	default_source_changed.emit(default_source)

@@ -25,11 +25,6 @@ update_on_process = true
 handle_files_dropped = true
 handle_close_requested = true
 
-[node name="OutsideDropHandler" type="Node" parent="." node_paths=PackedStringArray("default_player")]
-script = ExtResource("4_74hdh")
-default_player = NodePath("../Player")
-default_source = ExtResource("4_crg0x")
-
 [node name="User" type="Node" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("1_778hk")
 player = NodePath("../Player")
@@ -45,6 +40,11 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 metadata/_edit_lock_ = true
+
+[node name="OutsideDropHandler" type="Node" parent="GUI" node_paths=PackedStringArray("default_player")]
+script = ExtResource("4_74hdh")
+default_player = NodePath("../../Player")
+default_source = ExtResource("4_crg0x")
 
 [node name="Panel" type="Panel" parent="GUI"]
 layout_mode = 2

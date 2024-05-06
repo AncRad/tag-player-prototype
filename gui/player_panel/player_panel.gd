@@ -1,76 +1,18 @@
-class_name PlayerPanel
-extends MarginContainer
+extends Control
 
-const PlayerButtons = preload('player_buttons.gd')
+signal player_changed(player : Player)
 
-@export var player : Player:
-	set(value):
-		if value != player:
-			if player:
-				player.progress_changed.disconnect(set_progress)
-			if value:
-				value.progress_changed.connect(set_progress)
-			
-			player = value
-			
-			update_drag_callback()
-			if _player_buttons:
-				_player_buttons.player = player
+@export var player : Player: set = set_player
 
-var _grabbed : bool
+func _ready() -> void:
+	player_changed.emit(player)
 
-var _progress_bar : ProgressBar
-var _player_buttons : PlayerButtons
-
-
-func _notification(what : int) -> void:
-	match what:
-		NOTIFICATION_SCENE_INSTANTIATED:
-			_progress_bar = %ProgressBar
-			_player_buttons = %PlayerButtons
-			
-			_player_buttons.player = player
-			update_drag_callback()
-			set_progress(0)
+func set_player(value : Player) -> void:
+		player = value
 		
-		NOTIFICATION_VISIBILITY_CHANGED, NOTIFICATION_WM_WINDOW_FOCUS_OUT:
-			_grabbed = false
-
-func _on_progress_bar_gui_input(event : InputEvent) -> void:
-	if event is InputEventMouseButton:
-		if not event.is_echo():
-			if event.button_index == MOUSE_BUTTON_LEFT:
-				if _grabbed:
-					if not event.is_pressed():
-						_grabbed = false
-						_progress_bar.value = clampf(event.position.x / size.x, 0, 1)
-						player.set_progress(_progress_bar.value)
-				
-				else:
-					if event.is_pressed():
-						_grabbed = true
-			
-			elif event.button_index == MOUSE_BUTTON_RIGHT:
-				if _grabbed and event.is_pressed():
-					_grabbed = false
-	
-	elif event is InputEventMouseMotion:
-		if _grabbed:
-			_progress_bar.value = clampf(event.position.x / size.x, 0, 1)
-
-func _on_progress_bar_resized() -> void:
-	if _progress_bar:
-		if _progress_bar.custom_minimum_size.y != _progress_bar.size.y:
-			_progress_bar.custom_minimum_size.y = _progress_bar.size.y
-
-func set_progress(progress : float) -> void:
-	if _progress_bar:
-		if not _grabbed:
-			_progress_bar.value = progress
-
-func update_drag_callback() -> void:
-	if _progress_bar:
 		if player:
-			_progress_bar.set_drag_forwarding(Callable(), player.can_drop_data, player.drop_data)
+			set_drag_forwarding(player.get_drag_data, player.can_drop_data, player.drop_data)
 		else:
-			_progress_bar.set_drag_forwarding(Callable(), Callable(), Callable())
+			set_drag_forwarding(Callable(), Callable(), Callable())
+		
+		player_changed.emit(player)
