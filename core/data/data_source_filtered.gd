@@ -30,14 +30,6 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	if not _updated or source and not source._updated:
-		_filter()
-		changes_up()
-
-func get_tracks() -> Array[Dictionary]:
-	return tracks_filtered
-
-func _filter() -> void:
 	var new_filtered : Array[Dictionary] = source.get_tracks()
 	if source:
 		
@@ -60,7 +52,13 @@ func _filter() -> void:
 		tracks_filtered = new_filtered
 		new_filtered = []
 		tracks_filtered.make_read_only()
+		changes_up()
 		data_changed.emit()
+
+func get_tracks() -> Array[Dictionary]:
+	return tracks_filtered
+
+#func _filter() -> void:
 
 static func filter_by_tags(input : Array[Dictionary], p_filter : Array[Dictionary]) -> Array[Dictionary]:
 	if p_filter:

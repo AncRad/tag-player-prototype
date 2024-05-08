@@ -13,7 +13,7 @@ var player : Player:
 					player = value
 					player.finished.connect(play_next)
 
-@export var current_source: DataSource = preload('res://core/data_base.tres')
+@export var current_source: DataSource = preload('res://core/data_base_ordered.tres')
 var current_track: Dictionary
 var progress_on_pause: float = 0
 
@@ -107,7 +107,7 @@ func set_progress(value: float) -> void:
 func get_drag_data(_at_position: Vector2) -> Variant:
 	var data := {}
 	data.from = self
-	data.player = self
+	data.playback = self
 	
 	if current_source:
 		data.source = current_source

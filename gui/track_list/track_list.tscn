@@ -1,7 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://d14jad0a07fdo"]
+[gd_scene load_steps=7 format=3 uid="uid://d14jad0a07fdo"]
 
 [ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_k8p78"]
 [ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="2_g0k8f"]
+[ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_ohn8c"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_d50df"]
 [ext_resource type="FontFile" uid="uid://dagfcdeco83pk" path="res://gui/main.fontdata" id="5_7t7tn"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_03a55"]
@@ -20,6 +22,8 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 script = ExtResource("1_k8p78")
+source = ExtResource("2_ohn8c")
+playback = ExtResource("3_d50df")
 metadata/_edit_lock_ = true
 metadata/_edit_group_ = true
 
@@ -29,7 +33,6 @@ theme_override_constants/separation = 0
 
 [node name="FindPanel" type="HBoxContainer" parent="VBoxContainer"]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2
 
 [node name="Control" type="Control" parent="VBoxContainer/FindPanel"]
@@ -65,6 +68,7 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 focus_mode = 2
 script = ExtResource("2_g0k8f")
+source = ExtResource("2_ohn8c")
 _font = ExtResource("5_7t7tn")
 
 [node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/HBoxContainer"]
@@ -72,7 +76,9 @@ unique_name_in_owner = true
 layout_mode = 2
 max_value = 1.0
 
+[connection signal="focus_exited" from="VBoxContainer/FindPanel/FindLineEdit" to="." method="_on_find_line_edit_focus_exited"]
 [connection signal="text_changed" from="VBoxContainer/FindPanel/FindLineEdit" to="." method="_on_find_line_edit_text_changed"]
+[connection signal="text_submitted" from="VBoxContainer/FindPanel/FindLineEdit" to="." method="_on_find_line_edit_text_submitted" unbinds=1]
 [connection signal="gui_input" from="VBoxContainer/HBoxContainer/TrackListItem" to="." method="_on_track_list_item_gui_input"]
 [connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer/TrackListItem" to="VBoxContainer/HBoxContainer/VScrollBar" method="set_value_no_signal"]
 [connection signal="value_changed" from="VBoxContainer/HBoxContainer/VScrollBar" to="VBoxContainer/HBoxContainer/TrackListItem" method="set_scroll_progress"]

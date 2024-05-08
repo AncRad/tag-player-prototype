@@ -11,7 +11,8 @@ const KEY_MAX : int = 1_999_999_999
 const TRACK_TO_TAG_PRIORTY_MIN : int = -128
 const TRACK_TO_TAG_PRIORTY_MAX : int = 127
 
-var changes_cached : int = 0
+@warning_ignore('unused_private_class_variable')
+var _changes_cached : int = 0
 
 var _tracks_array : Array[Dictionary] = []
 var _tags_array : Array[Dictionary] = []
@@ -170,8 +171,6 @@ func from_bytes(bytes : PackedByteArray) -> void:
 		for j in tag_tracks_keys.size():
 			track_key2priority[tag_tracks_keys[j]] = tag_tracks_prioritys[j]
 		_tag_create(tags_names[i], tags_colors[i], tags_keys[i], track_key2priority)
-	
-	changes_cached = changes
 
 
 func _track_create(file_path : StringName, key : int = 0) -> Dictionary:

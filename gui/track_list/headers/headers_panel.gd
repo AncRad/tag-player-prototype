@@ -110,24 +110,37 @@ func _get_drag_data(_at_position: Vector2, item: Object = null) -> Variant:
 	if not is_instance_valid(item):
 		item = null
 	
+	#var label := Label.new()
+	#label['theme_override_font_sizes/font_size'] = 20
+	#label.text = '  '
+	
 	if item is Header:
 		var header := item as Header
 		data.from = header
 		if header.list:
 			data.track_list = header.list
-			if header.list.source:
-				data.source = header.list.source
 			if header.list.playback:
 				data.playback = header.list.playback
+				#label.text += '▷'
+			if header.list.source:
+				data.source = header.list.source
+				#label.text += '☰'
+			#label.text += '▤'
+		#label.text += '▔'
 	
 	else:
 		data.from = self
-		if default_source:
-			#if item == _add_button_1 or item == _add_button_2:
-			data.source = default_source
 		if default_playback:
 			#if item == _add_button_1 or item == _add_button_2:
 			data.playback = default_playback
+			#label.text += '▷'
+		if default_source:
+			#if item == _add_button_1 or item == _add_button_2:
+			data.source = default_source
+			#label.text += '☰'
+	
+	
+	#set_drag_preview(label)
 	
 	if data:
 		return data

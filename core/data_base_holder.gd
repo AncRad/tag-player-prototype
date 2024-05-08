@@ -69,14 +69,16 @@ func data_base_save(path : String) -> void:
 					err = DirAccess.rename_absolute(temp_path, path)
 					assert(err == OK)
 					if err == OK:
-						data_base.changes_cached = data_base.changes
+						data_base._changes_cached = data_base._changes
 
 func data_base_load(path : String) -> void:
 	var bytes := FileAccess.get_file_as_bytes(path)
 	var err := FileAccess.get_open_error()
 	assert(err == OK)
 	if err == OK and bytes:
+		## TODO: data_base.clear()
 		data_base.from_bytes(bytes)
+		data_base._changes_cached = data_base._changes
 
 static func get_default_data_base_file_name() -> String:
 	return "data_base.tpdb"

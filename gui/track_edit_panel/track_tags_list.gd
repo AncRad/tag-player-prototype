@@ -4,6 +4,17 @@ const TagFindLineEdit = preload('tag_find_line_edit.gd')
 
 @export var root_db : DataBase
 
+var source : DataSource:
+	set(value):
+		if value != source:
+			if source:
+				source.data_changed.disconnect(_on_source_data_changed)
+			
+			source = value
+			
+			if source:
+				source.data_changed.connect(_on_source_data_changed)
+
 var tracks : Array[Dictionary]:
 	set(value):
 		if value != tracks:
@@ -28,14 +39,18 @@ var _tag_find : TagFindLineEdit
 var _track_name_label : Label
 var _updating := false
 
+var _track_list: TrackList
+
 
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED:
 			_tag_find = %TagFindLineEdit as TagFindLineEdit
 			_track_name_label = %TrackNameLabel as Label
+			_track_list = %TrackList as TrackList
 			
 			_track_name_label.set_drag_forwarding(Callable(), drop_data.bind(true), drop_data.bind(false))
+			source = _track_list.get_selection_data_source()
 		
 		NOTIFICATION_PREDELETE:
 			tracks = []
@@ -75,6 +90,11 @@ func _on_tag_item_pressed(tag_item : TagItem) -> void:
 				if track.key in tag.track_key2priority:
 					root_db.untag_track(track, tag)
 
+func _on_source_data_changed() -> void:
+	tracks = source.get_tracks().duplicate()
+	#if not tracks:
+		#tracks = %TrackList.source.get_tracks().duplicate()
+
 func drop_data(_pos, data : Variant, test : bool) -> bool:
 	if data is Dictionary:
 		
@@ -101,7 +121,7 @@ func drop_data(_pos, data : Variant, test : bool) -> bool:
 	
 	return false
 
-func update():
+func update() -> void:
 	if not _updating:
 		_updating = true
 		_update.call_deferred()
@@ -163,7 +183,7 @@ class TagItem extends Button:
 			NOTIFICATION_PREDELETE:
 				tag = {}
 	
-	func update():
+	func update() -> void:
 		if not _updating:
 			_updating = true
 			_update.call_deferred()

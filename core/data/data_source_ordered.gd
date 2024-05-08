@@ -15,14 +15,6 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	if not _updated or source and not source._updated:
-		_sort()
-		changes_up()
-
-func get_tracks() -> Array[Dictionary]:
-	return tracks_ordered
-
-func _sort() -> void:
 	var new_order : Array[Dictionary] = []
 	if source:
 		new_order = source.get_tracks().duplicate()
@@ -35,7 +27,13 @@ func _sort() -> void:
 		tracks_ordered = new_order
 		new_order = []
 		tracks_ordered.make_read_only()
+		changes_up()
 		data_changed.emit()
+
+func get_tracks() -> Array[Dictionary]:
+	return tracks_ordered
+
+#func _sort() -> void:
 
 static func compare(track_a : Dictionary, track_b : Dictionary) -> bool:
 	return track_a.file_name < track_b.file_name
