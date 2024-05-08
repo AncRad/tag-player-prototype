@@ -32,18 +32,20 @@ func append(track : Dictionary, merge := false) -> void:
 
 func append_array(p_tracks : Array[Dictionary], merge := false) -> void:
 	var to_append : Array[Dictionary] = []
+	
 	if merge:
 		for track in p_tracks:
 			if not track in _tracks:
 				to_append.append(track)
 	else:
 		to_append = p_tracks
+	
 	if to_append.size():
 		_tracks.append_array(to_append)
 		changes_up()
 
 func erase(track : Dictionary) -> void:
-	track.erase(track)
+	_tracks.erase(track)
 	changes_up()
 
 func clear() -> void:

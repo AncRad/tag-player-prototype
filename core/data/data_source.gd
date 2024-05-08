@@ -14,7 +14,7 @@ enum UpdateMode {Inherit, Always, Disabled}
 
 var _changes : int = 0
 var _changes_updated : int = 0
-var _source_changeds_updated_cached : int = -1
+var _source_changes_updated_cached : int = -1
 
 var _ordered := WeakRef.new()
 var _children : Array[WeakRef] = []
@@ -30,19 +30,17 @@ func changes_up(up : int = 1) -> void:
 		_changes += up
 
 func update() -> void:
-	var p_can_update := can_update()
-	var p_need_update := need_update()
+	var do_update := can_update() and need_update()
 	
-	if p_can_update and p_need_update:
+	if do_update:
 		_update()
 	
 	for child in get_children():
 		child.update()
 	
-	if p_can_update and p_need_update:
+	if do_update:
 		_changes_updated = _changes
-		if source:
-			_source_changeds_updated_cached = source._changes_updated
+		_source_changes_updated_cached = source._changes_updated if source else -1
 		data_changed.emit()
 
 func can_update() -> bool:
@@ -64,7 +62,14 @@ func can_update() -> bool:
 			return false
 
 func need_update() -> bool:
-	return _changes != _changes_updated or (source and source._changes_updated != _source_changeds_updated_cached)
+	if _changes != _changes_updated:
+		return true
+	
+	elif source:
+		return _source_changes_updated_cached != source._changes_updated
+	
+	else:
+		return _source_changes_updated_cached != -1
 
 func set_source(value : DataSource) -> void:
 	if value != source:
@@ -80,9 +85,6 @@ func set_source(value : DataSource) -> void:
 		
 		if source:
 			source.append_child(self)
-		
-		_source_changeds_updated_cached = -1
-		changes_up()
 
 func size() -> int:
 	if source:

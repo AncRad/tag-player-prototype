@@ -53,7 +53,6 @@ func _update() -> void:
 		new_filtered = []
 		tracks_filtered.make_read_only()
 		changes_up()
-		data_changed.emit()
 
 func get_tracks() -> Array[Dictionary]:
 	return tracks_filtered

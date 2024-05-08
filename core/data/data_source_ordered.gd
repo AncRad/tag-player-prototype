@@ -28,7 +28,6 @@ func _update() -> void:
 		new_order = []
 		tracks_ordered.make_read_only()
 		changes_up()
-		data_changed.emit()
 
 func get_tracks() -> Array[Dictionary]:
 	return tracks_ordered
