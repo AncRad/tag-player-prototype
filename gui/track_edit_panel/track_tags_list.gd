@@ -175,7 +175,7 @@ class TagItem extends Button:
 	
 	
 	func _init() -> void:
-		flat = true
+		#flat = true
 		focus_mode = Control.FOCUS_NONE
 	
 	func _notification(what: int) -> void:

@@ -1,7 +1,8 @@
-[gd_scene load_steps=11 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=12 format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_nwl3h"]
+[ext_resource type="Script" path="res://Node.gd" id="3_0ekwr"]
 [ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="3_plvy5"]
 [ext_resource type="PackedScene" uid="uid://bgmvonyggitjj" path="res://user.tscn" id="4_m655p"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_h583o"]
@@ -18,6 +19,9 @@ bg_color = Color(0.0509804, 0.0509804, 0.0509804, 1)
 [node name="Player" type="AudioStreamPlayer" parent="."]
 script = ExtResource("1_if8um")
 playback = ExtResource("2_nwl3h")
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("3_0ekwr")
 
 [node name="DataBaseHolder" parent="." instance=ExtResource("3_plvy5")]
 load_on_ready = true

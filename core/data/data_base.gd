@@ -175,30 +175,49 @@ func from_bytes(bytes : PackedByteArray) -> void:
 
 func _track_create(file_path : StringName, key : int = 0) -> Dictionary:
 	assert(not key in _key2track, 'ключ %d уже занят' % key)
+	
+	## если ключ вне диапазона
 	if key < KEY_MIN or key > KEY_MAX:
 		assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
+		## генерируем новый
 		key = randi_range(KEY_MIN, KEY_MAX)
+	## если ключ уже используется, то ищем не используемый ключ
 	while key in _key2track:
 		key = randi_range(KEY_MIN, KEY_MAX)
 	
-	var signal_name : StringName = 'track%d' % key
+	## создаем сигнал
+	var signal_name : StringName = &'track%d' % key
+	## если уже создан, то очищаем
 	if has_user_signal(signal_name):
 		for data in get_signal_connection_list(signal_name):
 			data.signal.disconnect(data.callable)
+	## иначе создаем новый
 	else:
 		add_user_signal(signal_name)
+	
+	## создаем экземпляр
 	var track := {
+		## основные данные
 		key = key,
 		file_path = file_path,
 		
+		## кешированые данные
 		file_name = file_path.get_basename().get_file(),
+		
+		## вспомогательные данные
 		notification = Signal(self, signal_name)
 	}
+	
+	## добавляем в базу данных
 	_tracks_array.append(track)
+	
+	## кешируем некоторые данные
 	_key2track[key] = track
 	var tarck_track_key2tags : Array[Dictionary] = []
 	_track_key2tags[key] = tarck_track_key2tags
+	
 	changes_up()
+	
 	return track
 
 func _tag_create(name : String, color := Color.GRAY, key : int = 0, track_key2priority := {}) -> Dictionary:

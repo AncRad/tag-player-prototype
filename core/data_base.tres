@@ -4,3 +4,4 @@
 
 [resource]
 script = ExtResource("1_06tl2")
+update_mode = 0

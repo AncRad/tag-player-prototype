@@ -7,3 +7,4 @@
 script = ExtResource("1_mxv3x")
 inverted = false
 source = ExtResource("2_gq2cu")
+update_mode = 0
