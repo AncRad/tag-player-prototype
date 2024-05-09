@@ -36,12 +36,13 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 					finded.append(file)
 		
 		if finded:
-			var tracks := data_base.tracks_create(finded)
-			var tag := data_base.name_to_tag("tagme")
-			if not tag:
-				tag = data_base.tag_create("tagme", Color.BLUE_VIOLET.lightened(0.2))
-			for track in tracks:
-				data_base.tag_track(track, tag, 50)
+			#var tracks := data_base.tracks_create(finded) ## WARNING
+			#var tag := data_base.name_to_tag("tagme")
+			#if not tag:
+				#tag = data_base.tag_create("tagme", Color.BLUE_VIOLET.lightened(0.2))
+			#for track in tracks:
+				#data_base.tag_track(track, tag, 50)
+			pass
 
 func _on_close_requested() -> void:
 	if handle_close_requested:
@@ -54,7 +55,7 @@ func data_base_save(path : String) -> void:
 	var err := FileAccess.get_open_error()
 	assert(err == OK)
 	if file and err == OK:
-		file.store_buffer(data_base.to_bytes())
+		#file.store_buffer(data_base.to_bytes()) ## WARNING
 		err = file.get_error()
 		assert(err == OK)
 		if err == OK:
@@ -77,7 +78,7 @@ func data_base_load(path : String) -> void:
 	assert(err == OK)
 	if err == OK and bytes:
 		## TODO: data_base.clear()
-		data_base.from_bytes(bytes)
+		#data_base.from_bytes(bytes) ## WARNING
 		data_base._changes_cached = data_base._changes
 
 static func get_default_data_base_file_name() -> String:

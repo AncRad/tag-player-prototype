@@ -1,10 +1,8 @@
-[gd_resource type="Resource" script_class="DataSourceOrdered" load_steps=3 format=3 uid="uid://chtu6phxcxi1j"]
+[gd_resource type="Resource" script_class="DataSourceOrdered" load_steps=2 format=3 uid="uid://chtu6phxcxi1j"]
 
 [ext_resource type="Script" path="res://core/data/data_source_ordered.gd" id="1_mxv3x"]
-[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="2_gq2cu"]
 
 [resource]
 script = ExtResource("1_mxv3x")
 inverted = false
-source = ExtResource("2_gq2cu")
 update_mode = 0
