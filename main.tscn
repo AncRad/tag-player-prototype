@@ -65,21 +65,29 @@ custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_y4qpt")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/VBoxContainer"]
+[node name="HSplitContainer" type="HSplitContainer" parent="GUI/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/VBoxContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 
-[node name="Control" type="Control" parent="GUI/VBoxContainer/HBoxContainer"]
+[node name="Control" type="Control" parent="GUI/VBoxContainer/HSplitContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("8_ajcpq")
 source = ExtResource("7_uulph")
 
-[node name="VScrollBar" type="VScrollBar" parent="GUI/VBoxContainer/HBoxContainer"]
+[node name="VScrollBar" type="VScrollBar" parent="GUI/VBoxContainer/HSplitContainer/HBoxContainer"]
 layout_mode = 2
 max_value = 1.0
 step = 0.0001
+
+[node name="Control" type="Control" parent="GUI/VBoxContainer/HSplitContainer"]
+layout_mode = 2
 
 [node name="Panel" type="Panel" parent="GUI/VBoxContainer"]
 modulate = Color(1, 1, 1, 0.266667)
@@ -88,5 +96,5 @@ layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_binry")
 
 [connection signal="meta_clicked" from="GUI/VBoxContainer/RichTextLabel" to="GUI/VBoxContainer/RichTextLabel" method="_on_meta_clicked"]
-[connection signal="scroll_progress_changed" from="GUI/VBoxContainer/HBoxContainer/Control" to="GUI/VBoxContainer/HBoxContainer/VScrollBar" method="set_value_no_signal"]
-[connection signal="value_changed" from="GUI/VBoxContainer/HBoxContainer/VScrollBar" to="GUI/VBoxContainer/HBoxContainer/Control" method="set_scroll_progress"]
+[connection signal="scroll_progress_changed" from="GUI/VBoxContainer/HSplitContainer/HBoxContainer/Control" to="GUI/VBoxContainer/HSplitContainer/HBoxContainer/VScrollBar" method="set_value_no_signal"]
+[connection signal="value_changed" from="GUI/VBoxContainer/HSplitContainer/HBoxContainer/VScrollBar" to="GUI/VBoxContainer/HSplitContainer/HBoxContainer/Control" method="set_scroll_progress"]

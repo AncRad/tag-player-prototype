@@ -82,7 +82,7 @@ func tag_track(tag : Dictionary, track : Dictionary, type : StringName = &'', po
 	
 	track_typed_tags.insert(clampi(position, 0, track_typed_tags.size()), tag)
 	track.tag_key2type[tag.key] = type
-	tag.tracks_keys2type[track.key] = type
+	tag.track_key2type[track.key] = type
 	
 	tag.notification.emit(TAGGED)
 	track.notification.emit(TAGGED)
@@ -98,7 +98,7 @@ func untag_track(tag, track) -> void:
 			track.type2tags.erase(current_tag_type)
 		
 		track.tag_key2type.erase(tag.key)
-		tag.tracks_keys2type.erase(track.key)
+		tag.track_key2type.erase(track.key)
 		
 		tag.notification.emit(UNTAGGED)
 		track.notification.emit(UNTAGGED)
@@ -108,7 +108,7 @@ func tag_remove(tag : Dictionary) -> void:
 	
 	tag_notification.emit(PREDELETE)
 	
-	for track_key : int in tag.tracks_keys2type:
+	for track_key : int in tag.track_key2type:
 		untag_track(tag, _key2track[track_key])
 	
 	for connection : Dictionary in tag_notification.get_connections():
@@ -260,7 +260,7 @@ func from_bytes(bytes : PackedByteArray) -> void:
 				var tag : Dictionary = _key2tag[tag_key]
 				typed_tags.append(tag)
 				track.tag_key2type[tag_key] = tag_type
-				tag.tracks_keys2type[track.key] = tag_type
+				tag.track_key2type[track.key] = tag_type
 			track.type2tags[tag_type] = typed_tags
 	
 	changes_up()
@@ -338,7 +338,7 @@ func _tag_create(names : PackedStringArray, color := Color.GRAY, types : Array[S
 		default_types = types,
 		
 		## кешированые данные
-		tracks_keys2type = {}, # {track.key = type}
+		track_key2type = {}, # {track.key = type}
 		notification = Signal(self, signal_name),
 	}
 	
