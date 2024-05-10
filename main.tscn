@@ -1,8 +1,17 @@
-[gd_scene load_steps=4 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=11 format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_nwl3h"]
 [ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="3_plvy5"]
+[ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="4_ea6mm"]
+[ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_nwobq"]
+[ext_resource type="Script" path="res://RichTextLabel.gd" id="6_g3yru"]
+[ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="7_uulph"]
+[ext_resource type="Script" path="res://Control.gd" id="8_ajcpq"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y4qpt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_binry"]
 
 [node name="Main" type="Node"]
 
@@ -16,3 +25,68 @@ update_on_process = true
 handle_files_dropped = true
 handle_close_requested = true
 metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"load_on_ready", &"handle_close_requested"]
+
+[node name="GUI" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+metadata/_edit_lock_ = true
+
+[node name="Panel" type="Panel" parent="GUI"]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("4_ea6mm")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
+layout_mode = 2
+
+[node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("5_nwobq")]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="GUI/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+autowrap_mode = 0
+meta_underlined = false
+hint_underlined = false
+script = ExtResource("6_g3yru")
+source = ExtResource("7_uulph")
+
+[node name="Panel2" type="Panel" parent="GUI/VBoxContainer"]
+modulate = Color(1, 1, 1, 0.266667)
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_y4qpt")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="Control" type="Control" parent="GUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("8_ajcpq")
+source = ExtResource("7_uulph")
+
+[node name="VScrollBar" type="VScrollBar" parent="GUI/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+max_value = 1.0
+step = 0.0001
+
+[node name="Panel" type="Panel" parent="GUI/VBoxContainer"]
+modulate = Color(1, 1, 1, 0.266667)
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_binry")
+
+[connection signal="meta_clicked" from="GUI/VBoxContainer/RichTextLabel" to="GUI/VBoxContainer/RichTextLabel" method="_on_meta_clicked"]
+[connection signal="scroll_progress_changed" from="GUI/VBoxContainer/HBoxContainer/Control" to="GUI/VBoxContainer/HBoxContainer/VScrollBar" method="set_value_no_signal"]
+[connection signal="value_changed" from="GUI/VBoxContainer/HBoxContainer/VScrollBar" to="GUI/VBoxContainer/HBoxContainer/Control" method="set_scroll_progress"]

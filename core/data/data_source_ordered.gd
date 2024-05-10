@@ -35,7 +35,7 @@ func get_tracks() -> Array[Dictionary]:
 #func _sort() -> void:
 
 static func compare(track_a : Dictionary, track_b : Dictionary) -> bool:
-	return track_a.file_name < track_b.file_name
+	return track_a.name_string < track_b.name_string
 
 static func compare_inv(track_a : Dictionary, track_b : Dictionary) -> bool:
 	return track_a.file_name > track_b.file_name

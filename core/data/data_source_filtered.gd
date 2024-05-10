@@ -77,7 +77,7 @@ static func filter_by_name(input : Array[Dictionary], p_filter : String) -> Arra
 	if p_filter:
 		var out : Array[Dictionary] = []
 		for track in input:
-			if track.file_name.matchn(p_filter):
+			if track.find_string.matchn(p_filter):
 				out.append(track)
 		return out
 	return input

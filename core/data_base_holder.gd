@@ -36,13 +36,50 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 					finded.append(file)
 		
 		if finded:
-			#var tracks := data_base.tracks_create(finded) ## WARNING
-			#var tag := data_base.name_to_tag("tagme")
-			#if not tag:
-				#tag = data_base.tag_create("tagme", Color.BLUE_VIOLET.lightened(0.2))
-			#for track in tracks:
-				#data_base.tag_track(track, tag, 50)
-			pass
+			var tag_tagme := data_base.get_tag_or_create(['tagme'], Color.BLUE_VIOLET, ['system'])
+			var tag_instrumental := data_base.get_tag_or_create(['instrumental'], Color.SKY_BLUE, ['version'])
+			
+			
+			var tracks : Array[Dictionary] = []
+			for file in finded:
+				var track := data_base.track_create(file)
+				tracks.append(track)
+				data_base.tag_track(tag_tagme, track)
+				
+				var file_name := file.get_basename().get_file()
+				var file_name_split := file_name.split(' - ', false)
+				if not file_name_split:
+					file_name_split = file_name.split('-', false)
+				if file_name_split.size() == 2:
+					var first_names := (file_name_split[0].replace('feat.', ',').replace('feat', ',').replace('ft.', ',')
+							).replace('ft', ',').replace(', ', ',').replace(' ,', ',').split(',', false)
+					if not first_names:
+						first_names.append(file_name_split[0])
+					
+					for i in first_names.size():
+						var first_name := first_names[i] as String
+						if first_name[0] == ' ':
+							first_name.erase(0)
+						if first_name[-1] == ' ':
+							first_name.erase(first_name.length() - 1)
+						
+						if first_name:
+							var tag := data_base.get_tag_or_create([first_name], Color.WHITE, ['creator'])
+							data_base.tag_track(tag, track)
+					
+					var second_name := file_name_split[1]
+					
+					if second_name.matchn('instrumental'):
+						data_base.tag_track(tag_instrumental, track)
+						second_name = (second_name.replace('(Instrumental)', '').replace('(instrumental)', '')
+								).replace('Instrumental', '').replace('instrumental', '')
+					
+					if second_name:
+						if second_name[0] == ' ':
+							second_name.erase(0)
+						if second_name[-1] == ' ':
+							second_name.erase(second_name.length() - 1)
+						data_base.tag_track(data_base.get_tag_or_create([second_name], Color.WHITE, ['name']), track)
 
 func _on_close_requested() -> void:
 	if handle_close_requested:
@@ -55,7 +92,7 @@ func data_base_save(path : String) -> void:
 	var err := FileAccess.get_open_error()
 	assert(err == OK)
 	if file and err == OK:
-		#file.store_buffer(data_base.to_bytes()) ## WARNING
+		file.store_buffer(data_base.to_bytes())
 		err = file.get_error()
 		assert(err == OK)
 		if err == OK:
@@ -78,7 +115,7 @@ func data_base_load(path : String) -> void:
 	assert(err == OK)
 	if err == OK and bytes:
 		## TODO: data_base.clear()
-		#data_base.from_bytes(bytes) ## WARNING
+		data_base.from_bytes(bytes)
 		data_base._changes_cached = data_base._changes
 
 static func get_default_data_base_file_name() -> String:

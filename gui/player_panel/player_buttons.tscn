@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3 uid="uid://dhly8qeol4gu6"]
+
+[ext_resource type="PackedScene" uid="uid://tmk0xgu3rhtn" path="res://gui/player_panel/player_button.tscn" id="2_8pyg5"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_j72sd"]
+[ext_resource type="Script" path="res://gui/player_panel/player_buttons.gd" id="2_vxta0"]
+
+[node name="PlayerButtons" type="HBoxContainer"]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = 0
+script = ExtResource("2_vxta0")
+playback = ExtResource("2_j72sd")
+
+[node name="PlayPrev" parent="." instance=ExtResource("2_8pyg5")]
+layout_mode = 2
+text = "◅"
+mode = 4
+
+[node name="Stop" parent="." instance=ExtResource("2_8pyg5")]
+layout_mode = 2
+text = "□"
+mode = 3
+
+[node name="PlayPause" parent="." instance=ExtResource("2_8pyg5")]
+layout_mode = 2
+
+[node name="PlayNext" parent="." instance=ExtResource("2_8pyg5")]
+layout_mode = 2
+text = "▻"
+mode = 5

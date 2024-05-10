@@ -28,7 +28,7 @@ func play(offset := 0, track := current_track, source := current_source) -> void
 		if new_stream and new_stream.get_length():
 			player.stream = new_stream
 			player.play()
-			player.get_window().title = current_track.file_name
+			player.get_window().title = current_track.name_string
 		else:
 			player.stream = null
 			current_track = {}

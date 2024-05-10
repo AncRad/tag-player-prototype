@@ -1,0 +1,44 @@
+[gd_scene load_steps=6 format=3 uid="uid://cp0o32wj18o0x"]
+
+[ext_resource type="Script" path="res://gui/player_panel/player_panel.gd" id="1_spd74"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_ewovt"]
+[ext_resource type="Theme" uid="uid://slh6t1d4eoop" path="res://gui/player_panel/player_buttons.theme" id="2_kdfki"]
+[ext_resource type="PackedScene" uid="uid://dhly8qeol4gu6" path="res://gui/player_panel/player_buttons.tscn" id="2_poe4l"]
+[ext_resource type="PackedScene" uid="uid://handaig80i0n" path="res://gui/player_panel/progress_bar.tscn" id="5_ku0cc"]
+
+[node name="PlayerPanel" type="MarginContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 72.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("1_spd74")
+playback = ExtResource("2_ewovt")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Buttons" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_kdfki")
+theme_override_constants/separation = 0
+
+[node name="Left" type="HBoxContainer" parent="VBoxContainer/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerButtons" parent="VBoxContainer/Buttons" instance=ExtResource("2_poe4l")]
+layout_mode = 2
+
+[node name="Right" type="HBoxContainer" parent="VBoxContainer/Buttons"]
+layout_mode = 2
+size_flags_horizontal = 3
+alignment = 2
+
+[node name="ProgressBar" parent="VBoxContainer" node_paths=PackedStringArray("size_y_master") instance=ExtResource("5_ku0cc")]
+layout_mode = 2
+size_y_master = NodePath("../Buttons/PlayerButtons")
