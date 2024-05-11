@@ -2,9 +2,9 @@ class_name DataBase
 extends DataSource
 ## DataBase
 ##
-## 
+## DataBase
 
-enum {CHANGED = 1, PREDELETE = 1 << 1, TAGGED = 1 << 2, UNTAGGED = 1 << 3}
+#enum {CHANGED = 1, PREDELETE = 1 << 1, TAGGED = 1 << 2, UNTAGGED = 1 << 3}
 
 const KEY_MIN : int = 1_000_000_000
 const KEY_MAX : int = 1_999_999_999
@@ -12,10 +12,12 @@ const KEY_MAX : int = 1_999_999_999
 @warning_ignore('unused_private_class_variable')
 var _changes_cached : int = 0
 
-var _tracks_array : Array[Dictionary] = []
-var _tags_array : Array[Dictionary] = []
-var _key2track := {}
-var _key2tag := {}
+var _items_array : Array[Item] = []
+var _tracks_array : Array[Track] = []
+var _tags_array : Array[Tag] = []
+var _key_to_item := {}
+var _key_to_track := {}
+var _key_to_tag := {}
 
 
 func set_source(_value : DataSource) -> void:
@@ -24,142 +26,97 @@ func set_source(_value : DataSource) -> void:
 func size() -> int:
 	return _tracks_array.size()
 
-func get_tracks() -> Array[Dictionary]:
+func get_tracks() -> Array[Track]:
 	return _tracks_array
 
 
-func track_create(file : StringName) -> Dictionary:
+func track_create(file : StringName) -> Track:
 	return _track_create(file)
 
-func track_remove(track : Dictionary) -> void:
-	var track_notification := track.notification as Signal
+func track_remove(track : Track) -> void:
 	
-	track_notification.emit(PREDELETE)
+	track.predelete.emit()
 	
-	for tag_key : int in track.tag_key2type:
-		untag_track(_key2tag[tag_key], track)
+	for tag in track.get_tags():
+		tag.untag(track)
 	
-	for connection : Dictionary in track_notification.get_connections():
-		track_notification.disconnect(connection.callable)
-	
-	_key2track.erase(track.key)
+	_key_to_item.erase(track.key)
+	_items_array.erase(track.key)
+	_key_to_track.erase(track.key)
 	_tracks_array.erase(track)
 	track.clear()
-	track.removed = true
-
-#func track_get_tags(track : Dictionary) -> Array[Dictionary]:
-	#var tags : Array[Dictionary] = []
-	#for typed_tags : Array[Dictionary] in track.type2tags:
-		#tags.append_array(typed_tags)
-	#return tags
 
 
-func tag_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Dictionary:
+func tag_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Tag:
 	return _tag_create(names, color, types)
 
-func tag_track(tag : Dictionary, track : Dictionary, type : StringName = &'', position : int = -1) -> void:
+func tag_remove(tag : Tag) -> void:
 	
-	if not type and tag.default_types.size():
-		type = tag.default_types[0]
+	tag.predelete.emit()
 	
-	if tag.key in track.tag_key2type:
-		var current_tag_type : StringName = track.tag_key2type[tag.key]
-		var track_typed_tags : Array[Dictionary] = track.type2tags[current_tag_type]
-		if track_typed_tags.size() > 1:
-			track_typed_tags.erase(tag)
-		else:
-			track.type2tags.erase(current_tag_type)
+	for track_key : int in tag.track_key_to_type.duplicate():
+		tag.untag(_key_to_track[track_key])
 	
-	var track_typed_tags : Array[Dictionary] = []
-	
-	if type in track.type2tags:
-		track_typed_tags = track.type2tags[type]
-	else:
-		track.type2tags[type] = track_typed_tags
-	
-	if position <= -1:
-		position = track_typed_tags.size()
-	
-	track_typed_tags.insert(clampi(position, 0, track_typed_tags.size()), tag)
-	track.tag_key2type[tag.key] = type
-	tag.track_key2type[track.key] = type
-	
-	tag.notification.emit(TAGGED)
-	track.notification.emit(TAGGED)
-
-func untag_track(tag, track) -> void:
-	assert(tag.key in track.tag_key2type)
-	if tag.key in track.tag_key2type:
-		var current_tag_type : StringName = track.tag_key2type[tag.key]
-		var track_typed_tags : Array[Dictionary] = track.type2tags[current_tag_type]
-		if track_typed_tags.size() > 1:
-			track_typed_tags.erase(tag)
-		else:
-			track.type2tags.erase(current_tag_type)
-		
-		track.tag_key2type.erase(tag.key)
-		tag.track_key2type.erase(track.key)
-		
-		tag.notification.emit(UNTAGGED)
-		track.notification.emit(UNTAGGED)
-
-func tag_remove(tag : Dictionary) -> void:
-	var tag_notification := tag.notification as Signal
-	
-	tag_notification.emit(PREDELETE)
-	
-	for track_key : int in tag.track_key2type:
-		untag_track(tag, _key2track[track_key])
-	
-	for connection : Dictionary in tag_notification.get_connections():
-		tag_notification.disconnect(connection.callable)
-	
-	_key2tag.erase(tag.key)
+	_key_to_item.erase(tag.key)
+	_items_array.erase(tag)
+	_key_to_tag.erase(tag.key)
 	_tags_array.erase(tag)
 	tag.clear()
-	tag.removed = true
 
-func get_tag_or_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Dictionary:
-	if names:
-		if find_tags(names[0]):
-			return find_tags(names[0])[0]
-		else:
-			return tag_create(names, color, types)
-	return {}
+#func get_tag_or_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Tag:
+	##if names:
+		##if find_tags(names[0]):
+			##return find_tags(names[0])[0]
+		##else:
+			##return tag_create(names, color, types)
+	#return null
+#
+#func get_tags() -> Array[Tag]:
+	#return _tags_array
+#
+#func find_tags(name : String) -> Array[Tag]:
+	#var tags : Array[Tag] = []
+	#
+	#for tag in _tags_array:
+		#if name in tag.names:
+			#tags.append(tag)
+	#
+	#return tags
+#
+#func track_is_tagged(tag : Tag, track : Track) -> bool:
+	#return tag.key in track.tag_key_to_type
+#
+#func get_tag_type_in_track(tag : Tag, track : Track) -> StringName:
+	#assert(tag.key in track.tag_key_to_type)
+	#if tag.key in track.tag_key_to_type:
+		#return track.tag_key_to_type[tag.key]
+	#return &''
+#
+#func get_tag_position_in_track(tag : Tag, track : Track) -> int:
+	#assert(tag.key in track.tag_key_to_type)
+	#if tag.key in track.tag_key_to_type:
+		#var tag_type : StringName = track.tag_key_to_type[tag.key]
+		#var track_typed_tags : Array[Tag] = track.type_to_tags[tag_type]
+		#return track_typed_tags.find(tag)
+	#return -1
+#
+#func get_typed_tags_in_track(track : Track, type : Tag) -> Array[Dictionary]:
+	#if type in track.type_to_tags:
+		#return track.type_to_tags[type]
+	#return []
 
-func get_tags() -> Array[Dictionary]:
+func get_tags() -> Array[Tag]:
 	return _tags_array
 
-func find_tags(name : String) -> Array[Dictionary]:
-	var tags : Array[Dictionary] = []
+func find_tags_by_name(name : StringName) -> Array[Tag]:
+	var tags : Array[Tag] = []
 	
 	for tag in _tags_array:
-		if name in tag.names:
-			tags.append(tag)
+		for tag_name in tag.names:
+			if tag_name.begins_with(name):
+				tags.append(tag)
 	
 	return tags
-
-func track_is_tagged(tag : Dictionary, track : Dictionary) -> bool:
-	return tag.key in track.tag_key2type
-
-func get_tag_type_in_track(tag : Dictionary, track : Dictionary) -> StringName:
-	assert(tag.key in track.tag_key2type)
-	if tag.key in track.tag_key2type:
-		return track.tag_key2type[tag.key]
-	return &''
-
-func get_tag_position_in_track(tag : Dictionary, track : Dictionary) -> int:
-	assert(tag.key in track.tag_key2type)
-	if tag.key in track.tag_key2type:
-		var tag_type : StringName = track.tag_key2type[tag.key]
-		var track_typed_tags : Array[Dictionary] = track.type2tags[tag_type]
-		return track_typed_tags.find(tag)
-	return -1
-
-func get_typed_tags_in_track(track : Dictionary, type : StringName) -> Array[Dictionary]:
-	if type in track.type2tags:
-		return track.type2tags[type]
-	return []
 
 
 func to_bytes() -> PackedByteArray:
@@ -179,11 +136,11 @@ func to_bytes() -> PackedByteArray:
 		data_track_file_path.set(track_index, track.file_path)
 		
 		data_track_tags_types[track_index] = [] as Array[StringName]
-		data_track_tags_types[track_index].assign(track.type2tags.keys())
+		data_track_tags_types[track_index].assign(track.type_to_tags.keys())
 		data_track_typed_tags[track_index] = [] as Array[PackedInt32Array]
 		
 		for type in data_track_tags_types[track_index]:
-			var track_tyepd_tags := track.type2tags[type] as Array[Dictionary]
+			var track_tyepd_tags := track.type_to_tags[type] as Array[Dictionary]
 			var typed_tags := PackedInt32Array()
 			typed_tags.resize(track_tyepd_tags.size())
 			for tag_index in typed_tags.size():
@@ -257,98 +214,222 @@ func from_bytes(bytes : PackedByteArray) -> void:
 			var tag_type := track_tags_types[tag_type_index] as StringName
 			var typed_tags : Array[Dictionary] = []
 			for tag_key : int in track_typed_tags[tag_type_index]:
-				var tag : Dictionary = _key2tag[tag_key]
+				var tag : Dictionary = _key_to_tag[tag_key]
 				typed_tags.append(tag)
-				track.tag_key2type[tag_key] = tag_type
-				tag.track_key2type[track.key] = tag_type
-			track.type2tags[tag_type] = typed_tags
+				track.tag_key_to_type[tag_key] = tag_type
+				tag.track_key_to_type[track.key] = tag_type
+			track.type_to_tags[tag_type] = typed_tags
 	
 	changes_up()
 	update()
 
 
-func _track_create(file_path : StringName, key : int = 0) -> Dictionary:
-	assert(not key in _key2track, 'ключ %d уже занят' % key)
+func _track_create(file_path : StringName, key : int = 0) -> Track:
+	assert(not key in _key_to_item, 'ключ %d уже занят' % key)
 	
 	## ищем ключ
 	if key < KEY_MIN or key > KEY_MAX: ## если ключ вне диапазона
 		assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
 		## генерируем новый
 		key = randi_range(KEY_MIN, KEY_MAX)
-	while key in _key2track: ## если ключ уже используется, то ищем не используемый ключ
+	while key in _key_to_item: ## если ключ уже используется, то ищем не используемый ключ
 		key = randi_range(KEY_MIN, KEY_MAX)
 	
-	## создаем сигнал
-	var signal_name : StringName = &'track%d' % key
-	if has_user_signal(signal_name): ## если уже создан, то очищаем
-		for data in get_signal_connection_list(signal_name):
-			data.signal.disconnect(data.callable)
-	else: ## иначе создаем новый
-		add_user_signal(signal_name)
-	
 	## создаем экземпляр
-	var track := {
-		## основные данные
-		key = key,
-		file_path = file_path,
-		type2tags = {}, # {type as StringName = [tag, tag] as Array[Dictionary]}
-		
-		## кешированые данные
-		name_string = file_path.get_basename().get_file(),
-		find_string = file_path.get_basename().get_file(),
-		tag_key2type = {}, # {tag.key = type as StringName}
-		notification = Signal(self, signal_name),
-	}
+	var track := Track.new(key, file_path)
+	track.data_base = weakref(self)
 	
 	## добавляем в базу данных
+	_items_array.append(track)
 	_tracks_array.append(track)
 	
 	## кешируем некоторые данные
-	_key2track[key] = track
+	_key_to_item[key] = track
+	_key_to_track[key] = track
 	
 	changes_up()
 	
 	return track
 
-func _tag_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = [], key : int = 0) -> Dictionary:
-	assert(not key in _key2tag, 'ключ %d уже занят' % key)
+func _tag_create(names : PackedStringArray, color := Color.GRAY,
+		types : Array[StringName] = ['default'], key : int = 0) -> Tag:
+	assert(not key in _key_to_item, 'ключ %d уже занят' % key)
 	
 	## ищем ключ
 	if key < KEY_MIN or key > KEY_MAX: ## если ключ вне диапазона
 		assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
 		## генерируем новый
 		key = randi_range(KEY_MIN, KEY_MAX)
-	while key in _key2tag: ## если ключ уже используется, то ищем не используемый ключ
+	while key in _key_to_item: ## если ключ уже используется, то ищем не используемый ключ
 		key = randi_range(KEY_MIN, KEY_MAX)
 	
-	## создаем сигнал
-	var signal_name : StringName = &'tag%d' % key
-	if has_user_signal(signal_name): ## если уже создан, то очищаем
-		for data in get_signal_connection_list(signal_name):
-			data.signal.disconnect(data.callable)
-	else: ## иначе создаем новый
-		add_user_signal(signal_name)
-	
 	## создаем экземпляр
-	var tag := {
-		## основные данные
-		key = key,
-		names = names,
-		color = color,
-		default_types = types,
-		
-		## кешированые данные
-		track_key2type = {}, # {track.key = type}
-		notification = Signal(self, signal_name),
-	}
+	var tag := Tag.new(key, names)
+	tag.data_base = weakref(self)
 	
 	## добавляем в базу данных
+	_items_array.append(tag)
 	_tags_array.append(tag)
 	
 	## кешируем некоторые данные
-	_key2tag[key] = tag
+	_key_to_item[key] = tag
+	_key_to_tag[key] = tag
 	
 	changes_up()
 	
 	return tag
 
+
+class Item:
+	signal changed
+	signal predelete
+	
+	### основные данные
+	var valid : bool = true
+	var data_base : WeakRef
+	var key : int
+	
+	
+	func changes_up() -> void:
+		if data_base.get_ref():
+			var db := data_base.get_ref() as DataBase
+			db.changes_up()
+	
+	func clear() -> void:
+		valid = false
+		data_base = null
+		key = 0
+		
+		for signal_data in get_signal_list():
+			for connection : Dictionary in get_signal_connection_list(signal_data.name):
+				connection.signal.disconnect(connection.callable)
+	
+	func to_bytes() -> PackedByteArray:
+		return PackedByteArray()
+	
+	static func from_bytes(bytes : PackedByteArray) -> Item:
+		return
+	
+
+class Track extends Item:
+	signal tagged
+	signal untagged
+	
+	### основные данные
+	var file_path : String
+	var type_to_tags := {}
+	### кешированые данные
+	var order_string : String
+	var find_string : String
+	var tag_to_type := {}
+	
+	
+	func _init(p_key : int, p_file_path : StringName) -> void:
+		key = p_key
+		file_path = p_file_path
+		order_string = file_path.get_basename().get_file()
+		find_string = file_path.get_basename().get_file()
+	
+	func clear() -> void:
+		super()
+		file_path = ''
+		type_to_tags.clear()
+		order_string = ''
+		find_string = ''
+		tag_to_type.clear()
+	
+	func to_bytes() -> PackedByteArray:
+		return PackedByteArray()
+	
+	static func from_bytes(bytes : PackedByteArray) -> Track:
+		return
+	
+	func get_tags() -> Array[Tag]:
+		var tags : Array[Tag] = []
+		tags.assign(tag_to_type.keys())
+		return tags
+	
+	func is_tagged(tag : Tag) -> bool:
+		return tag in tag_to_type
+	
+
+class Tag extends Item:
+	signal tagged
+	signal untagged
+	
+	### основные данные
+	var names : Array[StringName] = []
+	var types : Array[StringName] = []
+	var color : Color = Color.WHITE
+	### кешированые данные
+	var track_key_to_type := {}
+	
+	
+	func _init(p_key : int, p_names : Array[StringName], p_types : Array[StringName] = ['default'],
+			color : Color = Color.WHITE) -> void:
+		key = p_key
+		names = p_names
+		types = p_types
+	
+	func tag(track : Track, type : StringName = &'', position : int = -1) -> void:
+		if not type and types.size():
+			type = types[0]
+		
+		if self in track.tag_to_type:
+			var current_tag_type : StringName = track.tag_to_type[self]
+			var track_typed_tags : Array[Dictionary] = track.type_to_tags[current_tag_type]
+			if track_typed_tags.size() > 1:
+				track_typed_tags.erase(self)
+			else:
+				track.type_to_tags.erase(current_tag_type)
+		
+		var track_typed_tags : Array[Dictionary] = []
+		
+		if type in track.type_to_tags:
+			track_typed_tags = track.type_to_tags[type]
+		else:
+			track.type_to_tags[type] = track_typed_tags
+		
+		if position <= -1:
+			position = track_typed_tags.size()
+		
+		track_typed_tags.insert(clampi(position, 0, track_typed_tags.size()), self)
+		track.tag_to_type[self] = type
+		track_key_to_type[track.key] = type
+		
+		changes_up()
+		
+		tagged.emit()
+		track.tagged.emit()
+	
+	func untag(track : Track) -> void:
+		assert(self in track.tag_to_type)
+		if self in track.tag_to_type:
+			var current_tag_type : StringName = track.tag_to_type[self]
+			var track_typed_tags : Array[Dictionary] = track.type_to_tags[current_tag_type]
+			if track_typed_tags.size() > 1:
+				track_typed_tags.erase(self)
+			else:
+				track.type_to_tags.erase(current_tag_type)
+			
+			track.tag_to_type.erase(self)
+			track_key_to_type.erase(track.key)
+			
+			changes_up()
+			
+			tagged.emit()
+			track.tagged.emit()
+	
+	func clear() -> void:
+		super()
+		names.clear()
+		types.clear()
+		color = Color()
+		track_key_to_type.clear()
+	
+	func to_bytes() -> PackedByteArray:
+		return PackedByteArray()
+	
+	static func from_bytes(bytes : PackedByteArray) -> Track:
+		return
+	

@@ -1,7 +1,7 @@
 class_name DataSourceList
 extends DataSource
 
-var _tracks : Array[Dictionary] = []
+var _tracks : Array[DataBase.Track] = []
 
 
 func _init(p_source : DataSource = null):
@@ -18,20 +18,16 @@ func set_source(value : DataSource) -> void:
 	else:
 		super(null)
 
-func get_tracks() -> Array[Dictionary]:
+func get_tracks() -> Array[DataBase.Track]:
 	return _tracks
 
-#func _update() -> void:
-	#if not _updated or source and not source._updated:
-		#changes_up()
-
-func append(track : Dictionary, merge := false) -> void:
+func append(track : DataBase.Track, merge := false) -> void:
 	if not merge or not track in _tracks:
 		_tracks.append(track)
 		changes_up()
 
-func append_array(p_tracks : Array[Dictionary], merge := false) -> void:
-	var to_append : Array[Dictionary] = []
+func append_array(p_tracks : Array[DataBase.Track], merge := false) -> void:
+	var to_append : Array[DataBase.Track] = []
 	
 	if merge:
 		for track in p_tracks:
@@ -44,7 +40,7 @@ func append_array(p_tracks : Array[Dictionary], merge := false) -> void:
 		_tracks.append_array(to_append)
 		changes_up()
 
-func erase(track : Dictionary) -> void:
+func erase(track : DataBase.Track) -> void:
 	_tracks.erase(track)
 	changes_up()
 

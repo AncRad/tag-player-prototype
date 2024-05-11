@@ -16,13 +16,13 @@ signal filters_changed
 		changes_up()
 		filters_changed.emit()
 
-var tags_filter : Array[Dictionary] = []:
+var tags_filter : Array[DataBase.Tag] = []:
 	set(value):
 		tags_filter = value
 		changes_up()
 		filters_changed.emit()
 
-var tracks_filtered : Array[Dictionary] = []
+var tracks_filtered : Array[DataBase.Track] = []
 
 
 func _init(p_source : DataSource = null):
@@ -30,22 +30,25 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	var new_filtered : Array[Dictionary] = source.get_tracks()
+	var new_filtered : Array[DataBase.Track] = source.get_tracks()
 	if source:
+		
+		if name_filter:
+			new_filtered = filter_by_name(new_filtered, name_filter)
 		
 		var current_tag_filters := tags_filter.duplicate()
 		if tag_names_filter:
 			var root := get_root()
 			if root:
 				for name in tag_names_filter:
-					var tag := root.name_to_tag(name)
-					if tag:
-						current_tag_filters.append(tag)
-		
-		if name_filter:
-			new_filtered = filter_by_name(new_filtered, name_filter)
+					current_tag_filters.append_array(root.find_tags_by_name(name))
 		
 		if current_tag_filters:
+			var dict := {}
+			for tag in current_tag_filters:
+				dict[tag] = null
+			current_tag_filters.clear()
+			current_tag_filters.assign(dict.keys())
 			new_filtered = filter_by_tags(new_filtered, current_tag_filters)
 	
 	if new_filtered != tracks_filtered:
@@ -54,18 +57,18 @@ func _update() -> void:
 		tracks_filtered.make_read_only()
 		changes_up()
 
-func get_tracks() -> Array[Dictionary]:
+func get_tracks() -> Array[DataBase.Track]:
 	return tracks_filtered
 
 #func _filter() -> void:
 
-static func filter_by_tags(input : Array[Dictionary], p_filter : Array[Dictionary]) -> Array[Dictionary]:
+static func filter_by_tags(input : Array[DataBase.Track], p_filter : Array[DataBase.Tag]) -> Array[DataBase.Track]:
 	if p_filter:
-		var out : Array[Dictionary] = []
+		var out : Array[DataBase.Track] = []
 		for track in input:
 			var all := true
 			for tag in p_filter:
-				if not track in tag.track2priority:
+				if not track.is_tagged(tag):
 					all = false
 					break
 			if all:
@@ -73,9 +76,9 @@ static func filter_by_tags(input : Array[Dictionary], p_filter : Array[Dictionar
 		return out
 	return input
 
-static func filter_by_name(input : Array[Dictionary], p_filter : String) -> Array[Dictionary]:
+static func filter_by_name(input : Array[DataBase.Track], p_filter : String) -> Array[DataBase.Track]:
 	if p_filter:
-		var out : Array[Dictionary] = []
+		var out : Array[DataBase.Track] = []
 		for track in input:
 			if track.find_string.matchn(p_filter):
 				out.append(track)

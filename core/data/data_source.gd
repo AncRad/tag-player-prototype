@@ -91,15 +91,15 @@ func size() -> int:
 		return get_tracks().size()
 	return 0
 
-func get_tracks() -> Array[Dictionary]:
+func get_tracks() -> Array[DataBase.Track]:
 	if source:
 		return source.get_tracks()
 	return []
 
-func has(track : Dictionary) -> bool:
+func has(track : DataBase.Track) -> bool:
 	return track in get_tracks()
 
-func find(track : Dictionary) -> int:
+func find(track : DataBase.Track) -> int:
 	return get_tracks().find(track)
 
 func get_root() -> DataBase:
