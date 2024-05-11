@@ -231,7 +231,7 @@ func _tag_create(names : Array[StringName], color := Color.WHITE,
 		key = randi_range(KEY_MIN, KEY_MAX)
 	
 	## создаем экземпляр
-	var tag := Tag.new(key, names)
+	var tag := Tag.new(key, names, types)
 	tag.data_base = weakref(self)
 	
 	## добавляем в базу данных
