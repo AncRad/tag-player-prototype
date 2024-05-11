@@ -19,9 +19,9 @@ script = ExtResource("1_if8um")
 playback = ExtResource("2_nwl3h")
 
 [node name="DataBaseHolder" parent="." instance=ExtResource("3_plvy5")]
-handle_files_dropped = true
 load_on_ready = true
 update_on_process = true
+handle_files_dropped = true
 handle_close_requested = true
 metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"load_on_ready", &"handle_close_requested"]
 

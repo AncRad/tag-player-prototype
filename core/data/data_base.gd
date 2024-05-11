@@ -47,7 +47,7 @@ func track_remove(track : Track) -> void:
 	track.clear()
 
 
-func tag_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Tag:
+func tag_create(names : Array[StringName], types : Array[StringName] = [], color := Color.WHITE) -> Tag:
 	return _tag_create(names, color, types)
 
 func tag_remove(tag : Tag) -> void:
@@ -63,48 +63,6 @@ func tag_remove(tag : Tag) -> void:
 	_tags_array.erase(tag)
 	tag.clear()
 
-#func get_tag_or_create(names : PackedStringArray, color := Color.GRAY, types : Array[StringName] = []) -> Tag:
-	##if names:
-		##if find_tags(names[0]):
-			##return find_tags(names[0])[0]
-		##else:
-			##return tag_create(names, color, types)
-	#return null
-#
-#func get_tags() -> Array[Tag]:
-	#return _tags_array
-#
-#func find_tags(name : String) -> Array[Tag]:
-	#var tags : Array[Tag] = []
-	#
-	#for tag in _tags_array:
-		#if name in tag.names:
-			#tags.append(tag)
-	#
-	#return tags
-#
-#func track_is_tagged(tag : Tag, track : Track) -> bool:
-	#return tag.key in track.tag_key_to_type
-#
-#func get_tag_type_in_track(tag : Tag, track : Track) -> StringName:
-	#assert(tag.key in track.tag_key_to_type)
-	#if tag.key in track.tag_key_to_type:
-		#return track.tag_key_to_type[tag.key]
-	#return &''
-#
-#func get_tag_position_in_track(tag : Tag, track : Track) -> int:
-	#assert(tag.key in track.tag_key_to_type)
-	#if tag.key in track.tag_key_to_type:
-		#var tag_type : StringName = track.tag_key_to_type[tag.key]
-		#var track_typed_tags : Array[Tag] = track.type_to_tags[tag_type]
-		#return track_typed_tags.find(tag)
-	#return -1
-#
-#func get_typed_tags_in_track(track : Track, type : Tag) -> Array[Dictionary]:
-	#if type in track.type_to_tags:
-		#return track.type_to_tags[type]
-	#return []
-
 func get_tags() -> Array[Tag]:
 	return _tags_array
 
@@ -117,6 +75,15 @@ func find_tags_by_name(name : StringName) -> Array[Tag]:
 				tags.append(tag)
 	
 	return tags
+
+func get_tag_or_create(names : Array[StringName], types : Array[StringName] = [], color := Color.WHITE) -> Tag:
+	if names:
+		var tags := find_tags_by_name(names[0])
+		if tags:
+			return tags[0]
+		else:
+			return tag_create([names[0]], types, color)
+	return null
 
 
 func to_bytes() -> PackedByteArray:
@@ -140,7 +107,7 @@ func to_bytes() -> PackedByteArray:
 		data_track_typed_tags[track_index] = [] as Array[PackedInt32Array]
 		
 		for type in data_track_tags_types[track_index]:
-			var track_tyepd_tags := track.type_to_tags[type] as Array[Dictionary]
+			var track_tyepd_tags := track.type_to_tags[type] as Array[Tag]
 			var typed_tags := PackedInt32Array()
 			typed_tags.resize(track_tyepd_tags.size())
 			for tag_index in typed_tags.size():
@@ -212,7 +179,7 @@ func from_bytes(bytes : PackedByteArray) -> void:
 		var track_typed_tags : Array = data_track_typed_tags[track_index]
 		for tag_type_index in track_tags_types.size():
 			var tag_type := track_tags_types[tag_type_index] as StringName
-			var typed_tags : Array[Dictionary] = []
+			var typed_tags : Array[Tag] = []
 			for tag_key : int in track_typed_tags[tag_type_index]:
 				var tag : Dictionary = _key_to_tag[tag_key]
 				typed_tags.append(tag)
@@ -251,7 +218,7 @@ func _track_create(file_path : StringName, key : int = 0) -> Track:
 	
 	return track
 
-func _tag_create(names : PackedStringArray, color := Color.GRAY,
+func _tag_create(names : Array[StringName], color := Color.WHITE,
 		types : Array[StringName] = ['default'], key : int = 0) -> Tag:
 	assert(not key in _key_to_item, 'ключ %d уже занят' % key)
 	
@@ -352,6 +319,11 @@ class Track extends Item:
 	func is_tagged(tag : Tag) -> bool:
 		return tag in tag_to_type
 	
+	func get_typed_tags(type : StringName) -> Array[Tag]:
+		if type in type_to_tags:
+			return type_to_tags[type]
+		return []
+	
 
 class Tag extends Item:
 	signal tagged
@@ -377,13 +349,13 @@ class Tag extends Item:
 		
 		if self in track.tag_to_type:
 			var current_tag_type : StringName = track.tag_to_type[self]
-			var track_typed_tags : Array[Dictionary] = track.type_to_tags[current_tag_type]
+			var track_typed_tags : Array[Tag] = track.type_to_tags[current_tag_type]
 			if track_typed_tags.size() > 1:
 				track_typed_tags.erase(self)
 			else:
 				track.type_to_tags.erase(current_tag_type)
 		
-		var track_typed_tags : Array[Dictionary] = []
+		var track_typed_tags : Array[Tag] = []
 		
 		if type in track.type_to_tags:
 			track_typed_tags = track.type_to_tags[type]
@@ -433,3 +405,30 @@ class Tag extends Item:
 	static func from_bytes(bytes : PackedByteArray) -> Track:
 		return
 	
+
+#func find_tags(name : String) -> Array[Tag]:
+	#var tags : Array[Tag] = []
+	#
+	#for tag in _tags_array:
+		#if name in tag.names:
+			#tags.append(tag)
+	#
+	#return tags
+#
+#func track_is_tagged(tag : Tag, track : Track) -> bool:
+	#return tag.key in track.tag_key_to_type
+#
+#func get_tag_type_in_track(tag : Tag, track : Track) -> StringName:
+	#assert(tag.key in track.tag_key_to_type)
+	#if tag.key in track.tag_key_to_type:
+		#return track.tag_key_to_type[tag.key]
+	#return &''
+#
+#func get_tag_position_in_track(tag : Tag, track : Track) -> int:
+	#assert(tag.key in track.tag_key_to_type)
+	#if tag.key in track.tag_key_to_type:
+		#var tag_type : StringName = track.tag_key_to_type[tag.key]
+		#var track_typed_tags : Array[Tag] = track.type_to_tags[tag_type]
+		#return track_typed_tags.find(tag)
+	#return -1
+#

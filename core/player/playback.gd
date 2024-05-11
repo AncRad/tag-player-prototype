@@ -1,7 +1,7 @@
 class_name Playback
 extends Resource
 
-signal track_changed(current_track: Dictionary)
+signal track_changed(current_track: DataBase.Track)
 signal playing_changed(playing: bool)
 signal progress_changed(progress: float)
 
@@ -14,7 +14,7 @@ var player : Player:
 					player.finished.connect(play_next)
 
 @export var current_source: DataSource = preload('res://core/data_base_ordered.tres')
-var current_track: Dictionary
+var current_track: DataBase.Track
 var progress_on_pause: float = 0
 
 
@@ -28,10 +28,10 @@ func play(offset := 0, track := current_track, source := current_source) -> void
 		if new_stream and new_stream.get_length():
 			player.stream = new_stream
 			player.play()
-			player.get_window().title = current_track.name_string
+			player.get_window().title = current_track.order_string
 		else:
 			player.stream = null
-			current_track = {}
+			current_track = null
 			player.get_window().title = ProjectSettings.get_setting('application/config/name', 'TagPlayer') as String
 			## TODO: добавить обработку ощибки загрузки
 		track_changed.emit(current_track)
@@ -128,12 +128,12 @@ func can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 		if 'player' in data and data.player is Player and data.player != self and data.player.current_source:
 			return true
 		
-		if 'track' in data and data.track is Dictionary:
+		if 'track' in data and data.track is DataBase.Track:
 			if find_track(current_source, data.track):
 				return true
 		
 		if 'player' in data and data.player is Player and data.player != self:
-			if find_track(current_source, data.player.current_track) != {}:
+			if find_track(current_source, data.player.current_track):
 				return true
 	return false
 
@@ -148,14 +148,14 @@ func drop_data(_at_position: Vector2, data: Variant) -> void:
 		elif 'player' in data and data.player is Player and data.player.current_source and data.player != self:
 			current_source = data.player.current_source
 		
-		if 'track' in data and data.track is Dictionary:
+		if 'track' in data and data.track is DataBase.Track:
 			play(0, data.track)
 		
 		elif 'player' in data and data.player is Player and data.player.current_track and data.player != self:
 			play(0, data.player.current_track)
 
 
-static func find_track(source: DataSource, track: Dictionary, offset := 0) -> Dictionary:
+static func find_track(source: DataSource, track: DataBase.Track, offset := 0) -> DataBase.Track:
 	if source.size():
 		var tracks := source.get_tracks()
 		var index := tracks.find(track) if track else 0
@@ -163,7 +163,7 @@ static func find_track(source: DataSource, track: Dictionary, offset := 0) -> Di
 			return tracks[wrapi(index + offset, 0, tracks.size())]
 		elif tracks.size():
 			return tracks[0]
-	return {}
+	return null
 
 static func load_stream(file_path: String) -> AudioStream:
 	if FileAccess.file_exists(file_path):

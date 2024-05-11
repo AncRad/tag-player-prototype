@@ -76,7 +76,7 @@ func _draw() -> void:
 	
 	var begin : int = clampi(int(scroll), 0, source.size())
 	var end : int = clampi(begin + line_max_count, begin, source.size())
-	var tracks := source.get_tracks().slice(begin, end) as Array[Dictionary]
+	var tracks := source.get_tracks().slice(begin, end) as Array[DataBase.Track]
 	
 	var draw_region := func(text : String, rect : Rect2, width := -1, color := font_color_default) -> Rect2:
 		font.draw_string(get_canvas_item(), rect.position + Vector2(0, font_ascent), text, HORIZONTAL_ALIGNMENT_LEFT,
@@ -94,15 +94,15 @@ func _draw() -> void:
 		var rect_left := Rect2(main_rect.position.x + margin_left, pos_y, creators_max_size, line_distance)
 		var region_rect := Rect2()
 		
-		var creators : Array[Dictionary]
-		var names : Array[Dictionary]
+		var creators : Array[DataBase.Tag]
+		var names : Array[DataBase.Tag]
 		if root:
-			creators = root.get_typed_tags_in_track(track, 'creator')
-			names = root.get_typed_tags_in_track(track, 'name')
+			creators = track.get_typed_tags('creator')
+			names = track.get_typed_tags('name')
 		
 		if creators and names:
 			var separeted := false
-			for tags : Array[Dictionary] in [creators, names]:
+			for tags : Array[DataBase.Tag] in [creators, names]:
 				var first := true
 				for tag in tags:
 					if first:
@@ -133,7 +133,7 @@ func _draw() -> void:
 					rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
 		
 		else:
-			draw_region.call('%s *\n' % track.name_string, rect_left, rect_left.size.x)
+			draw_region.call('%s *\n' % track.order_string, rect_left, rect_left.size.x)
 		
 		line_regions.append({rect = Rect2(main_rect.position.x, pos_y, main_rect.end.x - main_rect.position.x, line_distance),
 				track = track})

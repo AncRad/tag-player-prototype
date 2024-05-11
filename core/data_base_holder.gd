@@ -36,15 +36,13 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 					finded.append(file)
 		
 		if finded:
-			var tag_tagme := data_base.get_tag_or_create(['tagme'], Color.BLUE_VIOLET, ['system'])
-			var tag_instrumental := data_base.get_tag_or_create(['instrumental'], Color.SKY_BLUE, ['version'])
+			var tag_tagme := data_base.get_tag_or_create(['tagme'], ['system'], Color.BLUE_VIOLET)
+			var tag_instrumental := data_base.get_tag_or_create(['instrumental'], ['version'], Color.SKY_BLUE)
 			
 			
-			var tracks : Array[Dictionary] = []
 			for file in finded:
 				var track := data_base.track_create(file)
-				tracks.append(track)
-				data_base.tag_track(tag_tagme, track)
+				tag_tagme.tag(track)
 				
 				var file_name := file.get_basename().get_file()
 				var file_name_split := file_name.split(' - ', false)
@@ -64,13 +62,13 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 							first_name.erase(first_name.length() - 1)
 						
 						if first_name:
-							var tag := data_base.get_tag_or_create([first_name], Color.WHITE, ['creator'])
-							data_base.tag_track(tag, track)
+							var tag := data_base.get_tag_or_create([first_name], ['creator'])
+							tag.tag(track)
 					
 					var second_name := file_name_split[1]
 					
 					if second_name.matchn('instrumental'):
-						data_base.tag_track(tag_instrumental, track)
+						tag_instrumental.tag(track)
 						second_name = (second_name.replace('(Instrumental)', '').replace('(instrumental)', '')
 								).replace('Instrumental', '').replace('instrumental', '')
 					
@@ -79,7 +77,9 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 							second_name.erase(0)
 						if second_name[-1] == ' ':
 							second_name.erase(second_name.length() - 1)
-						data_base.tag_track(data_base.get_tag_or_create([second_name], Color.WHITE, ['name']), track)
+#region Новая область кода
+						data_base.get_tag_or_create([second_name], ['name']).tag(track)
+#endregion
 
 func _on_close_requested() -> void:
 	if handle_close_requested:
