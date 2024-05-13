@@ -51,8 +51,6 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 				if file_name_split.size() == 2:
 					var first_names := (file_name_split[0].replace('feat.', ',').replace('feat', ',').replace('ft.', ',')
 							).replace('ft', ',').replace(', ', ',').replace(' ,', ',').split(',', false)
-					if not first_names:
-						first_names.append(file_name_split[0])
 					
 					for i in first_names.size():
 						var first_name := first_names[i] as String
@@ -63,23 +61,22 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 						
 						if first_name:
 							var tag := data_base.get_tag_or_create([first_name], ['creator'])
-							tag.tag(track)
+							tag.tag(track, 'creator')
 					
 					var second_name := file_name_split[1]
 					
 					if second_name.matchn('instrumental'):
-						tag_instrumental.tag(track)
+						tag_instrumental.tag(track, 'version')
 						second_name = (second_name.replace('(Instrumental)', '').replace('(instrumental)', '')
 								).replace('Instrumental', '').replace('instrumental', '')
 					
-					if second_name:
+					if second_name and track.get_typed_tags('creator'):
 						if second_name[0] == ' ':
 							second_name.erase(0)
 						if second_name[-1] == ' ':
 							second_name.erase(second_name.length() - 1)
-#region Новая область кода
-						data_base.get_tag_or_create([second_name], ['name']).tag(track)
-#endregion
+						
+						track.name = second_name
 
 func _on_close_requested() -> void:
 	if handle_close_requested:

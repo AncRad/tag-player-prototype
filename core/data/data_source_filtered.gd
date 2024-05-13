@@ -30,8 +30,10 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	var new_filtered : Array[DataBase.Track] = source.get_tracks()
+	var new_filtered : Array[DataBase.Track] = []
+	
 	if source:
+		new_filtered = source.get_tracks().duplicate()
 		
 		if name_filter:
 			new_filtered = filter_by_name(new_filtered, name_filter)
@@ -49,11 +51,10 @@ func _update() -> void:
 				dict[tag] = null
 			current_tag_filters.clear()
 			current_tag_filters.assign(dict.keys())
-			new_filtered = filter_by_tags(new_filtered, current_tag_filters)
+			new_filtered = filter_by_tags(new_filtered, current_tag_filters, true)
 	
 	if new_filtered != tracks_filtered:
 		tracks_filtered = new_filtered
-		new_filtered = []
 		tracks_filtered.make_read_only()
 		changes_up()
 
@@ -62,17 +63,27 @@ func get_tracks() -> Array[DataBase.Track]:
 
 #func _filter() -> void:
 
-static func filter_by_tags(input : Array[DataBase.Track], p_filter : Array[DataBase.Tag]) -> Array[DataBase.Track]:
+static func filter_by_tags(input : Array[DataBase.Track], p_filter : Array[DataBase.Tag], any := false) -> Array[DataBase.Track]:
 	if p_filter:
 		var out : Array[DataBase.Track] = []
-		for track in input:
-			var all := true
-			for tag in p_filter:
-				if not track.is_tagged(tag):
-					all = false
-					break
-			if all:
-				out.append(track)
+		
+		if any:
+			for track in input:
+				for tag in p_filter:
+					if track.is_tagged(tag):
+						out.append(track)
+						break
+		
+		else:
+			for track in input:
+				var all := true
+				for tag in p_filter:
+					if not track.is_tagged(tag):
+						all = false
+						break
+				if all:
+					out.append(track)
+		
 		return out
 	return input
 

@@ -1,0 +1,70 @@
+[gd_scene load_steps=6 format=3 uid="uid://mqs6rjv3osx0"]
+
+[ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="1_dsj56"]
+[ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
+[ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
+[ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_wa3m6"]
+[ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/track_list/find_filter_panel.tscn" id="4_hm86d"]
+
+[node name="TrackList" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("1_guvhr")
+source = ExtResource("2_t662t")
+playback = ExtResource("3_wa3m6")
+metadata/_edit_lock_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="FindPanel" type="HBoxContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Control" type="Control" parent="VBoxContainer/FindPanel"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+
+[node name="FindFilterPanel" parent="VBoxContainer/FindPanel" instance=ExtResource("4_hm86d")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Control2" type="Control" parent="VBoxContainer/FindPanel"]
+custom_minimum_size = Vector2(30, 0)
+layout_mode = 2
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="List" type="Control" parent="VBoxContainer/HBoxContainer2"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+script = ExtResource("1_dsj56")
+source = ExtResource("2_t662t")
+playback = ExtResource("3_wa3m6")
+
+[node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/HBoxContainer2"]
+layout_mode = 2
+max_value = 1.0
+step = 0.0001
+
+[connection signal="filters_changed" from="VBoxContainer/FindPanel/FindFilterPanel" to="VBoxContainer/HBoxContainer2/List" method="_on_find_filter_panel_filters_changed"]
+[connection signal="filters_cleared" from="VBoxContainer/FindPanel/FindFilterPanel" to="VBoxContainer/FindPanel" method="hide"]
+[connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer2/List" to="VBoxContainer/HBoxContainer2/VScrollBar" method="set_value_no_signal"]
+[connection signal="value_changed" from="VBoxContainer/HBoxContainer2/VScrollBar" to="VBoxContainer/HBoxContainer2/List" method="set_scroll_progress"]

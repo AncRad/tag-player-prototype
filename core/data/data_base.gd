@@ -66,13 +66,49 @@ func tag_remove(tag : Tag) -> void:
 func get_tags() -> Array[Tag]:
 	return _tags_array
 
-func find_tags_by_name(name : StringName) -> Array[Tag]:
+func find_tags_by_name(name : StringName, p_match := true, no_register := true, sort := true) -> Array[Tag]:
 	var tags : Array[Tag] = []
+	
+	if no_register:
+		name = name.to_lower()
+	
+	var filter := ''
+	if p_match:
+		var split := name.split(' ', false)
+		if split:
+			filter = '*%s*' % '*'.join(split)
+	
+	if not name or p_match and not filter:
+		return []
 	
 	for tag in _tags_array:
 		for tag_name in tag.names:
-			if tag_name.begins_with(name):
+			var condition := false
+			if p_match:
+				if no_register:
+					condition = tag_name.matchn(filter)
+				else:
+					condition = tag_name.match(filter)
+			
+			else:
+				if no_register:
+					condition = tag_name.to_lower().begins_with(name)
+				else:
+					condition = tag_name.begins_with(name)
+			
+			if condition:
 				tags.append(tag)
+				break
+	
+	if sort:
+		var sim_hash := {}
+		tags.sort_custom(func (a : Tag, b : Tag):
+				if not a in sim_hash:
+					sim_hash[a] = a.names[0].similarity(name)
+				if not b in sim_hash:
+					sim_hash[b] = b.names[0].similarity(name)
+				return sim_hash[a] > sim_hash[b]
+		)
 	
 	return tags
 
@@ -313,7 +349,8 @@ class Track extends Item:
 	signal untagged
 	
 	### основные данные
-	var file_path : String
+	var file_path : StringName
+	var name : StringName
 	var type_to_tags := {}
 	### кешированые данные
 	var order_string : String
@@ -324,8 +361,9 @@ class Track extends Item:
 	func _init(p_key : int, p_file_path : StringName) -> void:
 		key = p_key
 		file_path = p_file_path
-		order_string = file_path.get_basename().get_file()
-		find_string = file_path.get_basename().get_file()
+		name = file_path.get_basename().get_file()
+		order_string = name
+		find_string = name
 	
 	func clear() -> void:
 		super()
@@ -344,14 +382,15 @@ class Track extends Item:
 			for i in tags_keys.size():
 				tags_keys.set(i, tags[i].key)
 			type_to_key_tags[type] = tags_keys
-		return var_to_bytes([key, file_path, type_to_key_tags])
+		return var_to_bytes([key, file_path, name, type_to_key_tags])
 	
 	static func from_bytes(bytes : PackedByteArray, _key_to_tag : Dictionary = {}) -> Track:
 		var data := bytes_to_var(bytes) as Array
 		
 		var track := Track.new(data[0], data[1])
+		track.name = data[2]
 		
-		var type_to_key_tags := data[2] as Dictionary
+		var type_to_key_tags := data[3] as Dictionary
 		for type : StringName in type_to_key_tags:
 			var tags_keys := type_to_key_tags[type] as PackedInt32Array
 			var typed_tags := [] as Array[Tag]
@@ -395,6 +434,9 @@ class Tag extends Item:
 		names = p_names
 		types = p_types
 		color = p_color
+	
+	#func _to_string() -> String:
+		#return '<Tag:%s>' % (names[0] if names else key)
 	
 	func tag(track : Track, type : StringName = &'', position : int = -1) -> void:
 		if not type and types.size():

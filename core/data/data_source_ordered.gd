@@ -18,14 +18,15 @@ func _update() -> void:
 	var new_order : Array[DataBase.Track] = []
 	if source:
 		new_order = source.get_tracks().duplicate()
+		
 		if inverted:
 			new_order.sort_custom(compare_inv)
+		
 		else:
 			new_order.sort_custom(compare)
 	
 	if new_order != tracks_ordered:
 		tracks_ordered = new_order
-		new_order = []
 		tracks_ordered.make_read_only()
 		changes_up()
 
