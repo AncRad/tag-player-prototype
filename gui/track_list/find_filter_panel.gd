@@ -11,11 +11,18 @@ const FILTER_ITEM = preload('filter_item.tscn')
 		if value != data_base:
 			data_base = value
 
+@export var solver : Solver:
+	set(value):
+		if value != solver:
+			solver = value
+			update()
+
+
 var _flow_container : HFlowContainer
 
 var _updating := false
 var _items : Array[FilterItem] = []
-var _filters_string := ''
+#var _filters_string := ''
 
 
 func _notification(what: int) -> void:
@@ -23,6 +30,12 @@ func _notification(what: int) -> void:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_flow_container = %HFlowContainer as HFlowContainer
 			update()
+			if OS.is_debug_build():
+				%DebugLabel1.show()
+				%DebugLabel2.show()
+			else:
+				%DebugLabel1.hide()
+				%DebugLabel2.hide()
 
 func _on_filter_item_focus_changed(item : FilterItem) -> void:
 	if item.has_focus():
@@ -33,14 +46,19 @@ func _on_filter_item_focus_changed(item : FilterItem) -> void:
 		_on_filter_item_text_submitted(item)
 
 func _on_filter_item_text_submitted(item : FilterItem) -> void:
-	parse(item)
+	parse_item_text(item)
 	item.inputed_text = item.text
 	item.text = item.filter_to_string()
 	item.caret_column = 10000
 	
 	update()
 
-func parse(item : FilterItem) -> void:
+func _on_filter_item_text_changed(item : FilterItem) -> void:
+	if item.has_focus() and item.type == FilterItem.Type.MatchString:
+		item.inputed_text = item.text
+		parse()
+
+func parse_item_text(item : FilterItem) -> void:
 	var finded := false
 	
 	if not finded:
@@ -50,11 +68,13 @@ func parse(item : FilterItem) -> void:
 	
 	if not finded:
 		var type_to_name_variations := {
-			FilterItem.Type.And : PackedStringArray(['and', '&', '&&']),
-			FilterItem.Type.Or : PackedStringArray(['or', '|', '||']),
-			FilterItem.Type.Not : PackedStringArray(['not', '!']),
+			FilterItem.Type.And : PackedStringArray(['and', '&', '&&', '+']),
+			FilterItem.Type.Or : PackedStringArray(['or', '|', '||', '~']),
+			FilterItem.Type.Not : PackedStringArray(['not', '!', '-']),
+			FilterItem.Type.BracketOpen : PackedStringArray(['(']),
+			FilterItem.Type.BracketClose : PackedStringArray([')']),
 		}
-		var text := item.text.to_lower().replace(' ', '')
+		var text := ' '.join(item.text.to_lower().split(' ', false))
 		for type : FilterItem.Type in type_to_name_variations:
 			if text in type_to_name_variations[type]:
 				item.type = type
@@ -82,7 +102,7 @@ func create_filter_item() -> FilterItem:
 
 func connect_filter_item(item : FilterItem, p_connect := true) -> void:
 	var signal_to_callable := {
-		item.text_changed : update.unbind(1),
+		item.text_changed : _on_filter_item_text_changed.bind(item).unbind(1),
 		item.focus_entered : _on_filter_item_focus_changed.bind(item),
 		item.focus_exited : _on_filter_item_focus_changed.bind(item),
 		item.visibility_changed : update,
@@ -107,7 +127,7 @@ func filters_to_string() -> String:
 	for item in _items:
 		if not item.empty():
 			split.append(item.filter_to_string())
-	return ', '.join(split)
+	return ' '.join(split)
 
 func get_tags() -> Array[DataBase.Tag]:
 	var tags := [] as Array[DataBase.Tag]
@@ -190,9 +210,12 @@ func _update() -> void:
 		_items = items
 	
 	
-	if filters_to_string() != _filters_string:
-		_filters_string = filters_to_string()
-		filters_changed.emit()
+	if solver:
+		parse()
+	
+	#if filters_to_string() != _filters_string:
+		#_filters_string = filters_to_string()
+		#filters_changed.emit()
 	
 	_updating = false
 	
@@ -200,3 +223,214 @@ func _update() -> void:
 		if not get_viewport().gui_get_focus_owner() or not is_ancestor_of(get_viewport().gui_get_focus_owner()):
 			filters_cleared.emit()
 
+
+
+	#       ______|______
+	#       |      _____|_____
+	#    ___|___   |    _____|_____
+	#  __|__   |   |    |   |   __|__
+	#  |   |   |   |    |   |   |   |
+	## T & T | T | T & (T | T | T & T)
+
+
+func parse() -> void:
+	var node := ExprNode.new()
+	node.type = ExprNode.Type.SubExpression
+	
+	_parse_items(_items, node.expressions)
+	
+	%DebugLabel1.text = node.to_text()
+	
+	_repair(node.expressions)
+	
+	%DebugLabel2.text = node.to_text()
+
+static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = 0) -> int:
+	
+	var return_on_close_bracket := true
+	while pos < items.size():
+		var item := items[pos]
+		
+		if item.empty():
+			pos += 1
+			continue
+		
+		match item.type:
+			
+			FilterItem.Type.BracketOpen:
+				if pos == 0:
+					return_on_close_bracket = false
+				
+				else:
+					var node := ExprNode.new()
+					node.type = ExprNode.Type.SubExpression
+					pos = _parse_items(items, node.expressions, pos + 1)
+					expressions.append(node)
+			
+			FilterItem.Type.BracketClose:
+				if return_on_close_bracket:
+					return pos + 1
+			
+			FilterItem.Type.Not, FilterItem.Type.And, FilterItem.Type.Or:
+				var node := ExprNode.new()
+				node.type = item.type as ExprNode.Type
+				expressions.append(node)
+			
+			FilterItem.Type.MatchString, FilterItem.Type.Tag:
+				var node := ExprNode.new()
+				node.type = item.type as ExprNode.Type
+				if item.type == FilterItem.Type.Tag:
+					node.tag = item.tag
+				else:
+					node.match_string = item.inputed_text
+				expressions.append(node)
+		
+		pos += 1
+	
+	return pos
+
+static func _repair(expressions : Array[ExprNode]) -> void:
+	
+	var pos : int = 0
+	while pos < expressions.size():
+		var node := expressions[pos]
+		if node.type == ExprNode.Type.SubExpression:
+			_repair(node.expressions)
+			if not node.expressions:
+				expressions.remove_at(pos)
+				pos -= 1
+		pos += 1
+	
+	pos = 0
+	while maxi(0, pos) < expressions.size():
+		if pos < 0:
+			pos = 0
+		
+		var node := expressions[pos]
+		var left : ExprNode
+		var right : ExprNode
+		if pos > 0:
+			left = expressions[pos - 1]
+		if pos < expressions.size() - 1:
+			right = expressions[pos + 1]
+		
+		if node.is_operator(): #not, and, or
+			if node.is_binary(): # and, or
+				if not left or not right or not left.is_operand():
+					expressions.remove_at(pos)
+					pos -= 1
+					continue
+			
+			else: # not
+				if not right:
+					expressions.remove_at(pos)
+					pos -= 1
+					continue
+				
+				if right.is_operator():
+					if right.is_binary():
+						expressions.remove_at(pos)
+						pos -= 1
+						continue
+				
+				if right.type == ExprNode.Type.Not:
+					expressions.remove_at(pos)
+					expressions.remove_at(pos)
+					pos -= 1
+					continue
+		
+		elif node.is_operand():
+			if right and right.is_operand():
+				right = ExprNode.new()
+				right.type = ExprNode.Type.And
+				expressions.insert(pos + 1, right)
+				pos += 2
+				continue
+		
+		else:
+			assert(false)
+		
+		pos += 1
+
+
+class ExprNode:
+	enum Type {
+		Not = FilterItem.Type.Not,
+		And = FilterItem.Type.And,
+		Or = FilterItem.Type.Or,
+		Tag = FilterItem.Type.Tag,
+		MatchString = FilterItem.Type.MatchString,
+		BracketOpen = FilterItem.Type.BracketOpen,
+		BracketClose = FilterItem.Type.BracketClose,
+		SubExpression,
+	}
+	var type : Type
+	
+	## Tag
+	var tag : DataBase.Tag
+	## MatchString
+	var match_string : String
+	
+	## SubExpression
+	var expressions : Array[ExprNode] = []
+	
+	## Tag, MatchString
+	func get_value() -> Variant:
+		if type == Type.Tag:
+			return tag
+		if type == Type.MatchString:
+			return match_string
+		return
+	
+	func is_operator() -> bool:
+		match type:
+			Type.Not, Type.And, Type.Or:
+				return true
+		return false
+	
+	func is_binary() -> bool:
+		match type:
+			Type.And, Type.Or:
+				return true
+			
+			Type.Not:
+				return false
+		return false
+	
+	func is_operand() -> bool:
+		match type:
+			Type.MatchString, Type.Tag, Type.SubExpression:
+				return true
+		return false
+	
+	func to_text() -> String:
+		match type:
+			Type.Not:
+				return 'NOT'
+			
+			Type.And:
+				return 'AND'
+			
+			Type.Or:
+				return 'OR'
+			
+			Type.Tag:
+				return '[tag:%d]' % tag.key
+			
+			Type.MatchString:
+				return '[%s]' % match_string
+			
+			Type.BracketOpen:
+				return '('
+			
+			Type.BracketClose:
+				return ')'
+			
+			Type.SubExpression:
+				var texts : Array[String] = []
+				for node in expressions:
+					texts.append(node.to_text())
+				return '(%s)' % ' '.join(texts)
+			
+			_:
+				return '<err expr>'

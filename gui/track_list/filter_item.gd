@@ -2,7 +2,7 @@ extends LineEdit
 
 const FilterItem = preload('filter_item.gd')
 
-enum Type {MatchString, And, Or, Not, Tag}
+enum Type {MatchString, And, Or, Not, Tag, BracketOpen, BracketClose}
 
 var type : Type = Type.MatchString:
 	set(value):
@@ -11,12 +11,12 @@ var type : Type = Type.MatchString:
 			
 			match type:
 				Type.MatchString:
-					expand_to_text_length = false
-					size_flags_horizontal = Control.SIZE_EXPAND_FILL
+					expand_to_text_length = true
+					size_flags_horizontal = Control.SIZE_FILL
 					alignment = HORIZONTAL_ALIGNMENT_LEFT
 					add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
 				
-				Type.And, Type.Or, Type.Not:
+				Type.And, Type.Or, Type.Not, Type.BracketOpen, Type.BracketClose:
 					custom_minimum_size.x = 1
 					expand_to_text_length = true
 					alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -96,7 +96,7 @@ func empty() -> bool:
 		Type.MatchString:
 			return inputed_text.is_empty() and text.is_empty()
 		
-		Type.And, Type.Or, Type.Not:
+		Type.And, Type.Or, Type.Not, Type.BracketOpen, Type.BracketClose:
 			return false
 		
 		Type.Tag:
@@ -110,6 +110,12 @@ func filter_to_string() -> String:
 		
 		Type.And, Type.Or, Type.Not:
 			return (Type.find_key(type) as StringName).to_upper()
+		
+		Type.BracketOpen:
+			return '('
+		
+		Type.BracketClose:
+			return ')'
 		
 		Type.Tag:
 			if tag and tag.valid:

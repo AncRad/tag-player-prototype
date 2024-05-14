@@ -16,15 +16,31 @@ theme_override_constants/margin_bottom = 0
 script = ExtResource("1_xg5pt")
 data_base = ExtResource("2_c5ni2")
 
-[node name="HFlowContainer" type="HFlowContainer" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/h_separation = 8
-
 [node name="Control" type="Control" parent="."]
 layout_mode = 2
 mouse_filter = 2
 
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HFlowContainer" type="HFlowContainer" parent="VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 0
+
+[node name="DebugLabel1" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560784, 0.560784, 0.560784, 1)
+
+[node name="DebugLabel2" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.560784, 0.560784, 0.560784, 1)
+
 [connection signal="focus_entered" from="." to="." method="filter_item_grab_focus"]
-[connection signal="focus_entered" from="HFlowContainer" to="." method="filter_item_grab_focus"]
+[connection signal="focus_entered" from="VBoxContainer/HFlowContainer" to="." method="filter_item_grab_focus"]

@@ -258,4 +258,4 @@ func focus_on_track_at_position(pos_y : float = size.y / 2, track := highlighted
 
 func _on_find_filter_panel_filters_changed() -> void:
 	if source and source.source and source.source is DataSourceFiltered:
-		source.source.tags_filter = %FindFilterPanel.get_tags()
+		source.source.solver = Solver.new(false, false, %FindFilterPanel.get_tags())

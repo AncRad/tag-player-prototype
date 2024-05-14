@@ -101,14 +101,19 @@ func find_tags_by_name(name : StringName, p_match := true, no_register := true, 
 				break
 	
 	if sort:
-		var sim_hash := {}
-		tags.sort_custom(func (a : Tag, b : Tag):
-				if not a in sim_hash:
-					sim_hash[a] = a.names[0].similarity(name)
-				if not b in sim_hash:
-					sim_hash[b] = b.names[0].similarity(name)
-				return sim_hash[a] > sim_hash[b]
-		)
+		## кэш таблица 'тег - схожесть имени тега с искомым именем'
+		var cache := {}
+		for tag in tags:
+			## ищем лучшую схожесть имени тега с искомым именем
+			var max_similarity := -INF
+			for tag_name in tag.names:
+				var similarity := tag_name.similarity(name)
+				if similarity > max_similarity:
+					max_similarity = similarity
+			cache[tag] = max_similarity
+		
+		## сортируем теги по величине схожести имени тега с искомым именем
+		tags.sort_custom(func (a, b): return cache[a] > cache[b])
 	
 	return tags
 
