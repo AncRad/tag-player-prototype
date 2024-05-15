@@ -372,9 +372,36 @@ func _parse() -> void:
 		#_expression_root.expressions = _decompile(solver)
 		#%DebugLabel2.text = _expression_root.to_text()
 
-static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = 0) -> int:
+static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = -1) -> int:
 	
-	var return_on_close_bracket := pos != 0
+	var return_on_close_bracket := pos != -1
+	
+	if pos == -1:
+		pos = 0
+		var brackets := 0
+		var not_openned := 0
+		for item in items:
+			if item.type == FilterItem.Type.BracketOpen:
+				brackets += 1
+			elif item.type == FilterItem.Type.BracketClose:
+				if brackets == 0:
+					not_openned += 1
+				else:
+					brackets -= 1
+		
+		if not_openned:
+			var node := ExprNode.new()
+			node.type = ExprNode.Type.SubExpression
+			while not_openned > 0:
+				not_openned -= 1
+				pos = _parse_items(items, node.expressions, pos)
+				
+				var next := ExprNode.new()
+				next.type = ExprNode.Type.SubExpression
+				next.expressions.append(node)
+				node = next
+			expressions.append(node.expressions[0])
+	
 	while pos < items.size():
 		var item := items[pos]
 		
@@ -386,27 +413,28 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 			
 			FilterItem.Type.BracketOpen:
 				var node := ExprNode.new()
+				expressions.append(node)
 				node.type = ExprNode.Type.SubExpression
 				pos = _parse_items(items, node.expressions, pos + 1)
-				expressions.append(node)
 			
 			FilterItem.Type.BracketClose:
+				assert(return_on_close_bracket)
 				if return_on_close_bracket:
 					return pos + 1
 			
 			FilterItem.Type.Not, FilterItem.Type.And, FilterItem.Type.Or:
 				var node := ExprNode.new()
-				node.type = item.type as ExprNode.Type
 				expressions.append(node)
+				node.type = item.type as ExprNode.Type
 			
 			FilterItem.Type.MatchString, FilterItem.Type.Tag:
 				var node := ExprNode.new()
+				expressions.append(node)
 				node.type = item.type as ExprNode.Type
 				if item.type == FilterItem.Type.Tag:
 					node.tag = item.tag
 				else:
 					node.match_string = item.inputed_text
-				expressions.append(node)
 		
 		pos += 1
 	
