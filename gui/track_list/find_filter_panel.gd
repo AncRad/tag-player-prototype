@@ -1,7 +1,7 @@
 extends Container
 
-signal filters_changed
-signal filters_cleared
+#signal filters_changed
+signal updated
 
 const FilterItem = preload('filter_item.gd')
 const FILTER_ITEM = preload('filter_item.tscn')
@@ -22,7 +22,7 @@ var _flow_container : HFlowContainer
 
 var _updating := false
 var _items : Array[FilterItem] = []
-#var _filters_string := ''
+var _expression_root : ExprNode
 
 
 func _notification(what: int) -> void:
@@ -31,14 +31,61 @@ func _notification(what: int) -> void:
 			_flow_container = %HFlowContainer as HFlowContainer
 			update()
 			if OS.is_debug_build():
-				%DebugLabel1.show()
-				%DebugLabel2.show()
+				#%DebugLabel1.show()
+				#%DebugLabel2.show()
+				pass
 			else:
 				%DebugLabel1.hide()
 				%DebugLabel2.hide()
 
+func _input(event: InputEvent) -> void:
+	if event.is_pressed():
+		if 'position' in event:
+			var focus_owner := get_viewport().gui_get_focus_owner()
+			if focus_owner is FilterItem:
+				if is_ancestor_of(focus_owner):
+					var pos := event.position as Vector2
+					var rect := focus_owner.get_global_transform() * Rect2(Vector2(), focus_owner.size)
+					if not rect.has_point(pos):
+						focus_owner.release_focus()
+
+func _on_filter_item_gui_input(event: InputEvent, item: FilterItem) -> void:
+	if item.has_focus() and event.is_pressed():
+		if (event.is_action('ui_text_caret_left') or event.is_action('ui_text_caret_line_start')
+				or event.is_action('ui_text_backspace')):
+			if item.caret_column == 0:
+				accept_event()
+				var item_index := _items.find(item)
+				if item_index - 1 >= 0:
+					var left_item := _items[item_index - 1]
+					left_item.grab_focus()
+					left_item.caret_column = 10000
+		
+		elif (event.is_action('ui_text_caret_right') or event.is_action('ui_text_caret_line_end')
+				or event.is_action('ui_text_delete')):
+			if item.caret_column == item.text.length():
+				accept_event()
+				var item_index := _items.find(item)
+				if item_index != -1 and item_index + 1 < _items.size():
+					var right_item := _items[item_index + 1]
+					right_item.grab_focus()
+					right_item.caret_column = 0
+				accept_event()
+		
+		elif event.is_action('ui_text_caret_down'):
+			if item.caret_column == item.text.length():
+				print('смахнуть вниз')
+				accept_event()
+		
+		elif event.is_action('ui_text_caret_up'):
+			if item.caret_column == 0:
+				print('смахнуть вверх')
+				accept_event()
+
 func _on_filter_item_focus_changed(item : FilterItem) -> void:
 	if item.has_focus():
+		if item.is_seprarator():
+			item.type = FilterItem.Type.MatchString
 		item.text = item.inputed_text
 		update()
 	
@@ -46,19 +93,218 @@ func _on_filter_item_focus_changed(item : FilterItem) -> void:
 		_on_filter_item_text_submitted(item)
 
 func _on_filter_item_text_submitted(item : FilterItem) -> void:
-	parse_item_text(item)
-	item.inputed_text = item.text
+	_parse_item_text(item)
+	#item.inputed_text = item.text
 	item.text = item.filter_to_string()
+	item.inputed_text = item.text
 	item.caret_column = 10000
 	
 	update()
 
 func _on_filter_item_text_changed(item : FilterItem) -> void:
-	if item.has_focus() and item.type == FilterItem.Type.MatchString:
-		item.inputed_text = item.text
-		parse()
+	if item.has_focus():
+		if item.type == FilterItem.Type.MatchString:
+			item.inputed_text = item.text
+			update()
+		
+		if not item.text:
+			item.type = FilterItem.Type.MatchString
+			item.inputed_text = ''
+			update()
 
-func parse_item_text(item : FilterItem) -> void:
+func connect_filter_item(item : FilterItem, p_connect := true) -> void:
+	var signal_to_callable := {
+		item.gui_input : _on_filter_item_gui_input.bind(item),
+		item.text_changed : _on_filter_item_text_changed.bind(item).unbind(1),
+		item.focus_entered : _on_filter_item_focus_changed.bind(item),
+		item.focus_exited : _on_filter_item_focus_changed.bind(item),
+		item.text_submitted : _on_filter_item_text_submitted.bind(item).unbind(1),
+	}
+	
+	if p_connect:
+		for _signal : Signal in signal_to_callable:
+			if not _signal.is_connected(signal_to_callable[_signal]):
+				_signal.connect(signal_to_callable[_signal])
+	
+	else:
+		for _signal : Signal in signal_to_callable:
+			if _signal.is_connected(signal_to_callable[_signal]):
+				_signal.disconnect(signal_to_callable[_signal])
+
+func filter_item_grab_focus() -> void:
+	if not _items:
+		var item = FILTER_ITEM.instantiate() as FilterItem
+		_items.append(item)
+		connect_filter_item(item)
+		_flow_container.add_child(item)
+	_items[-1].grab_focus()
+
+func update() -> void:
+	if not _updating:
+		_updating = true
+		_update.call_deferred()
+
+func get_tags() -> Array[DataBase.Tag]:
+	var tags := [] as Array[DataBase.Tag]
+	
+	for item in _items:
+		if item.type == FilterItem.Type.Tag and item.tag and item.tag.valid:
+			tags.append(item.tag)
+	
+	return tags
+
+func filters_to_string() -> String:
+	var split := PackedStringArray()
+	for item in _items:
+		if not item.empty():
+			split.append(item.filter_to_string())
+	return ' '.join(split)
+
+func empty() -> bool:
+	return not _expression_root or _expression_root.expressions.is_empty()
+
+func is_editing() -> bool:
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	if focus_owner and is_ancestor_of(focus_owner):
+		return true
+	return false
+
+func _update() -> void:
+	var empty_befor := empty()
+	
+	var focused_item : FilterItem
+	var items := [] as Array[FilterItem]
+	
+	for node in _flow_container.get_children():
+		if node is Control:
+			if node is FilterItem:
+				items.append(node)
+				if node.has_focus():
+					focused_item = node
+			
+			else:
+				assert(false)
+				_flow_container.remove_child(node)
+				node.queue_free()
+	
+	
+	var pos := 0
+	while pos < items.size():
+		var item := items[pos]
+		
+		var left : FilterItem
+		if pos > 0:
+			left = items[pos - 1]
+		
+		if item != focused_item and item.empty():
+			if pos != items.size() - 1 or left and left.empty():
+				_flow_container.remove_child(item)
+				item.queue_free()
+				items.remove_at(pos)
+				continue
+		
+		pos += 1
+	
+	
+	if not items or not items[-1].empty():
+		var end := FILTER_ITEM.instantiate() as FilterItem
+		end.type = FilterItem.Type.MatchString
+		items.append(end)
+		_flow_container.add_child(end)
+		connect_filter_item(end)
+	
+	
+	pos = 0
+	while pos < items.size():
+		var item := items[pos]
+		
+		var left : FilterItem
+		if pos > 0:
+			left = items[pos - 1]
+		
+		var right : FilterItem
+		if pos + 1 < items.size():
+			right = items[pos + 1]
+		
+		if item.is_seprarator():
+			if (pos == 0 or pos == items.size() - 1
+						or right and (right.is_seprarator() or right.empty())
+						or left and (left.is_seprarator() or left.empty())):
+				_flow_container.remove_child(item)
+				item.queue_free()
+				items.remove_at(pos)
+				continue
+		
+		else:
+			if not item.is_seprarator() and right and not right.is_seprarator():
+				if pos < items.size() - 2 or not right.empty():
+					if not focused_item or (focused_item != item and focused_item != right) or not focused_item.empty():
+						var separator := FILTER_ITEM.instantiate() as FilterItem
+						separator.type = FilterItem.Type.Separator
+						items.insert(pos + 1, separator)
+						item.add_sibling(separator)
+						connect_filter_item(separator)
+						pos += 2
+						continue
+		
+		pos += 1
+	
+	
+	for item in _items:
+		if is_instance_valid(item) and not item in items:
+			connect_filter_item(item, false)
+			
+			if item.get_parent() == _flow_container:
+				_flow_container.remove_child(item)
+				item.queue_free()
+	
+	
+	for i in items.size():
+		var item := items[i]
+		if i == 0:
+			item.focus_neighbor_left = ^''
+			item.focus_previous = ^''
+		else:
+			item.focus_neighbor_left = item.get_path_to(items[i - 1])
+			item.focus_previous = item.focus_neighbor_left
+		
+		if i < items.size() - 1:
+			item.focus_neighbor_right = item.get_path_to(items[i + 1])
+			item.focus_next = item.focus_neighbor_right
+		else:
+			item.focus_neighbor_right = ^''
+			item.focus_next = ^''
+	
+	
+	if _items != items:
+		_items = items
+	
+	
+	if solver:
+		_parse()
+	
+	
+	#if filters_to_string() != _filters_string:
+		#_filters_string = filters_to_string()
+		#filters_changed.emit()
+	
+	#if empty() and not empty_befor:
+	
+	
+	_updating = false
+	updated.emit()
+
+
+
+	#       ______|______
+	#       |      _____|_____
+	#    ___|___   |    _____|_____
+	#  __|__   |   |    |   |   __|__
+	#  |   |   |   |    |   |   |   |
+	## T & T | T | T & (T | T | T & T)
+
+
+func _parse_item_text(item : FilterItem) -> void:
 	var finded := false
 	
 	if not finded:
@@ -93,157 +339,26 @@ func parse_item_text(item : FilterItem) -> void:
 		item.type = FilterItem.Type.MatchString
 		finded = true
 
-func create_filter_item() -> FilterItem:
-	var item = FILTER_ITEM.instantiate() as FilterItem
-	_items.append(item)
-	connect_filter_item(item)
-	_flow_container.add_child(item)
-	return item
-
-func connect_filter_item(item : FilterItem, p_connect := true) -> void:
-	var signal_to_callable := {
-		item.text_changed : _on_filter_item_text_changed.bind(item).unbind(1),
-		item.focus_entered : _on_filter_item_focus_changed.bind(item),
-		item.focus_exited : _on_filter_item_focus_changed.bind(item),
-		item.visibility_changed : update,
-		item.text_submitted : _on_filter_item_text_submitted.bind(item).unbind(1),
-	}
+func _parse() -> void:
+	if not _expression_root:
+		_expression_root = ExprNode.new()
+		_expression_root.type = ExprNode.Type.SubExpression
 	
-	if p_connect:
-		for _signal : Signal in signal_to_callable:
-			if not _signal.is_connected(signal_to_callable[_signal]):
-				_signal.connect(signal_to_callable[_signal])
+	_expression_root.expressions.clear()
 	
-	else:
-		for _signal : Signal in signal_to_callable:
-			if _signal.is_connected(signal_to_callable[_signal]):
-				_signal.disconnect(signal_to_callable[_signal])
-
-func empty() -> bool:
-	return filters_to_string() == ''
-
-func filters_to_string() -> String:
-	var split := PackedStringArray()
-	for item in _items:
-		if not item.empty():
-			split.append(item.filter_to_string())
-	return ' '.join(split)
-
-func get_tags() -> Array[DataBase.Tag]:
-	var tags := [] as Array[DataBase.Tag]
+	_parse_items(_items, _expression_root.expressions)
 	
-	for item in _items:
-		if item.type == FilterItem.Type.Tag and item.tag and item.tag.valid:
-			tags.append(item.tag)
+	%DebugLabel1.text = _expression_root.to_text()
 	
-	return tags
-
-func filter_item_grab_focus() -> void:
-	if not _items:
-		create_filter_item()
-	_items[-1].grab_focus()
-
-func update() -> void:
-	if not _updating:
-		_updating = true
-		_update.call_deferred()
-
-func _update() -> void:
+	_repair(_expression_root.expressions)
 	
-	var to_remove := _items.duplicate() as Array[FilterItem]
-	
-	var items := [] as Array[FilterItem]
-	for node in _flow_container.get_children():
-		if node is FilterItem:
-			if node.visible:
-				items.append(node)
-				to_remove.erase(node)
-			
-			elif not node in to_remove:
-				to_remove.append(node)
-	
-	var last_item : FilterItem
-	if items:
-		last_item = items[-1]
-	
-	if not last_item or not last_item.empty():
-		last_item = create_filter_item()
-		items.append(last_item)
-	
-	for item in items.duplicate():
-		if not item.empty() or item.has_focus() or item == last_item:
-			if not item in _items:
-				connect_filter_item(item)
-		
-		else:
-			items.erase(item)
-			to_remove.append(item)
-	
-	for item in to_remove:
-		if is_instance_valid(item):
-			connect_filter_item(item, false)
-			
-			if item.get_parent() == _flow_container:
-				_flow_container.remove_child(item)
-				item.queue_free()
-		
-		items.erase(item)
-	
-	for i in items.size():
-		var item := items[i]
-		if i == 0:
-			item.focus_neighbor_left = ^''
-			item.focus_previous = ^''
-		else:
-			item.focus_neighbor_left = item.get_path_to(items[i - 1])
-			item.focus_previous = item.focus_neighbor_left
-		
-		if i < items.size() - 1:
-			item.focus_neighbor_right = item.get_path_to(items[i + 1])
-			item.focus_next = item.focus_neighbor_right
-		else:
-			item.focus_neighbor_right = ^''
-			item.focus_next = ^''
-	
-	
-	if _items != items:
-		_items = items
-	
+	%DebugLabel2.text = _expression_root.to_text()
 	
 	if solver:
-		parse()
-	
-	#if filters_to_string() != _filters_string:
-		#_filters_string = filters_to_string()
-		#filters_changed.emit()
-	
-	_updating = false
-	
-	if empty():
-		if not get_viewport().gui_get_focus_owner() or not is_ancestor_of(get_viewport().gui_get_focus_owner()):
-			filters_cleared.emit()
-
-
-
-	#       ______|______
-	#       |      _____|_____
-	#    ___|___   |    _____|_____
-	#  __|__   |   |    |   |   __|__
-	#  |   |   |   |    |   |   |   |
-	## T & T | T | T & (T | T | T & T)
-
-
-func parse() -> void:
-	var node := ExprNode.new()
-	node.type = ExprNode.Type.SubExpression
-	
-	_parse_items(_items, node.expressions)
-	
-	%DebugLabel1.text = node.to_text()
-	
-	_repair(node.expressions)
-	
-	%DebugLabel2.text = node.to_text()
+		solver.all = false
+		solver.invert = false
+		solver.items.clear()
+		#_compile(_expression_root.expressions, solver)
 
 static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = 0) -> int:
 	
@@ -314,14 +429,14 @@ static func _repair(expressions : Array[ExprNode]) -> void:
 		if pos < expressions.size() - 1:
 			right = expressions[pos + 1]
 		
-		if node.is_operator(): #not, and, or
-			if node.is_binary(): # and, or
+		if node.is_operator():
+			if node.is_binary():
 				if not left or not right or not left.is_operand():
 					expressions.remove_at(pos)
 					pos -= 1
 					continue
 			
-			else: # not
+			else:
 				if not right:
 					expressions.remove_at(pos)
 					pos -= 1
@@ -352,6 +467,45 @@ static func _repair(expressions : Array[ExprNode]) -> void:
 		
 		pos += 1
 
+static func _compile(expressions : Array[ExprNode], solver : Solver) -> void:
+	var pos := 0
+	
+	var invert_first := false
+	var first_node : ExprNode
+	var is_and := false
+	var second_node : ExprNode
+	var invert_second := false
+	
+	while pos < expressions.size():
+		var node := expressions[pos]
+		
+		match node.type:
+			ExprNode.Type.Not:
+				if first_node:
+					invert_second = true
+				else:
+					invert_first = true
+			
+			ExprNode.Type.And, FilterItem.Type.Or:
+				is_and = node.type == ExprNode.Type.And
+			
+			ExprNode.Type.MatchString, ExprNode.Type.Tag, ExprNode.Type.SubExpression:
+				if first_node:
+					second_node = node
+				else:
+					first_node = node
+		
+		if first_node and second_node:
+			
+			
+			
+			invert_first = false
+			first_node = null
+			invert_second = false
+			second_node = null
+			is_and = false
+		
+		pos += 1
 
 class ExprNode:
 	enum Type {

@@ -41,9 +41,16 @@ var _find_filter_panel : FindFilterPanel:
 		else:
 			_find_filter_panel.data_base = null
 
+var _find_panel : Control
 
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_list = %List as TrackListItem
 			_find_filter_panel = %FindFilterPanel as FindFilterPanel
+			_find_panel = %FindPanel as Control
+
+
+func _update_find_panel_visibility() -> void:
+	if _find_filter_panel.empty() and not _find_filter_panel.is_editing():
+		_find_panel.hide()

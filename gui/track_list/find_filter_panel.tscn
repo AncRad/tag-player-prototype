@@ -35,12 +35,14 @@ unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.560784, 0.560784, 0.560784, 1)
+text_overrun_behavior = 1
 
 [node name="DebugLabel2" type="Label" parent="VBoxContainer"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.560784, 0.560784, 0.560784, 1)
+text_overrun_behavior = 1
 
 [connection signal="focus_entered" from="." to="." method="filter_item_grab_focus"]
 [connection signal="focus_entered" from="VBoxContainer/HFlowContainer" to="." method="filter_item_grab_focus"]
