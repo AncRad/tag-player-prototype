@@ -31,8 +31,8 @@ func _notification(what: int) -> void:
 			_flow_container = %HFlowContainer as HFlowContainer
 			update()
 			if OS.is_debug_build():
-				#%DebugLabel1.show()
-				#%DebugLabel2.show()
+				%DebugLabel1.show()
+				%DebugLabel2.show()
 				pass
 			else:
 				%DebugLabel1.hide()
@@ -56,6 +56,17 @@ func _on_filter_item_gui_input(event: InputEvent, item: FilterItem) -> void:
 			if item.caret_column == 0:
 				accept_event()
 				var item_index := _items.find(item)
+				
+				if item_index == 0:
+					var left := FILTER_ITEM.instantiate() as FilterItem
+					left.type = FilterItem.Type.MatchString
+					_items.insert(0, left)
+					_flow_container.add_child(left)
+					_flow_container.move_child(left, 0)
+					connect_filter_item(left)
+					item_index += 1
+					update()
+				
 				if item_index - 1 >= 0:
 					var left_item := _items[item_index - 1]
 					left_item.grab_focus()
@@ -170,7 +181,7 @@ func is_editing() -> bool:
 	return false
 
 func _update() -> void:
-	var empty_befor := empty()
+	#var empty_befor := empty()
 	
 	var focused_item : FilterItem
 	var items := [] as Array[FilterItem]
@@ -348,21 +359,22 @@ func _parse() -> void:
 	
 	_parse_items(_items, _expression_root.expressions)
 	
-	%DebugLabel1.text = _expression_root.to_text()
-	
 	_repair(_expression_root.expressions)
-	
-	%DebugLabel2.text = _expression_root.to_text()
 	
 	if solver:
 		solver.all = false
 		solver.invert = false
 		solver.items.clear()
-		#_compile(_expression_root.expressions, solver)
+		_compile(_expression_root.expressions, solver)
+		%DebugLabel1.text = _expression_root.to_text()
+		solver.emit_changed()
+		#_expression_root.expressions.clear()
+		#_expression_root.expressions = _decompile(solver)
+		#%DebugLabel2.text = _expression_root.to_text()
 
 static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = 0) -> int:
 	
-	var return_on_close_bracket := true
+	var return_on_close_bracket := pos != 0
 	while pos < items.size():
 		var item := items[pos]
 		
@@ -373,14 +385,10 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 		match item.type:
 			
 			FilterItem.Type.BracketOpen:
-				if pos == 0:
-					return_on_close_bracket = false
-				
-				else:
-					var node := ExprNode.new()
-					node.type = ExprNode.Type.SubExpression
-					pos = _parse_items(items, node.expressions, pos + 1)
-					expressions.append(node)
+				var node := ExprNode.new()
+				node.type = ExprNode.Type.SubExpression
+				pos = _parse_items(items, node.expressions, pos + 1)
+				expressions.append(node)
 			
 			FilterItem.Type.BracketClose:
 				if return_on_close_bracket:
@@ -467,45 +475,123 @@ static func _repair(expressions : Array[ExprNode]) -> void:
 		
 		pos += 1
 
-static func _compile(expressions : Array[ExprNode], solver : Solver) -> void:
-	var pos := 0
+@warning_ignore('shadowed_variable')
+static func _compile(expressions : Array[ExprNode], solver : Solver, begin := 0) -> int:
+	var pos := begin
 	
-	var invert_first := false
-	var first_node : ExprNode
-	var is_and := false
-	var second_node : ExprNode
-	var invert_second := false
-	
+	var invert := false
+	var stack_up := false
 	while pos < expressions.size():
 		var node := expressions[pos]
 		
 		match node.type:
 			ExprNode.Type.Not:
-				if first_node:
-					invert_second = true
-				else:
-					invert_first = true
+				invert = true
 			
 			ExprNode.Type.And, FilterItem.Type.Or:
-				is_and = node.type == ExprNode.Type.And
+				if solver.items.size() >= 2:
+					stack_up = solver.all != (node.type == ExprNode.Type.And)
+					if stack_up and begin != 0:
+						return pos
+				
+				else:
+					solver.all = node.type == ExprNode.Type.And
 			
 			ExprNode.Type.MatchString, ExprNode.Type.Tag, ExprNode.Type.SubExpression:
-				if first_node:
-					second_node = node
+				var right
+				if node.type == ExprNode.Type.SubExpression:
+					right = Solver.new()
+					right.invert = invert
+					_compile(node.expressions, right)
+				
+				elif invert:
+					right = Solver.new()
+					right.invert = invert
+					right.items.append(node.get_value())
+				
 				else:
-					first_node = node
-		
-		if first_node and second_node:
-			
-			
-			
-			invert_first = false
-			first_node = null
-			invert_second = false
-			second_node = null
-			is_and = false
+					right = node.get_value()
+				
+				if stack_up:
+					stack_up = false
+					var next := Solver.new()
+					
+					if solver.all:
+						next.all = solver.all
+						next.invert = solver.invert
+						next.items = solver.items
+						
+						solver.all = not solver.all
+						solver.invert = false
+						solver.items = [next, right]
+					else:
+						next.all = not solver.all
+						next.invert = invert
+						next.items = [solver.items[-1]]
+						solver.items[-1] = next
+						pos = _compile(expressions, next, pos)
+				
+				else:
+					solver.items.append(right)
+				
+				invert = false
 		
 		pos += 1
+	
+	return pos
+
+@warning_ignore('shadowed_variable')
+static func _decompile(solver : Solver) -> Array[ExprNode]:
+	var root := [] as Array[ExprNode]
+	var expressions := root
+	
+	if solver.invert:
+		var node := ExprNode.new()
+		expressions.append(node)
+		node.type = ExprNode.Type.Not
+		if solver.items.size() != 1:
+			node = ExprNode.new()
+			expressions.append(node)
+			node.type = ExprNode.Type.SubExpression
+			expressions = node.expressions
+	
+	for i in solver.items.size():
+		var item = solver.items[i]
+		if item is Solver:
+			assert(solver.items)
+			
+			if not item.all and solver.all and not (item.invert and item.items.size() == 1):
+				var node := ExprNode.new()
+				expressions.append(node)
+				node.type = ExprNode.Type.SubExpression
+				node.expressions = _decompile(item)
+			else:
+				expressions.append_array(_decompile(item))
+		
+		elif item is DataBase.Tag:
+			var node := ExprNode.new()
+			expressions.append(node)
+			node.type = ExprNode.Type.Tag
+			node.tag = item
+		
+		elif item is String:
+			var node := ExprNode.new()
+			expressions.append(node)
+			node.type = ExprNode.Type.MatchString
+			node.match_string = item
+		
+		else:
+			assert(false)
+		
+		if i < solver.items.size() - 1:
+			var node := ExprNode.new()
+			expressions.append(node)
+			if solver.all:
+				node.type = ExprNode.Type.And
+			else:
+				node.type = ExprNode.Type.Or
+	
+	return root
 
 class ExprNode:
 	enum Type {
