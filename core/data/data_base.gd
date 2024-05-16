@@ -499,6 +499,11 @@ class Tag extends Item:
 		color = Color()
 		track_key_to_type.clear()
 	
+	func get_name() -> StringName:
+		if names:
+			return names[0]
+		return ''
+	
 	func to_bytes() -> PackedByteArray:
 		return var_to_bytes([key, names, types, color])
 	

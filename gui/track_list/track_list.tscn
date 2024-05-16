@@ -1,11 +1,11 @@
 [gd_scene load_steps=7 format=3 uid="uid://mqs6rjv3osx0"]
 
-[ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="1_dsj56"]
 [ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_wa3m6"]
 [ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/track_list/find_filter_panel.tscn" id="4_hm86d"]
 [ext_resource type="Resource" uid="uid://vnhdqobrwyf" path="res://core/solver.tres" id="5_r6w5b"]
+[ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="6_x1fay"]
 
 [node name="TrackList" type="MarginContainer"]
 anchors_preset = 15
@@ -57,7 +57,7 @@ clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 2
-script = ExtResource("1_dsj56")
+script = ExtResource("6_x1fay")
 source = ExtResource("2_t662t")
 playback = ExtResource("3_wa3m6")
 
@@ -67,4 +67,5 @@ max_value = 1.0
 step = 0.0001
 
 [connection signal="updated" from="VBoxContainer/FindPanel/FindFilterPanel" to="." method="_update_find_panel_visibility"]
+[connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer2/List" to="VBoxContainer/HBoxContainer2/VScrollBar" method="set_value_no_signal"]
 [connection signal="value_changed" from="VBoxContainer/HBoxContainer2/VScrollBar" to="VBoxContainer/HBoxContainer2/List" method="set_scroll_progress"]

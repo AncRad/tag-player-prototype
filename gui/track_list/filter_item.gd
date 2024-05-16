@@ -84,3 +84,6 @@ func filter_to_string() -> String:
 
 func is_seprarator() -> bool:
 	return type == Type.Separator
+
+func get_match_string() -> String:
+	return '*%s*' % '*'.join(inputed_text.replace('*', ' ').split(' ', false))

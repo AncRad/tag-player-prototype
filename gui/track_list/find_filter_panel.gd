@@ -21,6 +21,7 @@ const FILTER_ITEM = preload('filter_item.tscn')
 var _flow_container : HFlowContainer
 
 var _updating := false
+var _building := false
 var _items : Array[FilterItem] = []
 var _expression_root : ExprNode
 
@@ -155,6 +156,10 @@ func update() -> void:
 		_updating = true
 		_update.call_deferred()
 
+func build() -> void:
+	update()
+	_building = true
+
 func get_tags() -> Array[DataBase.Tag]:
 	var tags := [] as Array[DataBase.Tag]
 	
@@ -182,6 +187,10 @@ func is_editing() -> bool:
 
 func _update() -> void:
 	#var empty_befor := empty()
+	
+	if _building:
+		#_build()
+		pass
 	
 	var focused_item : FilterItem
 	var items := [] as Array[FilterItem]
@@ -302,8 +311,9 @@ func _update() -> void:
 	#if empty() and not empty_befor:
 	
 	
-	_updating = false
 	updated.emit()
+	_updating = false
+	_building = false
 
 
 
@@ -434,7 +444,7 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 				if item.type == FilterItem.Type.Tag:
 					node.tag = item.tag
 				else:
-					node.match_string = item.inputed_text
+					node.match_string = item.get_match_string()
 		
 		pos += 1
 	
@@ -621,6 +631,10 @@ static func _decompile(solver : Solver) -> Array[ExprNode]:
 	
 	return root
 
+static func _build() -> void:
+	pass
+
+
 class ExprNode:
 	enum Type {
 		Not = FilterItem.Type.Not,
@@ -649,6 +663,7 @@ class ExprNode:
 		if type == Type.MatchString:
 			return match_string
 		return
+	
 	
 	func is_operator() -> bool:
 		match type:

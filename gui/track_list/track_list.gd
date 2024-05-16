@@ -43,6 +43,7 @@ var _find_filter_panel : FindFilterPanel:
 
 var _find_panel : Control
 
+
 func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:

@@ -102,7 +102,8 @@ func _draw() -> void:
 	
 	_line_regions.clear()
 	
-	var font : Font = get_font() #font.set_cache_capacity(1000, 10)
+	var font : Font = get_font()
+	font.set_cache_capacity(1000, 1000)
 	var font_size : int = get_font_size()
 	#var font_height : int = get_line_height()
 	var font_ascent : int = get_line_ascent()
@@ -254,8 +255,3 @@ func focus_on_track_at_position(pos_y : float = size.y / 2, track := highlighted
 		var index := source.get_tracks().find(track)
 		if index >= 0:
 			scroll = index - pos_y / get_line_interval() + 0.5
-
-
-func _on_find_filter_panel_filters_changed() -> void:
-	if source and source.source and source.source is DataSourceFiltered:
-		source.source.solver = Solver.new(false, false, %FindFilterPanel.get_tags())
