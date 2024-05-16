@@ -7,7 +7,7 @@ extends DataSource
 			inverted = value
 			changes_up()
 
-var tracks_ordered : Array[DataBase.Track] = []
+var _tracks : Array[DataBase.Track] = []
 
 
 func _init(p_source : DataSource = null):
@@ -15,25 +15,23 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	var new_order : Array[DataBase.Track] = []
+	var new_tracks : Array[DataBase.Track] = []
 	if source:
-		new_order = source.get_tracks().duplicate()
+		new_tracks = source.get_tracks().duplicate()
 		
 		if inverted:
-			new_order.sort_custom(compare_inv)
+			new_tracks.sort_custom(compare_inv)
 		
 		else:
-			new_order.sort_custom(compare)
+			new_tracks.sort_custom(compare)
 	
-	if new_order != tracks_ordered:
-		tracks_ordered = new_order
-		tracks_ordered.make_read_only()
+	if new_tracks != _tracks:
+		_tracks = new_tracks
+		_tracks.make_read_only()
 		changes_up()
 
 func get_tracks() -> Array[DataBase.Track]:
-	return tracks_ordered
-
-#func _sort() -> void:
+	return _tracks
 
 static func compare(track_a : DataBase.Track, track_b : DataBase.Track) -> bool:
 	return track_a.order_string < track_b.order_string

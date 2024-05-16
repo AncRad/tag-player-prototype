@@ -42,7 +42,7 @@ var _find_filter_panel : FindFilterPanel:
 		if value != _find_filter_panel:
 			_find_filter_panel = value
 
-var _focus_on_track : DataBase.Track
+var _deferred_scroll_to_track : DataBase.Track
 
 
 func _notification(what: int) -> void:
@@ -53,13 +53,7 @@ func _notification(what: int) -> void:
 
 func get_scroll_max() -> float:
 	if source:
-		## метод get_line_max_count не подходит, потому что округляет в до большего, когда нужно округлить до меньшего,
-		## чтобы была возможность прочитать послендюю строку, скрывающую свою часть за нижнем краем
-		#return maxf(0, source.size() - get_line_max_count())
-		var separation : int = get_line_separation()
-		var line_distance := get_line_height() + separation
-		var line_max_count := int((size.y + separation + wrapf(scroll, 0, 1) * line_distance) / line_distance)
-		return maxf(0, source.size() - line_max_count)
+		return maxf(0, source.size() - int((size.y + get_line_descent()) / get_line_interval()))
 	return 0
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -68,9 +62,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			accept_event()
 			var pos := get_global_mouse_position() * get_global_transform()
 			if has_point(pos):
-				focus_on_track_at_position(pos.y)
+				scroll_to_track(pos.y, highlighted_track)
 			else:
-				focus_on_track_at_position()
+				scroll_to_track(-0.5, highlighted_track, true)
 		
 		elif event.is_action('track_list_start_find', true):
 			accept_event()
@@ -105,7 +99,6 @@ func _draw() -> void:
 	var font : Font = get_font()
 	font.set_cache_capacity(1000, 1000)
 	var font_size : int = get_font_size()
-	#var font_height : int = get_line_height()
 	var font_ascent : int = get_line_ascent()
 	var font_color_default := Color.WHITE.darkened(0.5)
 	var font_color_light := Color.WHITE.darkened(0.2)
@@ -124,23 +117,23 @@ func _draw() -> void:
 	if playback:
 		highlighted_track = playback.current_track
 	
-	if _focus_on_track:
+	if _deferred_scroll_to_track:
 		if source:
-			focus_on_track_at_position(size.y / 2.0)
-		_focus_on_track = null
+			scroll_to_track(size.y / 2.0, _deferred_scroll_to_track, false)
+		_deferred_scroll_to_track = null
 	
 	var begin : int = clampi(int(scroll), 0, source.size())
 	var end : int = clampi(begin + line_max_count, begin, source.size())
 	var tracks := source.get_tracks().slice(begin, end) as Array[DataBase.Track]
 	
-	var draw_region := func(text : String, rect : Rect2, width := -1, color := font_color_default) -> Rect2:
+	var draw_region := func draw_region(text : String, rect : Rect2, width := -1, color := font_color_default) -> Rect2:
 		font.draw_string(get_canvas_item(), rect.position + Vector2(0, font_ascent + line_separation / 2.0),
 				text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, color, TextServer.JUSTIFICATION_NONE)
 		rect.size.x = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, TextServer.JUSTIFICATION_NONE).x
 		return rect
 	
 	var main_rect := Rect2(0, 0, size.x, size.y)
-	var pos_y : int = int(-wrapf(scroll, 0, 1) * line_interval - line_separation / 2.0)
+	var pos_y : int = int(-wrapf(scroll, 0, 1) * line_interval)
 	var root := source.get_root()
 	for track : DataBase.Track in tracks:
 		var color := font_color_default
@@ -245,13 +238,16 @@ func set_highlighted_track(value : DataBase.Track) -> void:
 				if absi(track_line_change) == 1:
 					scroll += track_line_change
 
-func focus_on_track(track := highlighted_track) -> void:
-	_focus_on_track = track
-	if _focus_on_track:
-		queue_redraw()
-
-func focus_on_track_at_position(pos_y : float = size.y / 2, track := highlighted_track) -> void:
-	if source:
-		var index := source.get_tracks().find(track)
-		if index >= 0:
-			scroll = index - pos_y / get_line_interval() + 0.5
+func scroll_to_track(offset : float = -0.5, track := highlighted_track, deferred := false) -> void:
+	if deferred:
+		_deferred_scroll_to_track = track
+		if track:
+			queue_redraw()
+	else:
+		if source:
+			var index := source.get_tracks().find(track)
+			if index >= 0:
+				if offset >= 0:
+					scroll = index - (offset + get_line_separation() / 2.0) / get_line_interval() + 0.5
+				else:
+					scroll = index + offset / size.y * get_line_interval() + 0.5

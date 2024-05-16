@@ -4,8 +4,6 @@ extends DataSource
 ##
 ## DataBase
 
-#enum {CHANGED = 1, PREDELETE = 1 << 1, TAGGED = 1 << 2, UNTAGGED = 1 << 3}
-
 const KEY_MIN : int = 1_000_000_000
 const KEY_MAX : int = 1_999_999_999
 
@@ -347,7 +345,6 @@ class Item:
 	
 	static func from_bytes(_bytes : PackedByteArray) -> Item:
 		return
-	
 
 class Track extends Item:
 	signal tagged
@@ -419,7 +416,6 @@ class Track extends Item:
 		if type in type_to_tags:
 			return type_to_tags[type]
 		return []
-	
 
 class Tag extends Item:
 	signal tagged
@@ -439,9 +435,6 @@ class Tag extends Item:
 		names = p_names
 		types = p_types
 		color = p_color
-	
-	#func _to_string() -> String:
-		#return '<Tag:%s>' % (names[0] if names else key)
 	
 	func tag(track : Track, type : StringName = &'', position : int = -1) -> void:
 		if not type and types.size():
@@ -516,7 +509,6 @@ class Tag extends Item:
 		var types := [] as Array[StringName]
 		types.assign(data[2])
 		return Tag.new(data[0], names, types, data[3])
-	
 
 #func find_tags(name : String) -> Array[Tag]:
 	#var tags : Array[Tag] = []
@@ -543,4 +535,3 @@ class Tag extends Item:
 		#var track_typed_tags : Array[Tag] = track.type_to_tags[tag_type]
 		#return track_typed_tags.find(tag)
 	#return -1
-#

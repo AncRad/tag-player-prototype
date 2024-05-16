@@ -19,7 +19,7 @@ var _line_regions : Array[Array] = []
 
 
 func has_point(point : Vector2) -> bool:
-	return Rect2(Vector2(), size).has_point(point)
+	return Rect2(Vector2(), size).grow(0.005).has_point(point)
 
 func get_font() -> Font:
 	return get_theme_font('font')
@@ -33,23 +33,22 @@ func get_line_height() -> int:
 func get_line_ascent() -> int:
 	return int(get_font().get_ascent(get_font_size()))
 
+func get_line_descent() -> int:
+	return int(get_font().get_descent(get_font_size()))
+
 func get_line_separation() -> int:
 	return 2
 
 func get_line_interval() -> int:
 	return get_line_height() + get_line_separation()
 
-func get_line_max_count() -> int:
-	var separation : int = get_line_separation()
-	var line_distance := get_line_height() + separation
-	return int(ceil((size.y + separation + wrapf(scroll, 0, 1) * line_distance) / line_distance))
-
-func get_line_at_position(p_position : Vector2) -> int:
+func get_line_at_position(p_position : Vector2) -> float:
 	if has_point(p_position):
-		var separation : int = get_line_separation()
-		var line_distance := get_line_height() + separation
-		return int((p_position.y + separation + wrapf(scroll, 0, 1) * line_distance) / line_distance)
+		return (p_position.y + get_line_descent()) / get_line_interval()
 	return -1
+
+func get_line_max_count() -> int:
+	return maxi(0, ceili(get_line_at_position(Vector2(0, size.y))))
 
 func get_line_regions(line : int) -> Array[Dictionary]:
 	assert(line >= 0 and line < _line_regions.size())
@@ -58,7 +57,8 @@ func get_line_regions(line : int) -> Array[Dictionary]:
 	return []
 
 func get_region_at_position(p_position : Vector2) -> Dictionary:
-	var line := get_line_at_position(p_position)
+	var line := int(get_line_at_position(p_position))
+	print(line)
 	if line >= 0 and line < _line_regions.size():
 		var line_regions := get_line_regions(line)
 		for region in line_regions:

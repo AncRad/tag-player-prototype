@@ -55,7 +55,6 @@ func _on_filter_item_gui_input(event: InputEvent, item: FilterItem) -> void:
 		if (event.is_action('ui_text_caret_left') or event.is_action('ui_text_caret_line_start')
 				or event.is_action('ui_text_backspace')):
 			if item.caret_column == 0:
-				accept_event()
 				var item_index := _items.find(item)
 				
 				if item_index == 0:
@@ -72,27 +71,46 @@ func _on_filter_item_gui_input(event: InputEvent, item: FilterItem) -> void:
 					var left_item := _items[item_index - 1]
 					left_item.grab_focus()
 					left_item.caret_column = 10000
+				
+				accept_event()
+				return
 		
 		elif (event.is_action('ui_text_caret_right') or event.is_action('ui_text_caret_line_end')
 				or event.is_action('ui_text_delete')):
 			if item.caret_column == item.text.length():
-				accept_event()
 				var item_index := _items.find(item)
 				if item_index != -1 and item_index + 1 < _items.size():
 					var right_item := _items[item_index + 1]
 					right_item.grab_focus()
 					right_item.caret_column = 0
+				
 				accept_event()
+				return
 		
 		elif event.is_action('ui_text_caret_down'):
 			if item.caret_column == item.text.length():
 				print('смахнуть вниз')
+				
 				accept_event()
+				return
 		
 		elif event.is_action('ui_text_caret_up'):
 			if item.caret_column == 0:
 				print('смахнуть вверх')
+				
 				accept_event()
+				return
+		
+	
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_MIDDLE:
+			item.hide()
+			_items.erase(item)
+			item.queue_free()
+			update()
+			
+			accept_event()
+			return
 
 func _on_filter_item_focus_changed(item : FilterItem) -> void:
 	if item.has_focus():
@@ -198,7 +216,8 @@ func _update() -> void:
 	for node in _flow_container.get_children():
 		if node is Control:
 			if node is FilterItem:
-				items.append(node)
+				if node.visible:
+					items.append(node)
 				if node.has_focus():
 					focused_item = node
 			

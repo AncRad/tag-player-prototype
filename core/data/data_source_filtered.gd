@@ -16,7 +16,7 @@ signal filters_changed
 			
 			changes_up()
 
-var tracks_filtered : Array[DataBase.Track] = []
+var _tracks : Array[DataBase.Track] = []
 
 
 func _init(p_source : DataSource = null):
@@ -24,23 +24,21 @@ func _init(p_source : DataSource = null):
 		source = p_source
 
 func _update() -> void:
-	var new_filtered : Array[DataBase.Track] = []
+	var new_tracks : Array[DataBase.Track] = []
 	
 	if source:
 		if solver:
 			for track in source.get_tracks():
 				if solver.solve(track):
-					new_filtered.append(track)
+					new_tracks.append(track)
 		
 		else:
-			new_filtered = source.get_tracks().duplicate()
+			new_tracks = source.get_tracks().duplicate()
 	
-	if new_filtered != tracks_filtered:
-		tracks_filtered = new_filtered
-		tracks_filtered.make_read_only()
+	if new_tracks != _tracks:
+		_tracks = new_tracks
+		_tracks.make_read_only()
 		changes_up()
 
 func get_tracks() -> Array[DataBase.Track]:
-	return tracks_filtered
-
-#func _filter() -> void:
+	return _tracks

@@ -74,7 +74,7 @@ func need_update() -> bool:
 func set_source(value : DataSource) -> void:
 	if value != source:
 		if source:
-			source.erase_child(self)
+			source._erase_child(self)
 		
 		assert(not value is DataSourceOrdered)
 		#if value:
@@ -84,17 +84,15 @@ func set_source(value : DataSource) -> void:
 		source = value
 		
 		if source:
-			source.append_child(self)
-
-func size() -> int:
-	if source:
-		return get_tracks().size()
-	return 0
+			source._append_child(self)
 
 func get_tracks() -> Array[DataBase.Track]:
 	if source:
 		return source.get_tracks()
 	return []
+
+func size() -> int:
+	return get_tracks().size()
 
 func has(track : DataBase.Track) -> bool:
 	return track in get_tracks()
@@ -116,7 +114,7 @@ func get_ordered() -> DataSourceOrdered:
 	
 	if not _ordered.get_ref():
 		var ordered := DataSourceOrdered.new(self)
-		append_child(ordered)
+		_append_child(ordered)
 		_ordered = weakref(ordered)
 		return ordered
 	
@@ -141,7 +139,8 @@ func get_children() -> Array[DataSource]:
 			_children.remove_at(i)
 	return children
 
-func append_child(child : DataSource) -> void:
+
+func _append_child(child : DataSource) -> void:
 	var finded := false
 	var i := 0
 	while i < _children.size():
@@ -155,7 +154,7 @@ func append_child(child : DataSource) -> void:
 	if not finded:
 		_children.append(weakref(child))
 
-func erase_child(child : DataSource) -> void:
+func _erase_child(child : DataSource) -> void:
 	var i := 0
 	while i < _children.size():
 		if not _children[i].get_ref() or _children[i].get_ref() == child:

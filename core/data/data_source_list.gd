@@ -12,7 +12,7 @@ func set_source(value : DataSource) -> void:
 	if value:
 		var value_root := value.get_root()
 		if value_root:
-			super(value.get_root())
+			super(value_root)
 		else:
 			assert(false)
 	else:
