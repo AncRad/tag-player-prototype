@@ -15,6 +15,7 @@ signal filters_changed
 				solver.changed.connect(changes_up)
 			
 			changes_up()
+			filters_changed.emit()
 
 var _tracks : Array[DataBase.Track] = []
 

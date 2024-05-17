@@ -2,7 +2,7 @@ class_name TrackList
 extends MarginContainer
 
 const TrackListItem = preload('track_list_item.gd')
-const FindFilterPanel = preload('find_filter_panel.gd')
+const FindFilterPanel = preload('res://gui/find_panel/find_filter_panel.gd')
 
 @export var source : DataSource:
 	set(value):

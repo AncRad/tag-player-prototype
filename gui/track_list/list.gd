@@ -44,7 +44,7 @@ func get_line_interval() -> int:
 
 func get_line_at_position(p_position : Vector2) -> float:
 	if has_point(p_position):
-		return (p_position.y + get_line_descent()) / get_line_interval()
+		return p_position.y / get_line_interval() + wrapf(scroll, 0, 1)
 	return -1
 
 func get_line_max_count() -> int:
@@ -58,7 +58,6 @@ func get_line_regions(line : int) -> Array[Dictionary]:
 
 func get_region_at_position(p_position : Vector2) -> Dictionary:
 	var line := int(get_line_at_position(p_position))
-	print(line)
 	if line >= 0 and line < _line_regions.size():
 		var line_regions := get_line_regions(line)
 		for region in line_regions:

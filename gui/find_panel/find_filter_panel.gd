@@ -10,12 +10,20 @@ const FILTER_ITEM = preload('filter_item.tscn')
 	set(value):
 		if value != data_base:
 			data_base = value
+			build()
 
 @export var solver : Solver:
 	set(value):
 		if value != solver:
+			if solver:
+				solver.changed.disconnect(build)
+			
 			solver = value
-			update()
+			
+			if solver:
+				solver.changed.connect(build)
+			
+			build()
 
 
 var _flow_container : HFlowContainer
@@ -213,6 +221,7 @@ func _update() -> void:
 	var focused_item : FilterItem
 	var items := [] as Array[FilterItem]
 	
+	## ищем focused_item и составляем массив видимых FilterItem
 	for node in _flow_container.get_children():
 		if node is Control:
 			if node is FilterItem:
@@ -226,7 +235,7 @@ func _update() -> void:
 				_flow_container.remove_child(node)
 				node.queue_free()
 	
-	
+	## удаляем пустые FilterItem кроме focused_item
 	var pos := 0
 	while pos < items.size():
 		var item := items[pos]
@@ -244,7 +253,7 @@ func _update() -> void:
 		
 		pos += 1
 	
-	
+	## если в конце нет пустого, то добавляем
 	if not items or not items[-1].empty():
 		var end := FILTER_ITEM.instantiate() as FilterItem
 		end.type = FilterItem.Type.MatchString
@@ -253,6 +262,8 @@ func _update() -> void:
 		connect_filter_item(end)
 	
 	
+	## удаляем все крайние разделители, разделители соседствующие с разделителями и пустыми FilterItem
+	## создаем разделители между всеми не пустыми FilterItem, не имеющими между собой разделителей
 	pos = 0
 	while pos < items.size():
 		var item := items[pos]
@@ -275,20 +286,18 @@ func _update() -> void:
 				continue
 		
 		else:
-			if not item.is_seprarator() and right and not right.is_seprarator():
-				if pos < items.size() - 2 or not right.empty():
-					if not focused_item or (focused_item != item and focused_item != right) or not focused_item.empty():
-						var separator := FILTER_ITEM.instantiate() as FilterItem
-						separator.type = FilterItem.Type.Separator
-						items.insert(pos + 1, separator)
-						item.add_sibling(separator)
-						connect_filter_item(separator)
-						pos += 2
-						continue
+			if right and not right.is_seprarator() and not right.empty() and not item.empty():
+				var separator := FILTER_ITEM.instantiate() as FilterItem
+				separator.type = FilterItem.Type.Separator
+				items.insert(pos + 1, separator)
+				item.add_sibling(separator)
+				connect_filter_item(separator)
+				pos += 2
+				continue
 		
 		pos += 1
 	
-	
+	## удаляем все не нужные FilterItem
 	for item in _items:
 		if is_instance_valid(item) and not item in items:
 			connect_filter_item(item, false)
@@ -297,7 +306,11 @@ func _update() -> void:
 				_flow_container.remove_child(item)
 				item.queue_free()
 	
+	## выполняем парсинг
+	if solver:
+		_parse()
 	
+	## настраиваем пути направления фокуса FilterItem
 	for i in items.size():
 		var item := items[i]
 		if i == 0:
@@ -314,13 +327,8 @@ func _update() -> void:
 			item.focus_neighbor_right = ^''
 			item.focus_next = ^''
 	
-	
-	if _items != items:
-		_items = items
-	
-	
-	if solver:
-		_parse()
+	## обновляем массив
+	_items = items
 	
 	
 	#if filters_to_string() != _filters_string:
@@ -391,22 +399,29 @@ func _parse() -> void:
 	_repair(_expression_root.expressions)
 	
 	if solver:
-		solver.all = false
-		solver.invert = false
-		solver.items.clear()
-		_compile(_expression_root.expressions, solver)
+		var next := Solver.new()
+		next.all = false
+		next.invert = false
+		next.items.clear()
+		_compile(_expression_root.expressions, next)
 		%DebugLabel1.text = _expression_root.to_text()
-		solver.emit_changed()
 		#_expression_root.expressions.clear()
-		#_expression_root.expressions = _decompile(solver)
+		#_expression_root.expressions = _decompile(next)
 		#%DebugLabel2.text = _expression_root.to_text()
+		solver.all = next.all
+		solver.invert = next.invert
+		solver.items.clear()
+		solver.items.assign(next.items)
+		solver.emit_changed()
 
 static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = -1) -> int:
+	
 	
 	var return_on_close_bracket := pos != -1
 	
 	if pos == -1:
 		pos = 0
+		
 		var brackets := 0
 		var not_openned := 0
 		for item in items:
@@ -466,6 +481,8 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 					node.match_string = item.get_match_string()
 		
 		pos += 1
+	
+	
 	
 	return pos
 
@@ -666,6 +683,8 @@ class ExprNode:
 		SubExpression,
 	}
 	var type : Type
+	var virtual := false
+	var disabled := false
 	
 	## Tag
 	var tag : DataBase.Tag

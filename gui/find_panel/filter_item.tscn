@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://couobddpm3smw"]
 
-[ext_resource type="Script" path="res://gui/track_list/filter_item.gd" id="1_5h3mi"]
+[ext_resource type="Script" path="res://gui/find_panel/filter_item.gd" id="1_5h3mi"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_dogt5"]
 
