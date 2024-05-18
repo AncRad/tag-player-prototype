@@ -1,7 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://cfyql36sw5nod"]
+[gd_scene load_steps=5 format=3 uid="uid://cfyql36sw5nod"]
 
 [ext_resource type="Script" path="res://gui/find_panel/find_filter_panel.gd" id="1_xg5pt"]
-[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="2_c5ni2"]
+[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="2_0pkje"]
+[ext_resource type="Resource" uid="uid://vnhdqobrwyf" path="res://core/solver.tres" id="3_3t4ci"]
+[ext_resource type="Resource" uid="uid://6vg6y6vheb7a" path="res://gui/find_panel/expr_node.tres" id="4_6l2qq"]
 
 [node name="FindFilterPanel" type="MarginContainer"]
 anchors_preset = 10
@@ -14,7 +16,9 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 script = ExtResource("1_xg5pt")
-data_base = ExtResource("2_c5ni2")
+data_base = ExtResource("2_0pkje")
+solver = ExtResource("3_3t4ci")
+_expression = ExtResource("4_6l2qq")
 
 [node name="Control" type="Control" parent="."]
 layout_mode = 2

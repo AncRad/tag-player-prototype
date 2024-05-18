@@ -31,7 +31,18 @@ var _flow_container : HFlowContainer
 var _updating := false
 var _building := false
 var _items : Array[FilterItem] = []
-var _expression_root : ExprNode
+@export var _expression : ExprNode:
+	set(value):
+		if value != _expression:
+			if _expression:
+				_expression.changed.disconnect(build)
+			
+			_expression = value
+			
+			if _expression:
+				_expression.changed.connect(build)
+			
+			build()
 
 
 func _notification(what: int) -> void:
@@ -183,8 +194,9 @@ func update() -> void:
 		_update.call_deferred()
 
 func build() -> void:
-	update()
-	_building = true
+	if not _building:
+		_building = true
+		update()
 
 func get_tags() -> Array[DataBase.Tag]:
 	var tags := [] as Array[DataBase.Tag]
@@ -203,7 +215,7 @@ func filters_to_string() -> String:
 	return ' '.join(split)
 
 func empty() -> bool:
-	return not _expression_root or _expression_root.expressions.is_empty()
+	return not _expression or _expression.expressions.is_empty()
 
 func is_editing() -> bool:
 	var focus_owner := get_viewport().gui_get_focus_owner()
@@ -214,10 +226,7 @@ func is_editing() -> bool:
 func _update() -> void:
 	#var empty_befor := empty()
 	
-	if _building:
-		#_build()
-		pass
-	
+	var pos := 0
 	var focused_item : FilterItem
 	var items := [] as Array[FilterItem]
 	
@@ -236,7 +245,6 @@ func _update() -> void:
 				node.queue_free()
 	
 	## удаляем пустые FilterItem кроме focused_item
-	var pos := 0
 	while pos < items.size():
 		var item := items[pos]
 		
@@ -252,6 +260,38 @@ func _update() -> void:
 				continue
 		
 		pos += 1
+	
+	if _building:
+		for item in items:
+			connect_filter_item(item, false)
+			_flow_container.remove_child(item)
+			item.queue_free()
+		items.clear()
+		_items.clear()
+		
+		if _expression:
+			pos = 0
+			while pos < _expression.expressions.size():
+				var node := _expression.expressions[pos]
+				
+				if not node.virtual:
+					var item := FILTER_ITEM.instantiate() as FilterItem
+					items.append(item)
+					item.type = node.type as FilterItem.Type
+					if node.is_operand():
+						if item.type == FilterItem.Type.MatchString:
+							item.text = node.match_string
+							item.inputed_text = item.text
+						else:
+							item.tag = node.tag
+							item.text = item.tag.names[0]
+							item.inputed_text = item.text
+					item.text = item.filter_to_string()
+					item.inputed_text = item.text
+					_flow_container.add_child(item)
+					connect_filter_item(item)
+				
+				pos += 1
 	
 	## если в конце нет пустого, то добавляем
 	if not items or not items[-1].empty():
@@ -306,9 +346,40 @@ func _update() -> void:
 				_flow_container.remove_child(item)
 				item.queue_free()
 	
+	## обновляем массив
+	_items = items
+	
 	## выполняем парсинг
-	if solver:
-		_parse()
+	if not _building:
+		_building = true
+		
+		if not _expression:
+			_expression = ExprNode.new()
+			_expression.type = ExprNode.Type.SubExpression
+		
+		_expression.clear()
+		
+		_parse_items(items, _expression)
+		
+		_repair(_expression)
+		
+		_expression.emit_changed()
+		
+		if solver:
+			var next := Solver.new()
+			next.all = false
+			next.invert = false
+			next.items.clear()
+			_expression.compile(next)
+			%DebugLabel1.text = _expression.to_text()
+			#_expression.expressions.clear()
+			#_expression.expressions = _decompile(next)
+			#%DebugLabel2.text = _expression.to_text()
+			solver.all = next.all
+			solver.invert = next.invert
+			solver.items.clear()
+			solver.items.assign(next.items)
+			solver.emit_changed()
 	
 	## настраиваем пути направления фокуса FilterItem
 	for i in items.size():
@@ -326,9 +397,6 @@ func _update() -> void:
 		else:
 			item.focus_neighbor_right = ^''
 			item.focus_next = ^''
-	
-	## обновляем массив
-	_items = items
 	
 	
 	#if filters_to_string() != _filters_string:
@@ -386,38 +454,36 @@ func _parse_item_text(item : FilterItem) -> void:
 	if not finded:
 		item.type = FilterItem.Type.MatchString
 		finded = true
+#
+#func _parse() -> void:
+	#if not _expression:
+		#_expression = ExprNode.new()
+		#_expression.type = ExprNode.Type.SubExpression
+	#
+	#_expression.clear()
+	#
+	#_parse_items(_items, _expression)
+	#
+	#_repair(_expression)
+	#
+	#if solver and false:
+		#var next := Solver.new()
+		#next.all = false
+		#next.invert = false
+		#next.items.clear()
+		##_compile(_expression.expressions, next)
+		#%DebugLabel1.text = _expression.to_text()
+		##_expression.expressions.clear()
+		##_expression.expressions = _decompile(next)
+		##%DebugLabel2.text = _expression.to_text()
+		#solver.all = next.all
+		#solver.invert = next.invert
+		#solver.items.clear()
+		#solver.items.assign(next.items)
+		#solver.emit_changed()
 
-func _parse() -> void:
-	if not _expression_root:
-		_expression_root = ExprNode.new()
-		_expression_root.type = ExprNode.Type.SubExpression
-	
-	_expression_root.expressions.clear()
-	
-	_parse_items(_items, _expression_root.expressions)
-	
-	_repair(_expression_root.expressions)
-	
-	if solver:
-		var next := Solver.new()
-		next.all = false
-		next.invert = false
-		next.items.clear()
-		_compile(_expression_root.expressions, next)
-		%DebugLabel1.text = _expression_root.to_text()
-		#_expression_root.expressions.clear()
-		#_expression_root.expressions = _decompile(next)
-		#%DebugLabel2.text = _expression_root.to_text()
-		solver.all = next.all
-		solver.invert = next.invert
-		solver.items.clear()
-		solver.items.assign(next.items)
-		solver.emit_changed()
-
-static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode] = [], pos : int = -1) -> int:
-	
-	
-	var return_on_close_bracket := pos != -1
+static func _parse_items(items : Array[FilterItem], node : ExprNode, pos : int = -1) -> int:
+	#var return_on_close_bracket := pos != -1
 	
 	if pos == -1:
 		pos = 0
@@ -434,17 +500,22 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 					brackets -= 1
 		
 		if not_openned:
-			var node := ExprNode.new()
-			node.type = ExprNode.Type.SubExpression
-			while not_openned > 0:
-				not_openned -= 1
-				pos = _parse_items(items, node.expressions, pos)
-				
-				var next := ExprNode.new()
-				next.type = ExprNode.Type.SubExpression
-				next.expressions.append(node)
-				node = next
-			expressions.append(node.expressions[0])
+			for i in not_openned:
+				var bracket := ExprNode.new(ExprNode.Type.BracketOpen)
+				bracket.virtual = true
+				node.append(bracket)
+		#if not_openned:
+			#var node1 := ExprNode.new()
+			#node1.type = ExprNode.Type.SubExpression
+			#while not_openned > 0:
+				#not_openned -= 1
+				#pos = _parse_items(items, node1, pos)
+				#
+				#var next := ExprNode.new()
+				#next.type = ExprNode.Type.SubExpression
+				#next.append(node1)
+				#node1 = next
+			#node.append(node1.expressions[0])
 	
 	while pos < items.size():
 		var item := items[pos]
@@ -456,302 +527,101 @@ static func _parse_items(items : Array[FilterItem], expressions : Array[ExprNode
 		match item.type:
 			
 			FilterItem.Type.BracketOpen:
-				var node := ExprNode.new()
-				expressions.append(node)
-				node.type = ExprNode.Type.SubExpression
-				pos = _parse_items(items, node.expressions, pos + 1)
+				node.append(ExprNode.new(ExprNode.Type.BracketOpen))
 			
 			FilterItem.Type.BracketClose:
-				assert(return_on_close_bracket)
-				if return_on_close_bracket:
-					return pos + 1
+				node.append(ExprNode.new(ExprNode.Type.BracketClose))
 			
 			FilterItem.Type.Not, FilterItem.Type.And, FilterItem.Type.Or:
-				var node := ExprNode.new()
-				expressions.append(node)
-				node.type = item.type as ExprNode.Type
+				node.append(ExprNode.new(item.type as ExprNode.Type))
 			
 			FilterItem.Type.MatchString, FilterItem.Type.Tag:
-				var node := ExprNode.new()
-				expressions.append(node)
-				node.type = item.type as ExprNode.Type
+				var node1 := ExprNode.new(item.type as ExprNode.Type)
+				node.append(node1)
 				if item.type == FilterItem.Type.Tag:
-					node.tag = item.tag
+					node1.tag = item.tag
 				else:
-					node.match_string = item.get_match_string()
+					node1.match_string = item.inputed_text
+					#node1.match_string = item.get_match_string()
 		
 		pos += 1
 	
-	
+	#_repair(node)
 	
 	return pos
 
-static func _repair(expressions : Array[ExprNode]) -> void:
+static func _repair(node : ExprNode) -> void:
 	
 	var pos : int = 0
-	while pos < expressions.size():
-		var node := expressions[pos]
-		if node.type == ExprNode.Type.SubExpression:
-			_repair(node.expressions)
-			if not node.expressions:
-				expressions.remove_at(pos)
-				pos -= 1
-		pos += 1
+	#while pos < node.expressions.size():
+		#var node2 := node.expressions[pos]
+		#if node2.type == ExprNode.Type.SubExpression:
+			#_repair(node2)
+			#if not node2.expressions:
+				#node.remove_at(pos)
+				#pos -= 1
+		#pos += 1
 	
 	pos = 0
-	while maxi(0, pos) < expressions.size():
+	var left : ExprNode
+	var right : ExprNode
+	while maxi(0, pos) < node.expressions.size():
 		if pos < 0:
 			pos = 0
 		
-		var node := expressions[pos]
-		var left : ExprNode
-		var right : ExprNode
-		if pos > 0:
-			left = expressions[pos - 1]
-		if pos < expressions.size() - 1:
-			right = expressions[pos + 1]
+		var this := node.expressions[pos]
+		if not this.enabled:
+			pos += 1
+			continue
 		
-		if node.is_operator():
-			if node.is_binary():
+		var p := pos
+		while p > 0:
+			p -= 1
+			var n := node.expressions[p]
+			if n.enabled:
+				if n.is_operator() or n.is_binary():
+					left = n
+					break
+		p = pos
+		while p < node.expressions.size() - 1:
+			p += 1
+			var n := node.expressions[p]
+			if n.enabled:
+				if n.is_operator() or n.is_binary():
+					right = n
+					break
+		
+		if this.is_operator():
+			if this.is_binary():
 				if not left or not right or not left.is_operand():
-					expressions.remove_at(pos)
+					this.enabled = false
 					pos -= 1
 					continue
 			
 			else:
 				if not right:
-					expressions.remove_at(pos)
+					this.enabled = false
 					pos -= 1
 					continue
 				
 				if right.is_operator():
 					if right.is_binary():
-						expressions.remove_at(pos)
+						this.enabled = false
 						pos -= 1
 						continue
 				
 				if right.type == ExprNode.Type.Not:
-					expressions.remove_at(pos)
-					expressions.remove_at(pos)
+					this.enabled = false
+					right.enabled = false
 					pos -= 1
 					continue
 		
-		elif node.is_operand():
+		elif this.is_operand():
 			if right and right.is_operand():
-				right = ExprNode.new()
-				right.type = ExprNode.Type.And
-				expressions.insert(pos + 1, right)
+				right = ExprNode.new(ExprNode.Type.And)
+				right.virtual = true
+				node.insert(pos + 1, right)
 				pos += 2
 				continue
 		
-		else:
-			assert(false)
-		
 		pos += 1
-
-@warning_ignore('shadowed_variable')
-static func _compile(expressions : Array[ExprNode], solver : Solver, begin := 0) -> int:
-	var pos := begin
-	
-	var invert := false
-	var stack_up := false
-	while pos < expressions.size():
-		var node := expressions[pos]
-		
-		match node.type:
-			ExprNode.Type.Not:
-				invert = true
-			
-			ExprNode.Type.And, FilterItem.Type.Or:
-				if solver.items.size() >= 2:
-					stack_up = solver.all != (node.type == ExprNode.Type.And)
-					if stack_up and begin != 0:
-						return pos
-				
-				else:
-					solver.all = node.type == ExprNode.Type.And
-			
-			ExprNode.Type.MatchString, ExprNode.Type.Tag, ExprNode.Type.SubExpression:
-				var right
-				if node.type == ExprNode.Type.SubExpression:
-					right = Solver.new()
-					right.invert = invert
-					_compile(node.expressions, right)
-				
-				elif invert:
-					right = Solver.new()
-					right.invert = invert
-					right.items.append(node.get_value())
-				
-				else:
-					right = node.get_value()
-				
-				if stack_up:
-					stack_up = false
-					var next := Solver.new()
-					
-					if solver.all:
-						next.all = solver.all
-						next.invert = solver.invert
-						next.items = solver.items
-						
-						solver.all = not solver.all
-						solver.invert = false
-						solver.items = [next, right]
-					else:
-						next.all = not solver.all
-						next.invert = invert
-						next.items = [solver.items[-1]]
-						solver.items[-1] = next
-						pos = _compile(expressions, next, pos)
-				
-				else:
-					solver.items.append(right)
-				
-				invert = false
-		
-		pos += 1
-	
-	return pos
-
-@warning_ignore('shadowed_variable')
-static func _decompile(solver : Solver) -> Array[ExprNode]:
-	var root := [] as Array[ExprNode]
-	var expressions := root
-	
-	if solver.invert:
-		var node := ExprNode.new()
-		expressions.append(node)
-		node.type = ExprNode.Type.Not
-		if solver.items.size() != 1:
-			node = ExprNode.new()
-			expressions.append(node)
-			node.type = ExprNode.Type.SubExpression
-			expressions = node.expressions
-	
-	for i in solver.items.size():
-		var item = solver.items[i]
-		if item is Solver:
-			assert(solver.items)
-			
-			if not item.all and solver.all and not (item.invert and item.items.size() == 1):
-				var node := ExprNode.new()
-				expressions.append(node)
-				node.type = ExprNode.Type.SubExpression
-				node.expressions = _decompile(item)
-			else:
-				expressions.append_array(_decompile(item))
-		
-		elif item is DataBase.Tag:
-			var node := ExprNode.new()
-			expressions.append(node)
-			node.type = ExprNode.Type.Tag
-			node.tag = item
-		
-		elif item is String:
-			var node := ExprNode.new()
-			expressions.append(node)
-			node.type = ExprNode.Type.MatchString
-			node.match_string = item
-		
-		else:
-			assert(false)
-		
-		if i < solver.items.size() - 1:
-			var node := ExprNode.new()
-			expressions.append(node)
-			if solver.all:
-				node.type = ExprNode.Type.And
-			else:
-				node.type = ExprNode.Type.Or
-	
-	return root
-
-static func _build() -> void:
-	pass
-
-
-class ExprNode:
-	enum Type {
-		Not = FilterItem.Type.Not,
-		And = FilterItem.Type.And,
-		Or = FilterItem.Type.Or,
-		Tag = FilterItem.Type.Tag,
-		MatchString = FilterItem.Type.MatchString,
-		BracketOpen = FilterItem.Type.BracketOpen,
-		BracketClose = FilterItem.Type.BracketClose,
-		SubExpression,
-	}
-	var type : Type
-	var virtual := false
-	var disabled := false
-	
-	## Tag
-	var tag : DataBase.Tag
-	## MatchString
-	var match_string : String
-	
-	## SubExpression
-	var expressions : Array[ExprNode] = []
-	
-	## Tag, MatchString
-	func get_value() -> Variant:
-		if type == Type.Tag:
-			return tag
-		if type == Type.MatchString:
-			return match_string
-		return
-	
-	
-	func is_operator() -> bool:
-		match type:
-			Type.Not, Type.And, Type.Or:
-				return true
-		return false
-	
-	func is_binary() -> bool:
-		match type:
-			Type.And, Type.Or:
-				return true
-			
-			Type.Not:
-				return false
-		return false
-	
-	func is_operand() -> bool:
-		match type:
-			Type.MatchString, Type.Tag, Type.SubExpression:
-				return true
-		return false
-	
-	func to_text() -> String:
-		match type:
-			Type.Not:
-				return 'NOT'
-			
-			Type.And:
-				return 'AND'
-			
-			Type.Or:
-				return 'OR'
-			
-			Type.Tag:
-				return '[tag:%d]' % tag.key
-			
-			Type.MatchString:
-				return '[%s]' % match_string
-			
-			Type.BracketOpen:
-				return '('
-			
-			Type.BracketClose:
-				return ')'
-			
-			Type.SubExpression:
-				var texts : Array[String] = []
-				for node in expressions:
-					texts.append(node.to_text())
-				return '(%s)' % ' '.join(texts)
-			
-			_:
-				return '<err expr>'

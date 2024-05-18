@@ -1,10 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://mqs6rjv3osx0"]
+[gd_scene load_steps=6 format=3 uid="uid://mqs6rjv3osx0"]
 
 [ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_wa3m6"]
 [ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/find_panel/find_filter_panel.tscn" id="4_hm86d"]
-[ext_resource type="Resource" uid="uid://vnhdqobrwyf" path="res://core/solver.tres" id="5_r6w5b"]
 [ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="6_x1fay"]
 
 [node name="TrackList" type="MarginContainer"]
@@ -39,7 +38,6 @@ layout_mode = 2
 [node name="FindFilterPanel" parent="VBoxContainer/FindPanel" instance=ExtResource("4_hm86d")]
 unique_name_in_owner = true
 layout_mode = 2
-solver = ExtResource("5_r6w5b")
 
 [node name="Control2" type="Control" parent="VBoxContainer/FindPanel"]
 custom_minimum_size = Vector2(30, 0)

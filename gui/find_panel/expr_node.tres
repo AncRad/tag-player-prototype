@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="ExprNode" load_steps=2 format=3 uid="uid://6vg6y6vheb7a"]
+
+[ext_resource type="Script" path="res://gui/find_panel/expr_node.gd" id="1_w5bo8"]
+
+[resource]
+script = ExtResource("1_w5bo8")
+type = 7
