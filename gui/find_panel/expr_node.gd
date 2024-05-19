@@ -1,6 +1,8 @@
 class_name ExprNode
 extends Resource
 
+signal enable_changed
+
 const FilterItem = preload('res://gui/find_panel/filter_item.gd')
 
 enum Type {
@@ -16,7 +18,10 @@ enum Type {
 @export var type : Type
 var parent : WeakRef
 var virtual := false
-var enabled := true
+var enabled := true:
+	set(value):
+		enabled = value
+		enable_changed.emit()
 
 ## Tag
 var tag : DataBase.Tag
@@ -108,8 +113,12 @@ func to_text() -> String:
 		Type.SubExpression:
 			var texts : Array[String] = []
 			for node in expressions:
-				texts.append(node.to_text())
-			return '(%s)' % ' '.join(texts)
+				if node.enabled:
+					if node.type == Type.SubExpression:
+						texts.append('( %s )' % node.to_text())
+					else:
+						texts.append(node.to_text())
+			return ' '.join(texts)
 		
 		_:
 			return '<err expr>'
@@ -124,6 +133,9 @@ func compile(solver : Solver, begin := 0) -> int:
 		
 		if node.enabled:
 			match node.type:
+				ExprNode.Type.SubExpression:
+					assert(false)
+				
 				ExprNode.Type.Not:
 					invert = true
 				
@@ -142,10 +154,9 @@ func compile(solver : Solver, begin := 0) -> int:
 				ExprNode.Type.MatchString, ExprNode.Type.Tag, ExprNode.Type.BracketOpen:
 					var right
 					if node.type == ExprNode.Type.BracketOpen:
-						assert(false)
 						right = Solver.new()
 						right.invert = invert
-						pos = node._compile(right, pos + 1)
+						pos = compile(right, pos + 1)
 					
 					elif invert:
 						right = Solver.new()
@@ -172,7 +183,7 @@ func compile(solver : Solver, begin := 0) -> int:
 							next.invert = invert
 							next.items = [solver.items[-1]]
 							solver.items[-1] = next
-							pos = next._compile(next, pos)
+							pos = compile(next, pos)
 					
 					else:
 						solver.items.append(right)

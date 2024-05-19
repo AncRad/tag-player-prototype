@@ -29,6 +29,24 @@ var type : Type = Type.MatchString:
 var tag : DataBase.Tag
 var inputed_text : String
 
+var expr_node : ExprNode:
+	set(value):
+		if value != expr_node:
+			if expr_node:
+				expr_node.enable_changed.disconnect(_on_expr_node_enable_changed)
+				strike = false
+			
+			expr_node = value
+			
+			if expr_node:
+				expr_node.enable_changed.connect(_on_expr_node_enable_changed)
+				strike = not expr_node.enabled
+
+var strike : bool:
+	set(value):
+		strike = value
+		queue_redraw()
+
 
 func _notification(what: int) -> void:
 	match what:
@@ -40,8 +58,16 @@ func _notification(what: int) -> void:
 		NOTIFICATION_DRAG_END:
 			selecting_enabled = true
 
+func _draw() -> void:
+	if strike:
+		draw_line(Vector2(0, size.y / 2), Vector2(size.x, size.y / 2), get_theme_color('font_color'), 2)
+
 func _get_drag_data(_at_position: Vector2) -> Variant:
 	return self
+
+func _on_expr_node_enable_changed() -> void:
+	if expr_node:
+		strike = not expr_node.enabled
 
 func empty() -> bool:
 	match type:

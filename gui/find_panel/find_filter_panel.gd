@@ -277,6 +277,7 @@ func _update() -> void:
 				if not node.virtual:
 					var item := FILTER_ITEM.instantiate() as FilterItem
 					items.append(item)
+					item.expr_node = node
 					item.type = node.type as FilterItem.Type
 					if node.is_operand():
 						if item.type == FilterItem.Type.MatchString:
@@ -292,6 +293,8 @@ func _update() -> void:
 					connect_filter_item(item)
 				
 				pos += 1
+		
+		%DebugLabel1.text = _expression.to_text()
 	
 	## если в конце нет пустого, то добавляем
 	if not items or not items[-1].empty():
@@ -454,37 +457,8 @@ func _parse_item_text(item : FilterItem) -> void:
 	if not finded:
 		item.type = FilterItem.Type.MatchString
 		finded = true
-#
-#func _parse() -> void:
-	#if not _expression:
-		#_expression = ExprNode.new()
-		#_expression.type = ExprNode.Type.SubExpression
-	#
-	#_expression.clear()
-	#
-	#_parse_items(_items, _expression)
-	#
-	#_repair(_expression)
-	#
-	#if solver and false:
-		#var next := Solver.new()
-		#next.all = false
-		#next.invert = false
-		#next.items.clear()
-		##_compile(_expression.expressions, next)
-		#%DebugLabel1.text = _expression.to_text()
-		##_expression.expressions.clear()
-		##_expression.expressions = _decompile(next)
-		##%DebugLabel2.text = _expression.to_text()
-		#solver.all = next.all
-		#solver.invert = next.invert
-		#solver.items.clear()
-		#solver.items.assign(next.items)
-		#solver.emit_changed()
 
 static func _parse_items(items : Array[FilterItem], node : ExprNode, pos : int = -1) -> int:
-	#var return_on_close_bracket := pos != -1
-	
 	if pos == -1:
 		pos = 0
 		
@@ -533,20 +507,24 @@ static func _parse_items(items : Array[FilterItem], node : ExprNode, pos : int =
 				node.append(ExprNode.new(ExprNode.Type.BracketClose))
 			
 			FilterItem.Type.Not, FilterItem.Type.And, FilterItem.Type.Or:
-				node.append(ExprNode.new(item.type as ExprNode.Type))
+				var new := ExprNode.new(item.type as ExprNode.Type)
+				node.append(new)
+				item.expr_node = new
 			
 			FilterItem.Type.MatchString, FilterItem.Type.Tag:
-				var node1 := ExprNode.new(item.type as ExprNode.Type)
-				node.append(node1)
+				var node1 := ExprNode.new()
 				if item.type == FilterItem.Type.Tag:
+					node1.type = ExprNode.Type.Tag
 					node1.tag = item.tag
 				else:
+					node1.type = ExprNode.Type.MatchString
 					node1.match_string = item.inputed_text
-					#node1.match_string = item.get_match_string()
+				node.append(node1)
+				item.expr_node = node1
 		
 		pos += 1
 	
-	#_repair(node)
+	_repair(node)
 	
 	return pos
 
@@ -563,8 +541,6 @@ static func _repair(node : ExprNode) -> void:
 		#pos += 1
 	
 	pos = 0
-	var left : ExprNode
-	var right : ExprNode
 	while maxi(0, pos) < node.expressions.size():
 		if pos < 0:
 			pos = 0
@@ -574,12 +550,14 @@ static func _repair(node : ExprNode) -> void:
 			pos += 1
 			continue
 		
+		var left : ExprNode
+		var right : ExprNode
 		var p := pos
 		while p > 0:
 			p -= 1
 			var n := node.expressions[p]
 			if n.enabled:
-				if n.is_operator() or n.is_binary():
+				if n.is_operator() or n.is_operand():
 					left = n
 					break
 		p = pos
@@ -587,7 +565,7 @@ static func _repair(node : ExprNode) -> void:
 			p += 1
 			var n := node.expressions[p]
 			if n.enabled:
-				if n.is_operator() or n.is_binary():
+				if n.is_operator() or n.is_operand():
 					right = n
 					break
 		
@@ -617,11 +595,12 @@ static func _repair(node : ExprNode) -> void:
 					continue
 		
 		elif this.is_operand():
-			if right and right.is_operand():
-				right = ExprNode.new(ExprNode.Type.And)
-				right.virtual = true
-				node.insert(pos + 1, right)
-				pos += 2
-				continue
+			if right:
+				if right.is_operand() or not right.is_binary():
+					right = ExprNode.new(ExprNode.Type.And)
+					right.virtual = true
+					node.insert(pos + 1, right)
+					pos += 2
+					continue
 		
 		pos += 1
