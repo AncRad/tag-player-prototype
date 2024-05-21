@@ -1,0 +1,59 @@
+[gd_scene load_steps=7 format=3 uid="uid://xkmayo31dpas"]
+
+[ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="1_xhqs3"]
+[ext_resource type="Script" path="res://gui/find_panel/find_expression_edit.gd" id="2_t85bv"]
+[ext_resource type="Script" path="res://core/expr_node.gd" id="3_lqjbc"]
+[ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/find_panel/find_filter_panel.tscn" id="4_d5p12"]
+
+[sub_resource type="Resource" id="Resource_fe45m"]
+script = ExtResource("3_lqjbc")
+type = 8
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_h8bj0"]
+
+[node name="test" type="Node"]
+
+[node name="DataBaseHolder" parent="." instance=ExtResource("1_xhqs3")]
+load_on_ready = true
+update_on_process = true
+handle_files_dropped = true
+handle_close_requested = true
+metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"load_on_ready", &"handle_close_requested"]
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+metadata/_edit_lock_ = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="FindExpressionEdit" type="Container" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 2
+mouse_filter = 0
+mouse_default_cursor_shape = 1
+script = ExtResource("2_t85bv")
+expression = SubResource("Resource_fe45m")
+
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/FindExpressionEdit"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/normal = SubResource("StyleBoxEmpty_h8bj0")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_h8bj0")
+theme_override_styles/read_only = SubResource("StyleBoxEmpty_h8bj0")
+caret_blink = true
+
+[node name="FindFilterPanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("4_d5p12")]
+layout_mode = 2
+size_flags_vertical = 3
+expression = SubResource("Resource_fe45m")
