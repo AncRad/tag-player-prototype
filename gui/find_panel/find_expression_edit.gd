@@ -16,22 +16,43 @@ extends Container
 
 var _line_edit : LineEdit
 var _node_to_item := {}
+var _items : Array[Item] = []
 var _lines : Array[Array] = []
 
 var _focused_node : ExprNode:
 	set(value):
 		if value != _focused_node:
+			print(value)
 			if _focused_node in _node_to_item:
 				var item := _node_to_item[_focused_node] as Item
-				item.text = item.get_expression_text()
+				_line_edit.hide()
 			
 			_focused_node = value
 			
 			if _focused_node in _node_to_item:
 				var item := _node_to_item[_focused_node] as Item
-				item.text = item.get_expression_text()
+				_line_edit.text = item.get_visible_text()
+				_line_edit.grab_focus()
+				_line_edit.show()
+			
+			else:
+				_focused_node = null
 			
 			queue_sort()
+#
+#var _caret_blink_interval : float = 0.6
+#var _caret_blink_time : float = 0.0
+#var _caret_visible : bool = false:
+	#set(value):
+		#_caret_visible = value
+		#_caret_draw = _caret_visible
+		#_caret_blink_time = 0.0
+		#queue_redraw()
+#var _caret_draw : bool = false:
+	#set(value):
+		#_caret_draw = value
+		#_caret_blink_time = 0.0
+		#queue_redraw()
 
 
 func _init() -> void:
@@ -52,8 +73,7 @@ func _notification(what: int) -> void:
 		NOTIFICATION_TRANSLATION_CHANGED, NOTIFICATION_LAYOUT_DIRECTION_CHANGED:
 			queue_sort()
 		
-		NOTIFICATION_FOCUS_EXIT:
-			_focused_node = null
+		#NOTIFICATION_FOCUS_EXIT:
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_pressed():
@@ -65,70 +85,93 @@ func _gui_input(event: InputEvent) -> void:
 						for item in line:
 							if item.rect.has_point(event.position):
 								_focused_node = item.expr
-								var text := item.get_visible_text()
+								_line_edit.grab_focus()
 								var text_line := TextLine.new()
-								text_line.add_string(text, get_font(), get_font_size())
-								_line_edit.text = text
+								text_line.add_string(_line_edit.text, get_font(), get_font_size())
 								_line_edit.caret_column = text_line.hit_test(event.position.x - item.rect.position.x)
-								fit_child_in_rect(_line_edit, item.rect)
 								return
-		
+					_focused_node = null
+
+func _on_line_edit_gui_input(event: InputEvent) -> void:
+	if event.is_pressed():
 		if _focused_node in _node_to_item:
-			var item := _node_to_item[_focused_node] as Item
-			
 			if event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left'):
-				if item.caret == 0:
-					accept_event()
-					pass
+				if _line_edit.caret_column == 0:
+					_line_edit.accept_event()
+					if _focused_node and _focused_node in _node_to_item:
+						var item := _node_to_item[_focused_node] as Item
+						var index := _items.find(item)
+						if _items.size() > 1 and index > 0:
+							_focused_node = _items[index - 1].expr
+							_line_edit.caret_column = _line_edit.text.length()
 			
 			elif event.is_action('ui_text_delete') or event.is_action('ui_text_caret_right'):
-				if item.caret == item.text.length():
-					accept_event()
-					pass
+				if _line_edit.caret_column == _line_edit.text.length():
+					_line_edit.accept_event()
+					if _focused_node and _focused_node in _node_to_item:
+						var item := _node_to_item[_focused_node] as Item
+						var index := _items.find(item)
+						if _items.size() > 1 and index < _items.size() - 1:
+							_focused_node = _items[index + 1].expr
+							_line_edit.caret_column = 0
+
+#func _process(delta: float) -> void:
+	#if _caret_visible:
+		#_caret_blink_time += delta
+		#if _caret_blink_time > _caret_blink_interval:
+			#_caret_draw = not _caret_draw
+			#_caret_blink_time = 0.0
 
 func _draw() -> void:
 	print('%6d # ' % Engine.get_frames_drawn(), '_draw')
+	
+	if not _line_edit.has_focus():
+		_focused_node = null
+	
 	var font : Font = get_font()
 	var font_size : int = get_font_size()
 	var font_ascent : int = get_line_ascent()
 	#var font_color_default := Color.WHITE.darkened(0.5)
 	#var font_color_light := Color.WHITE.darkened(0.2)
 	var item_separation : int = 15
-	#var line_separation : int = get_line_separation()
+	var line_separation : int = get_line_separation()
 	var line_interval : int = get_line_interval()
 	var line_max_size : float = size.x - item_separation
 	#var line_max_count : int = get_line_max_count()
 	
 	for line_i in _lines.size():
 		var line := _lines[line_i] as Array[Item]
-		var line_size : float = 0
+		#var line_size : float = 0
 		for item_i in line.size():
 			var item := line[item_i]
-			var text := item.get_visible_text()
-			var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, line_max_size - line_size, font_size).x
-			item.rect = Rect2(line_size, line_interval * line_i, text_size, line_interval)
-			font.draw_string(get_canvas_item(), Vector2(line_size, font_ascent + line_interval * line_i),
-					text, HORIZONTAL_ALIGNMENT_LEFT, line_max_size - line_size, font_size)
-			line_size += text_size + item_separation
-			if line_size <= 0:
-				break
+			if item.expr != _focused_node:
+				var pos := Vector2(item.rect.position.x, item.rect.position.y + font_ascent + line_separation / 2.0)
+				font.draw_string(get_canvas_item(), pos, item.get_visible_text(), HORIZONTAL_ALIGNMENT_LEFT, item.rect.size.x, font_size)
+			#line_size += text_size + item_separation
+			#if line_size <= 0:
+				#break
 	
 	#if _caret_draw:
 		#if _focused_node in _node_to_item:
 			#var item := _node_to_item[_focused_node] as Item
-			##var text_line := TextLine.new()
 			#var pos_x := item.rect.position.x
-			#var text := item.get_visible_text()
-			#item.caret = clampi(item.caret, 0, text.length())
+			#var text := _line_edit.text
 			#if text:
-				#pos_x += get_font().get_string_size(text.left(item.caret), HORIZONTAL_ALIGNMENT_LEFT, -1,
+				#pos_x += get_font().get_string_size(text.left(_line_edit.caret_column), HORIZONTAL_ALIGNMENT_LEFT, -1,
 						#get_font_size(), TextServer.JUSTIFICATION_NONE).x
-			#var pos_y := item.rect.position.y + get_line_separation() / 2.0
-			#draw_line(Vector2(pos_x, pos_y), Vector2(pos_x, pos_y + get_line_ascent()), Color.WHITE)
+			#var line_pos_a := Vector2(pos_x, item.rect.position.y + get_line_separation() / 2.0)
+			#var line_pos_b := Vector2(pos_x, item.rect.end.y - get_line_separation() / 2.0)
+			#draw_line(line_pos_a, line_pos_b, Color.WHITE)
 
 func _get_minimum_size() -> Vector2:
 	print('%6d # ' % Engine.get_frames_drawn(), '_get_minimum_size')
 	return Vector2(get_line_height() * 3, get_line_interval() * maxi(1, _lines.size()) - get_line_separation())
+
+func _on_line_edit_text_changed() -> void:
+	if _focused_node and _focused_node in _node_to_item:
+		#var item := _node_to_item[_focused_node] as Item
+		#item.text = _line_edit.text
+		queue_sort()
 
 func _resort() -> void:
 	if not is_visible_in_tree():
@@ -142,8 +185,8 @@ func _resort() -> void:
 	#var font_color_default := Color.WHITE.darkened(0.5)
 	#var font_color_light := Color.WHITE.darkened(0.2)
 	var item_separation : int = 15
-	#var line_separation : int = get_line_separation()
-	#var line_interval : int = get_line_interval()
+	var line_separation : int = get_line_separation()
+	var line_interval : int = get_line_interval()
 	var line_max_size : float = size.x - item_separation
 	#var line_max_count : int = get_line_max_count()
 	
@@ -160,6 +203,7 @@ func _resort() -> void:
 			new_node_to_item[expr] = item
 			items.append(item)
 	_node_to_item = new_node_to_item
+	_items = items
 	
 	if _focused_node and not _focused_node in _node_to_item:
 		_focused_node = null
@@ -172,6 +216,9 @@ func _resort() -> void:
 	#var pack_size : float
 	for item in items:
 		var text := item.get_visible_text()
+		if item.expr == _focused_node:
+			text = _line_edit.text
+		
 		var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		var fit := line_size + text_size < line_max_size
 		if not fit and line:
@@ -179,8 +226,13 @@ func _resort() -> void:
 			line_size = 0
 			line = []
 		line.append(item)
-		#line.append()
-		line_size += text_size + item_separation
+		
+		item.rect = Rect2(line_size, line_interval * _lines.size(), text_size, line_interval)
+		
+		if item.expr == _focused_node:
+			fit_child_in_rect(_line_edit, item.rect)
+		
+		line_size += item.rect.size.x + item_separation
 	if line or not _lines:
 		_lines.append(line)
 	
@@ -222,14 +274,14 @@ class Item:
 	var expr : ExprNode
 	#var text_line := TextLine.new()
 	var rect : Rect2
-	var text : String
+	#var text : String
 	
 	func _init(p_expr : ExprNode) -> void:
 		expr = p_expr
 	
 	func get_visible_text() -> String:
-		if text:
-			return text
+		#if text:
+			#return text
 		return expression_to_text(expr)
 	
 	func get_expression_text() -> String:
