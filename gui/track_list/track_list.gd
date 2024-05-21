@@ -15,8 +15,15 @@ const FindFilterPanel = preload('res://gui/find_panel/find_filter_panel.gd')
 			if _find_filter_panel:
 				if source:
 					_find_filter_panel.data_base = source.get_root()
+					if source.get_not_ordered() is DataSourceFiltered:
+						var not_ordered := source.get_not_ordered()
+						if not_ordered is DataSourceFiltered:
+							_find_filter_panel.expression = not_ordered.expression
+					else:
+						_find_filter_panel.expression = null
 				else:
 					_find_filter_panel.data_base = null
+					_find_filter_panel.expression = null
 
 @export var playback : Playback:
 	set(value):
@@ -38,8 +45,14 @@ var _find_filter_panel : FindFilterPanel:
 		_find_filter_panel = value
 		if source:
 			_find_filter_panel.data_base = source.get_root()
+			var not_ordered := source.get_not_ordered()
+			if not_ordered is DataSourceFiltered:
+				_find_filter_panel.expression = not_ordered.expression
+			else:
+				_find_filter_panel.expression = null
 		else:
 			_find_filter_panel.data_base = null
+			_find_filter_panel.expression = null
 
 var _find_panel : Control
 
@@ -50,7 +63,6 @@ func _notification(what: int) -> void:
 			_list = %List as TrackListItem
 			_find_filter_panel = %FindFilterPanel as FindFilterPanel
 			_find_panel = %FindPanel as Control
-
 
 func _update_find_panel_visibility() -> void:
 	if _find_filter_panel.empty() and not _find_filter_panel.is_editing():

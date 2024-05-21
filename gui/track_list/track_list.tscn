@@ -56,8 +56,6 @@ layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 2
 script = ExtResource("6_x1fay")
-source = ExtResource("2_t662t")
-playback = ExtResource("3_wa3m6")
 
 [node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/HBoxContainer2"]
 layout_mode = 2

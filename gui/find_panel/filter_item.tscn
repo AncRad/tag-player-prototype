@@ -2,7 +2,12 @@
 
 [ext_resource type="Script" path="res://gui/find_panel/filter_item.gd" id="1_5h3mi"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_dogt5"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kskox"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
 
 [node name="FilterItem" type="LineEdit"]
 custom_minimum_size = Vector2(15, 0)
@@ -12,9 +17,9 @@ offset_bottom = 31.0
 grow_horizontal = 2
 theme_override_constants/minimum_character_width = 0
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxEmpty_dogt5")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_dogt5")
-theme_override_styles/read_only = SubResource("StyleBoxEmpty_dogt5")
+theme_override_styles/normal = SubResource("StyleBoxFlat_kskox")
+theme_override_styles/focus = SubResource("StyleBoxFlat_kskox")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_kskox")
 alignment = 1
 expand_to_text_length = true
 middle_mouse_paste_enabled = false

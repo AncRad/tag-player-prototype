@@ -48,12 +48,9 @@ layout_mode = 2
 size_flags_vertical = 3
 split_offset = 510
 
-[node name="TrackList" parent="GUI/VBoxContainer/HSplitContainer" instance=ExtResource("6_cwg7h")]
-layout_mode = 2
-
-[node name="TrackList2" parent="GUI/VBoxContainer/HSplitContainer" instance=ExtResource("6_cwg7h")]
-layout_mode = 2
-
 [node name="Control" type="Control" parent="GUI/VBoxContainer/HSplitContainer"]
 visible = false
+layout_mode = 2
+
+[node name="TrackList" parent="GUI/VBoxContainer/HSplitContainer" instance=ExtResource("6_cwg7h")]
 layout_mode = 2

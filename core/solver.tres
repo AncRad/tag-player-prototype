@@ -1,6 +1,0 @@
-[gd_resource type="Resource" script_class="Solver" load_steps=2 format=3 uid="uid://vnhdqobrwyf"]
-
-[ext_resource type="Script" path="res://core/data/solver.gd" id="1_614xo"]
-
-[resource]
-script = ExtResource("1_614xo")

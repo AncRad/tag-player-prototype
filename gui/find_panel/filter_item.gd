@@ -2,51 +2,27 @@ extends LineEdit
 
 const FilterItem = preload('filter_item.gd')
 
-enum Type {MatchString, And, Or, Not, Tag, BracketOpen, BracketClose, Separator}
-
-var type : Type = Type.MatchString:
+var expression : ExprNode:
 	set(value):
-		if value != type:
-			type = value
+		if not value:
+			value = ExprNode.new()
+		
+		if value != expression:
+			if expression:
+				expression.changed.disconnect(queue_redraw)
+				expression.type_changed.disconnect(_update_type)
 			
-			placeholder_text = ''
+			expression = value
 			
-			match type:
-				Type.MatchString:
-					add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
-				
-				Type.And, Type.Or, Type.Not, Type.BracketOpen, Type.BracketClose:
-					add_theme_color_override('font_color', Color('66afcc'))
-				
-				Type.Tag:
-					add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
-				
-				Type.Separator:
-					placeholder_text = '•'
-					add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
-					add_theme_color_override('font_placeholder_color', Color.WHITE.darkened(0.5))
-
-var tag : DataBase.Tag
-var inputed_text : String
-
-var expr_node : ExprNode:
-	set(value):
-		if value != expr_node:
-			if expr_node:
-				expr_node.enable_changed.disconnect(_on_expr_node_enable_changed)
-				strike = false
+			if expression:
+				expression.changed.connect(queue_redraw)
+				expression.type_changed.connect(_update_type)
 			
-			expr_node = value
-			
-			if expr_node:
-				expr_node.enable_changed.connect(_on_expr_node_enable_changed)
-				strike = not expr_node.enabled
+			queue_redraw()
 
-var strike : bool:
-	set(value):
-		strike = value
-		queue_redraw()
 
+func _init() -> void:
+	expression = null
 
 func _notification(what: int) -> void:
 	match what:
@@ -59,47 +35,51 @@ func _notification(what: int) -> void:
 			selecting_enabled = true
 
 func _draw() -> void:
-	if strike:
+	_update_type()
+	
+	if not has_focus():
+		text = filter_to_string()
+	
+	if not expression.enabled:
 		draw_line(Vector2(0, size.y / 2), Vector2(size.x, size.y / 2), get_theme_color('font_color'), 2)
 
 func _get_drag_data(_at_position: Vector2) -> Variant:
 	return self
 
-func _on_expr_node_enable_changed() -> void:
-	if expr_node:
-		strike = not expr_node.enabled
-
-func empty() -> bool:
-	match type:
-		Type.MatchString:
-			return inputed_text.is_empty() and text.is_empty()
-		
-		Type.And, Type.Or, Type.Not, Type.BracketOpen, Type.BracketClose, Type.Separator:
-			return false
-		
-		Type.Tag:
-			return not tag or not tag.valid
-	return true
+func _get_tooltip(_at_position) -> String:
+	if expression.is_operator():
+		return 'Operator: %s' % expression.to_text()
+	elif expression.is_operand():
+		if expression.type == ExprNode.Type.Tag:
+			return 'Tag: %s' % expression.to_text()
+		else:
+			if text:
+				return 'Regualr expression: %s' % expression.to_text()
+			else:
+				return 'Click to enter text'
+	elif is_seprarator():
+		return 'Separator'
+	return expression.to_text()
 
 func filter_to_string() -> String:
-	match type:
-		Type.MatchString:
-			return inputed_text
+	match expression.type:
+		ExprNode.Type.MatchString:
+			return expression.match_string
 		
-		Type.And, Type.Or, Type.Not:
-			return (Type.find_key(type) as StringName).to_upper()
+		ExprNode.Type.And, ExprNode.Type.Or, ExprNode.Type.Not:
+			return expression.to_text()
 		
-		Type.BracketOpen:
+		ExprNode.Type.BracketOpen:
 			return '('
 		
-		Type.BracketClose:
+		ExprNode.Type.BracketClose:
 			return ')'
 		
-		Type.Tag:
-			if tag and tag.valid:
-				if tag.names:
-					assert(tag.names[0])
-					return tag.names[0]
+		ExprNode.Type.Tag:
+			if expression.tag and expression.tag.valid:
+				if expression.tag.names:
+					assert(expression.tag.names[0])
+					return expression.tag.names[0]
 				
 				return '[Unnamed tag]'
 			
@@ -109,7 +89,35 @@ func filter_to_string() -> String:
 	return ''
 
 func is_seprarator() -> bool:
-	return type == Type.Separator
+	return expression.type == ExprNode.Type.Null
 
-func get_match_string() -> String:
-	return '*%s*' % '*'.join(inputed_text.replace('*', ' ').split(' ', false))
+func empty() -> bool:
+	match expression.type:
+		ExprNode.Type.MatchString:
+			return expression.match_string.is_empty() and text.is_empty()
+		
+		ExprNode.Type.And, ExprNode.Type.Or, ExprNode.Type.Not, ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose, ExprNode.Type.Null:
+			return false
+		
+		ExprNode.Type.Tag:
+			return not expression.tag or not expression.tag.valid
+	return true
+
+#func get_match_string() -> String:
+	#return '*%s*' % '*'.join(inputed_text.replace('*', ' ').split(' ', false))
+
+func _update_type() -> void:
+	placeholder_text = ''
+	match expression.type:
+		ExprNode.Type.And, ExprNode.Type.Or, ExprNode.Type.Not, ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose:
+			add_theme_color_override('font_color', Color('66afcc'))
+		
+		ExprNode.Type.Tag, ExprNode.Type.MatchString:
+			add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
+		
+		ExprNode.Type.Null:
+			placeholder_text = '•'
+			add_theme_color_override('font_color', Color.WHITE.darkened(0.1))
+			add_theme_color_override('font_placeholder_color', Color.WHITE.darkened(0.5))
+	
+	queue_redraw()

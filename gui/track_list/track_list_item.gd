@@ -85,13 +85,20 @@ func _gui_input(event: InputEvent) -> void:
 			
 			elif event.button_index == MOUSE_BUTTON_LEFT:
 				var region := get_region_at_position(event.position)
-				if OS.is_debug_build():
-					set_meta('clicked_rect', region.get('rect', Rect2()))
+				#if OS.is_debug_build():
+					#set_meta('highlight_region', region.get('rect', Rect2()))
 				if region and playback:
 					if source:
 						playback.play(0, region.track, source)
 					else:
 						playback.play(0, region.track)
+
+#func _get_tooltip(at_position: Vector2) -> String:
+	#var region := get_region_at_position(at_position)
+	#if OS.is_debug_build():
+		#set_meta('highlight_region', region.get('rect', Rect2()))
+		#queue_redraw()
+	#return ''
 
 func _draw() -> void:
 	var debug_time := Time.get_ticks_usec()
@@ -207,7 +214,7 @@ func _draw() -> void:
 		pos_y += line_interval
 	
 	if OS.is_debug_build():
-		draw_rect(get_meta('clicked_rect', Rect2()), Color(1,0,0,0.5), false)
+		draw_rect(get_meta('highlight_region', Rect2()), Color(1,0,0,0.5), false)
 		debug_time = Time.get_ticks_usec() - debug_time
 		set_meta("draw_counter", get_meta("draw_counter", 0) + 1)
 		var debug_string := "%4d draws %4d мкс" % [get_meta("draw_counter"), debug_time]
