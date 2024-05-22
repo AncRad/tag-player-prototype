@@ -1,15 +1,7 @@
-[gd_scene load_steps=7 format=3 uid="uid://xkmayo31dpas"]
+[gd_scene load_steps=3 format=3 uid="uid://xkmayo31dpas"]
 
 [ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="1_xhqs3"]
-[ext_resource type="Script" path="res://gui/find_panel/find_expression_edit.gd" id="2_t85bv"]
-[ext_resource type="Script" path="res://core/expr_node.gd" id="3_lqjbc"]
-[ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/find_panel/find_filter_panel.tscn" id="4_d5p12"]
-
-[sub_resource type="Resource" id="Resource_fe45m"]
-script = ExtResource("3_lqjbc")
-type = 8
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_h8bj0"]
+[ext_resource type="PackedScene" uid="uid://b0vibo33qrh4w" path="res://gui/find_panel/find_expression_edit.tscn" id="2_apj8c"]
 
 [node name="test" type="Node"]
 
@@ -35,31 +27,13 @@ metadata/_edit_lock_ = true
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 
-[node name="FindExpressionEdit" type="Container" parent="MarginContainer/VBoxContainer"]
+[node name="LineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-size_flags_vertical = 3
-focus_mode = 2
-mouse_filter = 0
-mouse_default_cursor_shape = 1
-script = ExtResource("2_t85bv")
-expression = SubResource("Resource_fe45m")
+placeholder_text = "sad"
+alignment = 1
 
-[node name="LineEdit" type="LineEdit" parent="MarginContainer/VBoxContainer/FindExpressionEdit"]
-unique_name_in_owner = true
+[node name="FindExpressionEdit" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_apj8c")]
 layout_mode = 2
-mouse_filter = 2
-theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxEmpty_h8bj0")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_h8bj0")
-theme_override_styles/read_only = SubResource("StyleBoxEmpty_h8bj0")
-caret_blink = true
 
-[node name="FindFilterPanel" parent="MarginContainer/VBoxContainer" instance=ExtResource("4_d5p12")]
+[node name="FindExpressionEdit2" parent="MarginContainer/VBoxContainer" instance=ExtResource("2_apj8c")]
 layout_mode = 2
-size_flags_vertical = 3
-expression = SubResource("Resource_fe45m")
-
-[connection signal="focus_exited" from="MarginContainer/VBoxContainer/FindExpressionEdit" to="MarginContainer/VBoxContainer/FindExpressionEdit" method="queue_redraw"]
-[connection signal="focus_exited" from="MarginContainer/VBoxContainer/FindExpressionEdit/LineEdit" to="MarginContainer/VBoxContainer/FindExpressionEdit" method="queue_redraw"]
-[connection signal="gui_input" from="MarginContainer/VBoxContainer/FindExpressionEdit/LineEdit" to="MarginContainer/VBoxContainer/FindExpressionEdit" method="_on_line_edit_gui_input"]
-[connection signal="text_changed" from="MarginContainer/VBoxContainer/FindExpressionEdit/LineEdit" to="MarginContainer/VBoxContainer/FindExpressionEdit" method="_on_line_edit_text_changed" unbinds=1]

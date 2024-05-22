@@ -157,7 +157,7 @@ func _process(_delta = null) -> void:
 			for item in items:
 				item.expression.enabled = true
 				expression.append(item.expression)
-			expression.repair()
+			expression.update()
 			expression.emit_changed()
 		
 		## настраиваем пути направления фокуса FilterItem

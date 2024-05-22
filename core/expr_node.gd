@@ -76,36 +76,47 @@ func is_operand() -> bool:
 
 func to_text() -> String:
 	match type:
-		Type.Not:
+		ExprNode.Type.Null:
+			return ''
+		
+		ExprNode.Type.Not:
 			return 'NOT'
 		
-		Type.And:
+		ExprNode.Type.And:
 			return 'AND'
 		
-		Type.Or:
+		ExprNode.Type.Or:
 			return 'OR'
 		
-		Type.Tag:
-			return '[tag:%d]' % tag.key
+		ExprNode.Type.Tag:
+			if tag and tag.valid:
+				if tag.names:
+					assert(tag.names[0])
+					return tag.names[0]
+				
+				return '[Unnamed tag]'
+			
+			else:
+				return '[Invalid tag]'
 		
-		Type.MatchString:
-			return '[%s]' % get_value()
+		ExprNode.Type.MatchString:
+			return match_string
 		
-		Type.BracketOpen:
+		ExprNode.Type.BracketOpen:
 			return '('
 		
-		Type.BracketClose:
+		ExprNode.Type.BracketClose:
 			return ')'
 		
 		Type.SubExpression:
 			var texts : Array[String] = []
-			for node in expressions:
-				if node.is_operand() or node.is_operator():
-					if node.enabled:
-						if node.type == Type.SubExpression:
-							texts.append('( %s )' % node.to_text())
+			for expr in expressions:
+				if expr.is_operand() or expr.is_operator():
+					if expr.enabled:
+						if expr.type == Type.SubExpression:
+							texts.append('( %s )' % expr.to_text())
 						else:
-							texts.append(node.to_text())
+							texts.append(expr.to_text())
 			return ' '.join(texts)
 		
 		_:
@@ -117,62 +128,68 @@ func changes_up() -> void:
 		if parent and is_instance_valid(parent.get_ref()):
 			parent.get_ref().changes_up()
 		print('EMIT_CHANGED', type == Type.SubExpression)
-		emit_changed()
+	emit_changed()
 
 func clear() -> void:
 	tag = null
 	match_string = ''
-	for node in expressions:
-		node.parent = null
+	for expr in expressions:
+		expr.parent = null
 	expressions.clear()
 	changes_up()
 
 func solve(track : DataBase.Track) -> bool:
 	if _changed:
-		_solver.all = false
-		_solver.invert = false
-		_solver.items.clear()
-		repair()
-		_compile(_solver)
+		update()
+	
 	return _solver.solve(track)
 
 ## SubExpression
-func insert(index : int, node : ExprNode) -> void:
-	assert(not node.parent or not is_instance_valid(node.parent.get_ref()))
-	assert(node.type != Type.SubExpression)
-	node.parent = weakref(self)
-	expressions.insert(index, node)
+func insert(index : int, expr : ExprNode) -> void:
+	assert(not expr.parent or not is_instance_valid(expr.parent.get_ref()))
+	assert(expr.type != Type.SubExpression)
+	assert(not expr in expressions)
+	expr.parent = weakref(self)
+	expressions.insert(index, expr)
 	changes_up()
 
-func append(node : ExprNode) -> void:
-	insert(expressions.size(), node)
+func append(expr : ExprNode) -> void:
+	insert(expressions.size(), expr)
 
 func remove_at(index : int) -> void:
-	var node := expressions[index]
-	node.parent = null
+	var expr := expressions[index]
+	expr.parent = null
 	expressions.remove_at(index)
 	changes_up()
 
-func repair() -> void:
+func erase(expr : ExprNode) -> void:
+	expressions.erase(expr)
+	changes_up()
+
+func has(expr : ExprNode) -> bool:
+	return expr in expressions
+
+func update() -> void:
 	var pos : int = 0
 	var brackets := 0
 	var not_openned := 0
 	while pos < expressions.size():
-		var node := expressions[pos]
+		var expr := expressions[pos]
 		
-		if node.virtual:
+		if expr.virtual:
 			remove_at(pos)
+			continue
 		
 		else:
-			if node.type == ExprNode.Type.BracketOpen:
+			if expr.type == ExprNode.Type.BracketOpen:
 				brackets += 1
-			elif node.type == ExprNode.Type.BracketClose:
+			elif expr.type == ExprNode.Type.BracketClose:
 				if brackets == 0:
 					not_openned += 1
 				else:
 					brackets -= 1
 			
-			node.enabled = true
+			expr.enabled = true
 			pos += 1
 	
 	for i in not_openned:
@@ -252,14 +269,20 @@ func repair() -> void:
 			continue
 		
 		pos += 1
+	
+	_solver.all = false
+	_solver.invert = false
+	_solver.items.clear()
+	_compile(_solver)
 
 ## Tag, MatchString
 func get_value() -> Variant:
 	if type == Type.Tag:
 		return tag
 	if type == Type.MatchString:
-		return '*%s*' % '*'.join(match_string.replace('*', ' ').split(' ', false))
-		#return match_string
+		if match_string:
+			return '*%s*' % '*'.join(match_string.replace('*', ' ').split(' ', false))
+		return ''
 	return
 
 func _compile(solver : Solver, begin := 0) -> int:
@@ -268,9 +291,9 @@ func _compile(solver : Solver, begin := 0) -> int:
 	var invert := false
 	var stack_up := false
 	while pos < expressions.size():
-		var node := expressions[pos]
-		if node.enabled:
-			match node.type:
+		var expr := expressions[pos]
+		if expr.enabled:
+			match expr.type:
 				ExprNode.Type.SubExpression:
 					assert(false)
 				
@@ -278,20 +301,22 @@ func _compile(solver : Solver, begin := 0) -> int:
 					invert = true
 				
 				ExprNode.Type.BracketClose:
+					expr._changed = false
 					return pos + 1
 				
 				ExprNode.Type.And, ExprNode.Type.Or:
 					if solver.items.size() >= 2:
-						stack_up = solver.all != (node.type == ExprNode.Type.And)
+						stack_up = solver.all != (expr.type == ExprNode.Type.And)
 						if stack_up and begin != 0:
+							expr._changed = false
 							return pos
 					
 					else:
-						solver.all = node.type == ExprNode.Type.And
+						solver.all = expr.type == ExprNode.Type.And
 				
 				ExprNode.Type.MatchString, ExprNode.Type.Tag, ExprNode.Type.BracketOpen:
 					var operand
-					if node.type == ExprNode.Type.BracketOpen:
+					if expr.type == ExprNode.Type.BracketOpen:
 						operand = Solver.new()
 						operand.invert = invert
 						pos = _compile(operand, pos + 1)
@@ -299,10 +324,10 @@ func _compile(solver : Solver, begin := 0) -> int:
 					elif invert:
 						operand = Solver.new()
 						operand.invert = invert
-						operand.items.append(node.get_value())
+						operand.items.append(expr.get_value())
 					
 					else:
-						operand = node.get_value()
+						operand = expr.get_value()
 					
 					if stack_up:
 						stack_up = false
@@ -328,7 +353,7 @@ func _compile(solver : Solver, begin := 0) -> int:
 					
 					invert = false
 		
-		node._changed = false
+		expr._changed = false
 		pos += 1
 	
 	_changed = false
@@ -340,14 +365,14 @@ func _compile(solver : Solver, begin := 0) -> int:
 	#var expressions := root
 	#
 	#if solver.invert:
-		#var node := ExprNode.new()
-		#expressions.append(node)
-		#node.type = ExprNode.Type.Not
+		#var expr := ExprNode.new()
+		#expressions.append(expr)
+		#expr.type = ExprNode.Type.Not
 		#if solver.items.size() != 1:
-			#node = ExprNode.new()
-			#expressions.append(node)
-			#node.type = ExprNode.Type.SubExpression
-			#expressions = node.expressions
+			#expr = ExprNode.new()
+			#expressions.append(expr)
+			#expr.type = ExprNode.Type.SubExpression
+			#expressions = expr.expressions
 	#
 	#for i in solver.items.size():
 		#var item = solver.items[i]
@@ -355,35 +380,35 @@ func _compile(solver : Solver, begin := 0) -> int:
 			#assert(solver.items)
 			#
 			#if not item.all and solver.all and not (item.invert and item.items.size() == 1):
-				#var node := ExprNode.new()
-				#expressions.append(node)
-				#node.type = ExprNode.Type.SubExpression
-				#node.expressions = _decompile(item)
+				#var expr := ExprNode.new()
+				#expressions.append(expr)
+				#expr.type = ExprNode.Type.SubExpression
+				#expr.expressions = _decompile(item)
 			#else:
 				#expressions.append_array(_decompile(item))
 		#
 		#elif item is DataBase.Tag:
-			#var node := ExprNode.new()
-			#expressions.append(node)
-			#node.type = ExprNode.Type.Tag
-			#node.tag = item
+			#var expr := ExprNode.new()
+			#expressions.append(expr)
+			#expr.type = ExprNode.Type.Tag
+			#expr.tag = item
 		#
 		#elif item is String:
-			#var node := ExprNode.new()
-			#expressions.append(node)
-			#node.type = ExprNode.Type.MatchString
-			#node.match_string = item
+			#var expr := ExprNode.new()
+			#expressions.append(expr)
+			#expr.type = ExprNode.Type.MatchString
+			#expr.match_string = item
 		#
 		#else:
 			#assert(false)
 		#
 		#if i < solver.items.size() - 1:
-			#var node := ExprNode.new()
-			#expressions.append(node)
+			#var expr := ExprNode.new()
+			#expressions.append(expr)
 			#if solver.all:
-				#node.type = ExprNode.Type.And
+				#expr.type = ExprNode.Type.And
 			#else:
-				#node.type = ExprNode.Type.Or
+				#expr.type = ExprNode.Type.Or
 	#
 	#return root
 
@@ -425,10 +450,10 @@ class Solver:
 		if invert:
 			strs.append('Not')
 			#if items.size() != 1:
-				#node = ExprNode.new()
-				#expressions.append(node)
-				#node.type = ExprNode.Type.SubExpression
-				#expressions = node.expressions
+				#expr = ExprNode.new()
+				#expressions.append(expr)
+				#expr.type = ExprNode.Type.SubExpression
+				#expressions = expr.expressions
 		
 		for i in items.size():
 			var item = items[i]
@@ -436,9 +461,9 @@ class Solver:
 				assert(items)
 				
 				if not item.all and all and not (item.invert and item.items.size() == 1):
-					#var node := ExprNode.new()
-					#expressions.append(node)
-					#node.type = ExprNode.Type.SubExpression
+					#var expr := ExprNode.new()
+					#expressions.append(expr)
+					#expr.type = ExprNode.Type.SubExpression
 					strs.append(item.to_text())
 				else:
 					strs.append(item.to_text())
