@@ -2,7 +2,7 @@ class_name TrackList
 extends MarginContainer
 
 const TrackListItem = preload('track_list_item.gd')
-const FindFilterPanel = preload('res://gui/find_panel/find_filter_panel.gd')
+const FindExpressionEdit = preload('res://gui/find_panel/find_expression_edit.gd')
 
 @export var source : DataSource:
 	set(value):
@@ -12,18 +12,17 @@ const FindFilterPanel = preload('res://gui/find_panel/find_filter_panel.gd')
 			if _list:
 				_list.source = source
 				
-			if _find_filter_panel:
+			if _find_expression_edit:
 				if source:
-					_find_filter_panel.data_base = source.get_root()
 					if source.get_not_ordered() is DataSourceFiltered:
 						var not_ordered := source.get_not_ordered()
 						if not_ordered is DataSourceFiltered:
-							_find_filter_panel.expression = not_ordered.expression
-					else:
-						_find_filter_panel.expression = null
-				else:
-					_find_filter_panel.data_base = null
-					_find_filter_panel.expression = null
+							_find_expression_edit.expression = not_ordered.expression
+							_find_expression_edit.data_base = source.get_root()
+							return
+				
+				_find_expression_edit.data_base = null
+				_find_expression_edit.expression = null
 
 @export var playback : Playback:
 	set(value):
@@ -40,19 +39,20 @@ var _list : TrackListItem:
 			_list.source = source
 			_list.playback = playback
 
-var _find_filter_panel : FindFilterPanel:
+var _find_expression_edit : FindExpressionEdit:
 	set(value):
-		_find_filter_panel = value
-		if source:
-			_find_filter_panel.data_base = source.get_root()
-			var not_ordered := source.get_not_ordered()
-			if not_ordered is DataSourceFiltered:
-				_find_filter_panel.expression = not_ordered.expression
-			else:
-				_find_filter_panel.expression = null
-		else:
-			_find_filter_panel.data_base = null
-			_find_filter_panel.expression = null
+		_find_expression_edit = value
+		if _find_expression_edit:
+			if source:
+				if source.get_not_ordered() is DataSourceFiltered:
+					var not_ordered := source.get_not_ordered()
+					if not_ordered is DataSourceFiltered:
+						_find_expression_edit.expression = not_ordered.expression
+						_find_expression_edit.data_base = source.get_root()
+						return
+			
+			_find_expression_edit.data_base = null
+			_find_expression_edit.expression = null
 
 var _find_panel : Control
 
@@ -61,9 +61,9 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_list = %List as TrackListItem
-			_find_filter_panel = %FindFilterPanel as FindFilterPanel
+			_find_expression_edit = %FindExpressionEdit as FindExpressionEdit
 			_find_panel = %FindPanel as Control
 
-func _update_find_panel_visibility() -> void:
-	if _find_filter_panel.empty() and not _find_filter_panel.is_editing():
+func _on_find_expression_edit_update_visibility() -> void:
+	if not _find_expression_edit.in_focus() and _find_expression_edit.is_empty():
 		_find_panel.hide()

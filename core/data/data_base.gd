@@ -99,19 +99,33 @@ func find_tags_by_name(name : StringName, p_match := true, no_register := true, 
 				break
 	
 	if sort:
-		## кэш таблица 'тег - схожесть имени тега с искомым именем'
 		var cache := {}
+		var begin := [] as Array[Tag]
+		var end := [] as Array[Tag]
 		for tag in tags:
-			## ищем лучшую схожесть имени тега с искомым именем
 			var max_similarity := -INF
+			var begins_with_name := false
 			for tag_name in tag.names:
+				if no_register:
+					begins_with_name = tag_name.to_lower().begins_with(name)
+				else:
+					begins_with_name = tag_name.begins_with(name)
+				if begins_with_name:
+					cache[tag] = String(tag_name)
+					begins_with_name = true
+					begin.append(tag)
+					break
+				
 				var similarity := tag_name.similarity(name)
 				if similarity > max_similarity:
 					max_similarity = similarity
-			cache[tag] = max_similarity
+					cache[tag] = String(tag_name)
+			if not begins_with_name:
+				end.append(tag)
 		
-		## сортируем теги по величине схожести имени тега с искомым именем
-		tags.sort_custom(func (a, b): return cache[a] > cache[b])
+		begin.sort_custom(func (a, b): return cache[a] < cache[b])
+		end.sort_custom(func (a, b): return cache[a] < cache[b])
+		tags = begin + end
 	
 	return tags
 

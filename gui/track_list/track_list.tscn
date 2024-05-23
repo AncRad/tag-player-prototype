@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_wa3m6"]
-[ext_resource type="PackedScene" uid="uid://cfyql36sw5nod" path="res://gui/find_panel/find_filter_panel.tscn" id="4_hm86d"]
+[ext_resource type="PackedScene" uid="uid://b0vibo33qrh4w" path="res://gui/find_panel/find_expression_edit.tscn" id="4_ued1a"]
 [ext_resource type="Script" path="res://gui/track_list/track_list_item.gd" id="6_x1fay"]
 
 [node name="TrackList" type="MarginContainer"]
@@ -35,7 +35,7 @@ theme_override_constants/separation = 0
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 
-[node name="FindFilterPanel" parent="VBoxContainer/FindPanel" instance=ExtResource("4_hm86d")]
+[node name="FindExpressionEdit" parent="VBoxContainer/FindPanel" instance=ExtResource("4_ued1a")]
 unique_name_in_owner = true
 layout_mode = 2
 
@@ -62,6 +62,7 @@ layout_mode = 2
 max_value = 1.0
 step = 0.0001
 
-[connection signal="updated" from="VBoxContainer/FindPanel/FindFilterPanel" to="." method="_update_find_panel_visibility"]
+[connection signal="empty" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
+[connection signal="focus_released" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
 [connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer2/List" to="VBoxContainer/HBoxContainer2/VScrollBar" method="set_value_no_signal"]
 [connection signal="value_changed" from="VBoxContainer/HBoxContainer2/VScrollBar" to="VBoxContainer/HBoxContainer2/List" method="set_scroll_progress"]

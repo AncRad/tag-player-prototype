@@ -30,6 +30,8 @@ var enabled := true:
 			enabled = value
 			changes_up()
 			enable_changed.emit()
+	get:
+		return enabled and type != Type.Null
 
 ## Tag
 var tag : DataBase.Tag:
@@ -63,16 +65,45 @@ func is_binary() -> bool:
 	match type:
 		Type.And, Type.Or:
 			return true
-		
-		Type.Not:
-			return false
 	return false
+
+func is_unary() -> bool:
+	return type == Type.Not
 
 func is_operand() -> bool:
 	match type:
 		Type.MatchString, Type.Tag, Type.SubExpression:
 			return true
 	return false
+
+func is_bracket_close() -> bool:
+	return type == Type.BracketClose
+
+func is_bracket_open() -> bool:
+	return type == Type.BracketOpen
+
+func is_bracket() -> bool:
+	return type == Type.BracketOpen or type == Type.BracketClose
+
+func is_empty() -> bool:
+	match type:
+		Type.MatchString:
+			return match_string.is_empty()
+		
+		Type.Tag:
+			return tag == null or not tag.valid
+		
+		Type.SubExpression:
+			for expr in expressions:
+				if not expr.is_empty():
+					return false
+			return true
+		
+		_:
+			return not (is_operator() or is_bracket())
+
+func is_valid() -> bool:
+	return enabled and not is_empty()
 
 func to_text() -> String:
 	match type:
@@ -111,12 +142,11 @@ func to_text() -> String:
 		Type.SubExpression:
 			var texts : Array[String] = []
 			for expr in expressions:
-				if expr.is_operand() or expr.is_operator():
-					if expr.enabled:
-						if expr.type == Type.SubExpression:
-							texts.append('( %s )' % expr.to_text())
-						else:
-							texts.append(expr.to_text())
+				if expr.enabled:
+					if expr.type == Type.SubExpression:
+						texts.append('( %s )' % expr.to_text())
+					else:
+						texts.append(expr.to_text())
 			return ' '.join(texts)
 		
 		_:
@@ -127,7 +157,6 @@ func changes_up() -> void:
 		_changed = true
 		if parent and is_instance_valid(parent.get_ref()):
 			parent.get_ref().changes_up()
-		print('EMIT_CHANGED', type == Type.SubExpression)
 	emit_changed()
 
 func clear() -> void:
@@ -177,7 +206,7 @@ func update() -> void:
 		var expr := expressions[pos]
 		
 		if expr.virtual:
-			remove_at(pos)
+			expressions.remove_at(pos)
 			continue
 		
 		else:
@@ -189,64 +218,51 @@ func update() -> void:
 				else:
 					brackets -= 1
 			
-			expr.enabled = true
+			expr.enabled = not expr.is_empty()
 			pos += 1
-	
 	for i in not_openned:
 		var bracket := ExprNode.new(ExprNode.Type.BracketOpen)
 		bracket.virtual = true
 		insert(0, bracket)
 	
+	pos = 0
 	while maxi(0, pos) < expressions.size():
 		if pos < 0:
 			pos = 0
 		
 		var this := expressions[pos]
-		if not this.enabled:
+		if not this.is_valid():
 			pos += 1
 			continue
 		
 		var left : ExprNode
+		var left_pos : int = 0
+		for i in range(pos - 1, -1, -1):
+			if expressions[i].is_valid():
+				left = expressions[i]
+				left_pos = i
+				break
 		var right : ExprNode
-		var left_pos := pos
-		while left_pos > 0:
-			left_pos -= 1
-			var n := expressions[left_pos]
-			if n.enabled:
-				if n.is_operator() or n.is_operand():
-					left = n
-					break
-		if not left:
-			left_pos = 0
-		var right_pos := pos
-		while right_pos < expressions.size() - 1:
-			right_pos += 1
-			var n := expressions[right_pos]
-			if n.enabled:
-				if n.is_operator() or n.is_operand():
-					right = n
-					break
-		if not right:
-			right_pos = 0
+		var right_pos := 0
+		for i in range(pos + 1, expressions.size()):
+			if expressions[i].is_valid():
+				right = expressions[i]
+				right_pos = i
+				break
 		
 		if this.is_operator():
 			if this.is_binary():
-				if not left or not right or not left.is_operand():
+				if not (left and right and (left.is_operand() or left.is_bracket_close())
+						and (left.is_operand() or right.is_bracket_open() or right.is_unary())):
 					this.enabled = false
 					pos = left_pos
 					continue
 			
 			else:
-				if not right:
+				if not right or right.is_bracket_close() or right.is_binary():
 					this.enabled = false
 					pos = left_pos
 					continue
-				
-				if right.is_operator():
-					if right.is_binary():
-						this.enabled = false
-						pos = left_pos
-						continue
 				
 				if right.type == ExprNode.Type.Not:
 					this.enabled = false
@@ -254,14 +270,26 @@ func update() -> void:
 					pos = left_pos
 					continue
 		
-		elif this.is_operand():
+		elif this.is_operand() or this.is_bracket_close():
 			if right:
-				if right.is_operand() or not right.is_binary():
+				if right.is_operand() or right.is_unary() or right.is_bracket_open():
 					right = ExprNode.new(ExprNode.Type.And)
 					right.virtual = true
-					insert(pos + 1, right)
-					pos += 2
+					insert(right_pos, right)
+					right_pos = pos + 1
+					pos = right_pos + 1
 					continue
+		
+		elif this.is_bracket_open():
+			if not right or right.is_bracket_close():
+				this.enabled = false
+				if right:
+					right.enabled = false
+				pos = left_pos
+				continue
+		
+		elif this.is_bracket():
+			pass
 		
 		else:
 			this.enabled = false
@@ -280,8 +308,9 @@ func get_value() -> Variant:
 	if type == Type.Tag:
 		return tag
 	if type == Type.MatchString:
-		if match_string:
-			return '*%s*' % '*'.join(match_string.replace('*', ' ').split(' ', false))
+		var split := match_string.replace('*', ' ').split(' ', false)
+		if split:
+			return '*%s*' % '*'.join(split)
 		return ''
 	return
 
@@ -292,7 +321,7 @@ func _compile(solver : Solver, begin := 0) -> int:
 	var stack_up := false
 	while pos < expressions.size():
 		var expr := expressions[pos]
-		if expr.enabled:
+		if expr.is_valid():
 			match expr.type:
 				ExprNode.Type.SubExpression:
 					assert(false)
@@ -302,7 +331,7 @@ func _compile(solver : Solver, begin := 0) -> int:
 				
 				ExprNode.Type.BracketClose:
 					expr._changed = false
-					return pos + 1
+					return pos
 				
 				ExprNode.Type.And, ExprNode.Type.Or:
 					if solver.items.size() >= 2:
@@ -319,7 +348,6 @@ func _compile(solver : Solver, begin := 0) -> int:
 					if expr.type == ExprNode.Type.BracketOpen:
 						operand = Solver.new()
 						operand.invert = invert
-						pos = _compile(operand, pos + 1)
 					
 					elif invert:
 						operand = Solver.new()
@@ -341,15 +369,21 @@ func _compile(solver : Solver, begin := 0) -> int:
 							solver.all = not solver.all
 							solver.invert = false
 							solver.items = [next, operand]
+							if expr.type == ExprNode.Type.BracketOpen:
+								pos = _compile(operand, pos + 1)
 						else:
 							next.all = not solver.all
 							next.invert = invert
-							next.items = [solver.items[-1]]
+							next.items = [solver.items[-1], operand]
 							solver.items[-1] = next
-							pos = _compile(next, pos)
+							if expr.type == ExprNode.Type.BracketOpen:
+								pos = _compile(operand, pos + 1)
+							pos = _compile(next, pos + 1)
 					
 					else:
 						solver.items.append(operand)
+						if expr.type == ExprNode.Type.BracketOpen:
+							pos = _compile(operand, pos + 1)
 					
 					invert = false
 		

@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3 uid="uid://cthxa6fyjqmsq"]
+
+[ext_resource type="Script" path="res://gui/menu_panel/menu_panel.gd" id="1_il4rt"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6hhiv"]
+bg_color = Color(0.06, 0.06, 0.06, 1)
+
+[node name="MenuPanel" type="MarginContainer"]
+focus_mode = 2
+mouse_filter = 0
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+script = ExtResource("1_il4rt")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_6hhiv")
+
+[node name="Tree" type="Tree" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+hide_root = true
+
+[connection signal="item_activated" from="Tree" to="." method="_on_tree_item_pressed"]
+[connection signal="item_mouse_selected" from="Tree" to="." method="_on_tree_item_pressed" unbinds=2]

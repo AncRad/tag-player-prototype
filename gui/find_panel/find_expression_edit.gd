@@ -1,7 +1,11 @@
 extends Container
-#•
 
-@export var expression : ExprNode:
+signal focus_released
+signal empty
+
+const MenuPanel = preload('res://gui/menu_panel/menu_panel.gd')
+
+@export var expression: ExprNode:
 	set(value):
 		if not value:
 			value = ExprNode.new(ExprNode.Type.SubExpression)
@@ -16,13 +20,34 @@ extends Container
 			if expression:
 				expression.changed.connect(queue_sort)
 
-var _line_edit : LineEdit
-var _tree : Tree
-var _expr_to_item := {}
-var _items : Array[Item] = []
-var _lines : Array[Array] = []
+@export var data_base : DataBase:
+	set(value):
+		if value != data_base:
+			data_base = value
 
-var _focused_expr : ExprNode:
+var _in_focus := false:
+	set(value):
+		if value != _in_focus:
+			_in_focus = value
+			if not _in_focus:
+				focus_released.emit()
+
+var _is_empty := false:
+	set(value):
+		if value != _is_empty:
+			_is_empty = value
+			if _is_empty:
+				empty.emit()
+
+var _expr_to_item := {}
+var _items: Array[Item] = []
+var _lines: Array[Array] = []
+
+var _line_edit: LineEdit
+var _menu: MenuPanel
+var _menu_building := false
+
+var _focused_expr: ExprNode:
 	set(value):
 		if value != _focused_expr:
 			if not _line_edit.text:
@@ -36,10 +61,14 @@ var _focused_expr : ExprNode:
 				_line_edit.text = _focused_expr.to_text()
 				_line_edit.show()
 				_line_edit.grab_focus()
+				_menu.hide()
+				_menu.clear()
 			
 			else:
 				_line_edit.release_focus()
 				_line_edit.hide()
+				_menu.hide()
+				_menu.clear()
 			
 			queue_sort()
 
@@ -51,7 +80,9 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_line_edit = %LineEdit as LineEdit
-			_tree = %Tree as Tree
+			_menu = %MenuPanel as MenuPanel
+			
+			_menu.hide()
 		
 		NOTIFICATION_SORT_CHILDREN:
 			_resort()
@@ -63,7 +94,19 @@ func _notification(what: int) -> void:
 		NOTIFICATION_TRANSLATION_CHANGED, NOTIFICATION_LAYOUT_DIRECTION_CHANGED:
 			queue_sort()
 		
-		#NOTIFICATION_FOCUS_EXIT:
+		NOTIFICATION_FOCUS_ENTER:
+			if not _focused_expr:
+				if _items and _items[-1].expr and _items[-1].expr.is_empty():
+					_focused_expr = _items[-1].expr
+				
+				else:
+					var expr := ExprNode.new(ExprNode.Type.MatchString)
+					expression.append(expr)
+					_focused_expr = expr
+			queue_redraw()
+		
+		NOTIFICATION_FOCUS_EXIT:
+			queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_pressed():
@@ -75,8 +118,9 @@ func _gui_input(event: InputEvent) -> void:
 						for item in _items:
 							if item.rect.has_point(event.position):
 								_focused_expr = item.expr
-								_line_edit.grab_focus()
 								var text_line := TextLine.new()
+								text_line.width = item.rect.size.x
+								text_line.alignment = HORIZONTAL_ALIGNMENT_CENTER
 								text_line.add_string(_line_edit.text, get_font(), get_font_size())
 								_line_edit.caret_column = text_line.hit_test(event.position.x - item.rect.position.x)
 								return
@@ -99,82 +143,210 @@ func _gui_input(event: InputEvent) -> void:
 							_focused_expr = null
 						expression.erase(to_erase)
 
-func _on_line_edit_gui_input(event: InputEvent) -> void:
-	if event.is_pressed():
-		if _focused_expr in _expr_to_item:
-			if event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left'):
-				if _line_edit.caret_column == 0:
-					_line_edit.accept_event()
-					if _focused_expr and _focused_expr in _expr_to_item:
-						var item := _expr_to_item[_focused_expr] as Item
-						var index := _items.find(item)
-						if _items.size() > 1 and index > 0:
-							_focused_expr = _items[index - 1].expr
-							_line_edit.caret_column = _line_edit.text.length()
-						
-						else:
-							var expr := ExprNode.new(ExprNode.Type.MatchString)
-							index = expression.expressions.find(item.expr)
-							if index != -1 or not expression.expressions:
-								expression.insert(maxi(0, index), expr)
-								_focused_expr = expr
-			
-			elif event.is_action('ui_text_delete') or event.is_action('ui_text_caret_right'):
-				if _line_edit.caret_column == _line_edit.text.length():
-					_line_edit.accept_event()
-					if _focused_expr and _focused_expr in _expr_to_item:
-						var item := _expr_to_item[_focused_expr] as Item
-						var index := _items.find(item)
-						if _items.size() > 1 and index < _items.size() - 1:
-							_focused_expr = _items[index + 1].expr
-							_line_edit.caret_column = 0
-						
-						else:
-							var expr := ExprNode.new(ExprNode.Type.MatchString)
-							index = expression.expressions.find(item.expr)
-							if index != -1 or not expression.expressions:
-								expression.insert(maxi(0, index + 1), expr)
-								_focused_expr = expr
-
 func _draw() -> void:
-	print('%6d # ' % Engine.get_frames_drawn(), '_draw')
-	
-	if not _line_edit.has_focus():
+	if not _line_edit.has_focus() and not _menu.in_focus():
 		_focused_expr = null
 	
-	var font : Font = get_font()
-	var font_size : int = get_font_size()
-	var font_ascent : int = get_line_ascent()
+	var font: Font = get_font()
+	var font_size: int = get_font_size()
+	var font_ascent: int = get_line_ascent()
 	#var font_color_default := Color.WHITE.darkened(0.5)
 	#var font_color_light := Color.WHITE.darkened(0.2)
-	#var item_separation : int = 15
-	var line_separation : int = get_line_separation()
-	#var line_interval : int = get_line_interval()
-	#var line_max_size : float = size.x - item_separation
-	#var line_max_count : int = get_line_max_count()
+	#var item_separation: int = 15
+	var line_separation: int = get_line_separation()
+	#var line_interval: int = get_line_interval()
+	#var line_max_size: float = size.x - item_separation
+	#var line_max_count: int = get_line_max_count()
 	
 	for line_i in _lines.size():
 		var line := _lines[line_i] as Array[Item]
 		for item_i in line.size():
 			var item := line[item_i]
 			
+			var color : Color
+			match item.expr.type:
+				ExprNode.Type.And, ExprNode.Type.Or, ExprNode.Type.Not, ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose:
+					color = Color('66afcc')
+				
+				ExprNode.Type.Tag, ExprNode.Type.MatchString:
+					color = Color.WHITE.darkened(0.1)
+				
+				ExprNode.Type.Null:
+					color = Color.WHITE.darkened(0.1)
+			
 			if item.expr == _focused_expr:
-				#_focused_expr_exists = true
-				pass
+				if item.expr.type == ExprNode.Type.Null:
+					_line_edit.placeholder_text = '•'
+				_line_edit.add_theme_color_override('font_color', color)
+				_line_edit.add_theme_color_override('font_placeholder_color', Color.WHITE.darkened(0.5))
 			
 			else:
 				var pos := Vector2(item.rect.position.x, item.rect.position.y + font_ascent + line_separation / 2.0)
-				font.draw_string(get_canvas_item(), pos, item.expr.to_text(), HORIZONTAL_ALIGNMENT_LEFT, item.rect.size.x, font_size)
+				font.draw_string(get_canvas_item(), pos, item.expr.to_text(), HORIZONTAL_ALIGNMENT_CENTER, item.rect.size.x, font_size, color)
+
+func _process(_delta = null) -> void:
+	if not _line_edit.visible:
+		_menu.hide()
+		_menu.clear()
+		_menu_building = false
+	
+	if _menu_building:
+		_menu_building = false
+		
+		_menu.clear()
+		_menu.show()
+		if _line_edit.text:
+			var operator := ExprNode.Type.Null
+			match _line_edit.text.to_lower():
+				'and', '&', '&&', '+': operator = ExprNode.Type.And
+				'or', '|', '||', '~': operator = ExprNode.Type.Or
+				'not', '!', '-': operator = ExprNode.Type.Not
+				'(': operator = ExprNode.Type.BracketOpen
+				')': operator = ExprNode.Type.BracketClose
+			if operator != ExprNode.Type.Null:
+				var but_text := ExprNode.Type.find_key(operator) as String
+				if not operator in [ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose]:
+					but_text = but_text.to_upper()
+				var but := _menu.add_button(but_text, Color('66afcc'))
+				but.pressed.connect(_on_menu_selected_operator.bind(operator))
+			
+			_menu.add_button('matchn').pressed.connect(_on_menu_selected_matchn)
+			
+			if data_base:
+				var tags := data_base.find_tags_by_name(_line_edit.text)
+				for tag in tags:
+					var but := _menu.add_button(tag.get_name())
+					but.pressed.connect(_on_menu_selected_tag.bind(tag))
+		
+		else:
+			for operator in [ExprNode.Type.And, ExprNode.Type.Or, ExprNode.Type.Not, ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose]:
+				var but_text := ExprNode.Type.find_key(operator) as String
+				if not operator in [ExprNode.Type.BracketOpen, ExprNode.Type.BracketClose]:
+					but_text = but_text.to_upper()
+				var but := _menu.add_button(but_text, Color('66afcc'))
+				but.pressed.connect(_on_menu_selected_operator.bind(operator))
+		
+		var begin := _menu.get_buttons().front() as Control
+		if begin:
+			begin.focus_previous = get_path_to(_line_edit)
+			begin.focus_neighbor_top = get_path_to(_line_edit)
+			_line_edit.focus_neighbor_bottom = get_path_to(begin)
+		else:
+			_line_edit.focus_neighbor_bottom = ^''
+		var end := _menu.get_buttons().back() as Control
+		if end:
+			end.focus_previous = get_path_to(_line_edit)
+			end.focus_neighbor_top = get_path_to(_line_edit)
+			_line_edit.focus_neighbor_top = get_path_to(end)
+		else:
+			_line_edit.focus_neighbor_top = ^''
+	
+	_in_focus = in_focus()
+	_is_empty = is_empty()
 
 func _get_minimum_size() -> Vector2:
-	print('%6d # ' % Engine.get_frames_drawn(), '_get_minimum_size')
 	return Vector2(get_line_height() * 3, get_line_interval() * maxi(1, _lines.size()) - get_line_separation())
 
+func _on_line_edit_gui_input(event: InputEvent) -> void:
+	if event.is_pressed():
+		if _focused_expr in _expr_to_item:
+			if event.is_action('ui_text_caret_down'):
+				if _line_edit.caret_column == _line_edit.text.length():
+					_line_edit.accept_event()
+					if not _menu.visible:
+						_menu.show()
+						_menu_building = true
+					_menu.grab_focus()
+			
+			elif event.is_action('ui_text_caret_up'):
+				if _line_edit.caret_column == 0:
+					_line_edit.accept_event()
+					if not _menu.visible:
+						_menu.show()
+						_menu_building = true
+					_menu.grab_focus()
+			
+			elif event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left'):
+				if _line_edit.caret_column == 0:
+					_line_edit.accept_event()
+					grab_focus_neighbour(-1)
+			
+			elif event.is_action('ui_text_delete') or event.is_action('ui_text_caret_right'):
+				if _line_edit.caret_column == _line_edit.text.length():
+					_line_edit.accept_event()
+					grab_focus_neighbour(+1)
+
+func _on_menu_panel_tree_gui_input(event: InputEvent) -> void:
+	if event.is_pressed():
+		if event.is_action('ui_text_caret_left'):
+			grab_focus_neighbour(-1)
+		elif event.is_action('ui_text_caret_right'):
+			grab_focus_neighbour(+1)
+
 func _on_line_edit_text_changed() -> void:
-	if _focused_expr and _focused_expr in _expr_to_item:
+	if _line_edit.has_focus():
 		queue_sort()
 		if _focused_expr.type == ExprNode.Type.MatchString:
 			_focused_expr.match_string = _line_edit.text
+		_menu_building = true
+
+func _on_menu_selected_operator(operator : ExprNode.Type) -> void:
+	_menu.hide()
+	_focused_expr.type = operator
+	_line_edit.grab_focus()
+	_line_edit.text = _focused_expr.to_text()
+	_line_edit.caret_column = _line_edit.text.length()
+
+func _on_menu_selected_tag(tag : DataBase.Tag) -> void:
+	_menu.hide()
+	_focused_expr.type = ExprNode.Type.Tag
+	_line_edit.grab_focus()
+	_focused_expr.tag = tag
+	_line_edit.text = _focused_expr.to_text()
+	_line_edit.caret_column = _line_edit.text.length()
+
+func _on_menu_selected_matchn() -> void:
+	_menu.hide()
+	_focused_expr.type = ExprNode.Type.MatchString
+	_focused_expr.match_string = _line_edit.text
+	_line_edit.grab_focus()
+	_line_edit.text = _focused_expr.to_text()
+	_line_edit.caret_column = _line_edit.text.length()
+
+func grab_focus_neighbour(offset : int) -> void:
+	assert(offset)
+	if _focused_expr and offset:
+		var index := expression.expressions.find(_focused_expr)
+		if index != -1:
+			var right : bool = offset > 0
+			var next : ExprNode
+			while offset:
+				index += signi(offset)
+				if index < 0 or index >= expression.expressions.size():
+					break
+				var expr := expression.expressions[index]
+				if not expr.virtual:
+					offset -= signi(offset)
+					if not offset:
+						next = expr
+						break
+			
+			if not next:
+				next = ExprNode.new(ExprNode.Type.MatchString)
+				expression.insert(clampi(index, 0, expression.expressions.size()), next)
+			
+			if next:
+				_focused_expr = next
+				_line_edit.caret_column = 0 if right else _line_edit.text.length()
+
+func in_focus() -> bool:
+	if has_focus():
+		return true
+	var focus_owner := get_viewport().gui_get_focus_owner()
+	return focus_owner and is_ancestor_of(focus_owner)
+
+func is_empty() -> bool:
+	return not expression or expression.is_empty()
 
 func _resort() -> void:
 	if not is_visible_in_tree():
@@ -183,27 +355,25 @@ func _resort() -> void:
 	if expression._changed:
 		expression.update()
 	
-	var t := Time.get_ticks_usec()
-	
-	if not _line_edit.has_focus():
+	if not _line_edit.has_focus() and not _menu.in_focus():
 		_focused_expr = null
 	
-	var font : Font = get_font()
-	var font_size : int = get_font_size()
-	#var font_ascent : int = get_line_ascent()
+	var font: Font = get_font()
+	var font_size: int = get_font_size()
+	#var font_ascent: int = get_line_ascent()
 	#var font_color_default := Color.WHITE.darkened(0.5)
 	#var font_color_light := Color.WHITE.darkened(0.2)
-	var item_separation : int = 15
-	#var line_separation : int = get_line_separation()
-	var line_interval : int = get_line_interval()
-	var line_max_size : float = size.x - item_separation
-	#var line_max_count : int = get_line_max_count()
+	var item_separation: int = 15
+	#var line_separation: int = get_line_separation()
+	var line_interval: int = get_line_interval()
+	var line_max_size: float = size.x - item_separation
+	#var line_max_count: int = get_line_max_count()
 	
 	var new_expr_to_item := {}
 	var items := [] as Array[Item]
 	for expr in expression.expressions:
 		if not expr.virtual and expr.type != ExprNode.Type.Null:
-			var item : Item
+			var item: Item
 			if expr in _expr_to_item:
 				item = _expr_to_item[expr]
 			else:
@@ -220,15 +390,16 @@ func _resort() -> void:
 	
 	_lines.clear()
 	var line := [] as Array[Item]
-	var line_size : float
+	var line_size: float
 	#var pack := [] as Array[Item]
-	#var pack_size : float
+	#var pack_size: float
 	for item in items:
 		var text := item.expr.to_text()
 		if item.expr == _focused_expr:
 			text = _line_edit.text
 		
-		var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
+		text_size = maxf(text_size, _line_edit.get_combined_minimum_size().x)
 		var fit := line_size + text_size < line_max_size
 		if not fit and line:
 			_lines.append(line)
@@ -240,17 +411,21 @@ func _resort() -> void:
 		
 		if item.expr == _focused_expr:
 			fit_child_in_rect(_line_edit, item.rect)
+			var item_global_rect := get_global_transform() * item.rect
+			_menu.set_global_position(Vector2(item_global_rect.position.x, item_global_rect.end.y))
+			_menu.size = Vector2(150, 250)
+			#fit_child_in_rect(_menu, Rect2(item.rect.position.x, item.rect.end.y, 150, 250))
 		
 		line_size += item.rect.size.x + item_separation
 	if line or not _lines:
 		_lines.append(line)
 	
+	print(expression.to_text())
+	
 	queue_redraw()
-	#_committing = false
-	print('%6d # ' % Engine.get_frames_drawn(), '_resort за %d мкс' % (Time.get_ticks_usec() - t))
 
 
-func has_point(point : Vector2) -> bool:
+func has_point(point: Vector2) -> bool:
 	return Rect2(Vector2(), size).grow(0.005).has_point(point)
 
 func get_font() -> Font:
@@ -274,17 +449,17 @@ func get_line_separation() -> int:
 func get_line_interval() -> int:
 	return get_line_height() + get_line_separation()
 
-func get_line_at_position(p_position : Vector2) -> float:
+func get_line_at_position(p_position: Vector2) -> float:
 	if has_point(p_position):
 		return p_position.y / get_line_interval()
 	return -1
 
 
 class Item:
-	var expr : ExprNode
+	var expr: ExprNode
 	#var text_line := TextLine.new()
-	var rect : Rect2
-	#var text : String
+	var rect: Rect2
+	#var text: String
 	
-	func _init(p_expr : ExprNode) -> void:
+	func _init(p_expr: ExprNode) -> void:
 		expr = p_expr

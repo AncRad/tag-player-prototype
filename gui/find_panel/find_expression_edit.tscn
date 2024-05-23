@@ -1,50 +1,65 @@
-[gd_scene load_steps=5 format=3 uid="uid://b0vibo33qrh4w"]
+[gd_scene load_steps=8 format=3 uid="uid://b0vibo33qrh4w"]
 
 [ext_resource type="Script" path="res://gui/find_panel/find_expression_edit.gd" id="1_3apnd"]
 [ext_resource type="Script" path="res://core/expr_node.gd" id="2_loo4q"]
+[ext_resource type="PackedScene" uid="uid://cthxa6fyjqmsq" path="res://gui/menu_panel/menu_panel.tscn" id="3_ln3sr"]
+[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="3_md1p5"]
+[ext_resource type="StyleBox" uid="uid://g55n6rwyxnsy" path="res://gui/find_panel/empty.stylebox" id="4_5mode"]
+[ext_resource type="Theme" uid="uid://cupq31a7vpqj3" path="res://gui/find_panel/menu_panel.theme" id="5_2vi37"]
 
 [sub_resource type="Resource" id="Resource_fe45m"]
 script = ExtResource("2_loo4q")
 type = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sjmoy"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
-border_width_top = 1
-border_width_bottom = 1
-border_color = Color(0.8, 0.8, 0.8, 0.517647)
-
 [node name="FindExpressionEdit" type="Container"]
 anchors_preset = 10
 anchor_right = 1.0
 grow_horizontal = 2
-size_flags_vertical = 3
+size_flags_horizontal = 3
 focus_mode = 2
 mouse_filter = 0
 mouse_default_cursor_shape = 1
 script = ExtResource("1_3apnd")
 expression = SubResource("Resource_fe45m")
+data_base = ExtResource("3_md1p5")
 
 [node name="LineEdit" type="LineEdit" parent="."]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(15, 0)
 layout_mode = 2
+focus_neighbor_top = NodePath("../CanvasLayer/MenuPanel")
+focus_neighbor_bottom = NodePath("../CanvasLayer/MenuPanel")
+focus_previous = NodePath("../CanvasLayer/MenuPanel")
 theme_override_constants/minimum_character_width = 1
 theme_override_font_sizes/font_size = 14
-theme_override_styles/normal = SubResource("StyleBoxFlat_sjmoy")
-theme_override_styles/focus = SubResource("StyleBoxFlat_sjmoy")
-theme_override_styles/read_only = SubResource("StyleBoxFlat_sjmoy")
+theme_override_styles/normal = ExtResource("4_5mode")
+theme_override_styles/focus = ExtResource("4_5mode")
+theme_override_styles/read_only = ExtResource("4_5mode")
+alignment = 1
 flat = true
 caret_blink = true
 
-[node name="Tree" type="Tree" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-allow_search = false
-hide_folding = true
-hide_root = true
-scroll_horizontal_enabled = false
-scroll_vertical_enabled = false
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
 
-[connection signal="focus_exited" from="." to="." method="queue_redraw"]
+[node name="MenuPanel" parent="CanvasLayer" instance=ExtResource("3_ln3sr")]
+unique_name_in_owner = true
+focus_neighbor_top = NodePath("../../LineEdit")
+focus_neighbor_bottom = NodePath("../../LineEdit")
+focus_next = NodePath("../../LineEdit")
+focus_previous = NodePath("../../LineEdit")
+theme = ExtResource("5_2vi37")
+
+[node name="Tree" parent="CanvasLayer/MenuPanel" index="1"]
+focus_neighbor_left = NodePath("../../../LineEdit")
+focus_neighbor_top = NodePath("../../../LineEdit")
+focus_neighbor_right = NodePath("../../../LineEdit")
+focus_neighbor_bottom = NodePath("../../../LineEdit")
+focus_next = NodePath("../../../LineEdit")
+focus_previous = NodePath("../../../LineEdit")
+
 [connection signal="focus_exited" from="LineEdit" to="." method="queue_redraw"]
 [connection signal="gui_input" from="LineEdit" to="." method="_on_line_edit_gui_input"]
 [connection signal="text_changed" from="LineEdit" to="." method="_on_line_edit_text_changed" unbinds=1]
+[connection signal="gui_input" from="CanvasLayer/MenuPanel/Tree" to="." method="_on_menu_panel_tree_gui_input"]
+
+[editable path="CanvasLayer/MenuPanel"]

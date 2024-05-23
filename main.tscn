@@ -43,14 +43,6 @@ theme_override_constants/separation = 0
 [node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("5_nwobq")]
 layout_mode = 2
 
-[node name="HSplitContainer" type="HSplitContainer" parent="GUI/VBoxContainer"]
+[node name="TrackList" parent="GUI/VBoxContainer" instance=ExtResource("6_cwg7h")]
 layout_mode = 2
 size_flags_vertical = 3
-split_offset = 510
-
-[node name="Control" type="Control" parent="GUI/VBoxContainer/HSplitContainer"]
-visible = false
-layout_mode = 2
-
-[node name="TrackList" parent="GUI/VBoxContainer/HSplitContainer" instance=ExtResource("6_cwg7h")]
-layout_mode = 2

@@ -1,6 +1,6 @@
 extends List
 
-const FindFilterPanel = preload('res://gui/find_panel/find_filter_panel.gd')
+const FindExpressionEdit = preload('res://gui/find_panel/find_expression_edit.gd')
 
 @export var source : DataSource:
 	set(value):
@@ -37,10 +37,10 @@ var _find_panel : Control:
 			if _find_panel:
 				_find_panel.hide()
 
-var _find_filter_panel : FindFilterPanel:
+var _find_expression_edit : FindExpressionEdit:
 	set(value):
-		if value != _find_filter_panel:
-			_find_filter_panel = value
+		if value != _find_expression_edit:
+			_find_expression_edit = value
 
 var _deferred_scroll_to_track : DataBase.Track
 
@@ -49,7 +49,7 @@ func _notification(what: int) -> void:
 	match what:
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_find_panel = %FindPanel as Control
-			_find_filter_panel = %FindFilterPanel as FindFilterPanel
+			_find_expression_edit = %FindExpressionEdit as FindExpressionEdit
 
 func get_scroll_max() -> float:
 	if source:
@@ -69,7 +69,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		elif event.is_action('track_list_start_find', true):
 			accept_event()
 			_find_panel.show()
-			_find_filter_panel.grab_focus()
+			_find_expression_edit.grab_focus()
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_pressed() and 'position' in event:
