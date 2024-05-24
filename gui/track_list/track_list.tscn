@@ -63,6 +63,6 @@ max_value = 1.0
 step = 0.0001
 
 [connection signal="empty" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
-[connection signal="focus_released" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
+[connection signal="unfocused" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
 [connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer2/List" to="VBoxContainer/HBoxContainer2/VScrollBar" method="set_value_no_signal"]
 [connection signal="value_changed" from="VBoxContainer/HBoxContainer2/VScrollBar" to="VBoxContainer/HBoxContainer2/List" method="set_scroll_progress"]

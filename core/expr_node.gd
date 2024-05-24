@@ -321,7 +321,7 @@ func _compile(solver : Solver, begin := 0) -> int:
 	var stack_up := false
 	while pos < expressions.size():
 		var expr := expressions[pos]
-		if expr.is_valid():
+		if expr.enabled:
 			match expr.type:
 				ExprNode.Type.SubExpression:
 					assert(false)
@@ -373,7 +373,7 @@ func _compile(solver : Solver, begin := 0) -> int:
 								pos = _compile(operand, pos + 1)
 						else:
 							next.all = not solver.all
-							next.invert = invert
+							next.invert = false
 							next.items = [solver.items[-1], operand]
 							solver.items[-1] = next
 							if expr.type == ExprNode.Type.BracketOpen:

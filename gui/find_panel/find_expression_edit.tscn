@@ -48,6 +48,7 @@ focus_neighbor_bottom = NodePath("../../LineEdit")
 focus_next = NodePath("../../LineEdit")
 focus_previous = NodePath("../../LineEdit")
 theme = ExtResource("5_2vi37")
+release_focus_on_outer_event = false
 
 [node name="Tree" parent="CanvasLayer/MenuPanel" index="1"]
 focus_neighbor_left = NodePath("../../../LineEdit")
@@ -60,6 +61,10 @@ focus_previous = NodePath("../../../LineEdit")
 [connection signal="focus_exited" from="LineEdit" to="." method="queue_redraw"]
 [connection signal="gui_input" from="LineEdit" to="." method="_on_line_edit_gui_input"]
 [connection signal="text_changed" from="LineEdit" to="." method="_on_line_edit_text_changed" unbinds=1]
+[connection signal="text_submitted" from="LineEdit" to="." method="_on_line_edit_text_submitted"]
+[connection signal="focused" from="CanvasLayer/MenuPanel" to="." method="_on_menu_focus_changeed"]
+[connection signal="unfocused" from="CanvasLayer/MenuPanel" to="." method="queue_redraw"]
+[connection signal="unfocused" from="CanvasLayer/MenuPanel" to="." method="_on_menu_focus_changeed"]
 [connection signal="gui_input" from="CanvasLayer/MenuPanel/Tree" to="." method="_on_menu_panel_tree_gui_input"]
 
 [editable path="CanvasLayer/MenuPanel"]

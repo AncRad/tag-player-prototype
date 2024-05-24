@@ -1,13 +1,18 @@
 extends MarginContainer
 
-signal focus_released
+signal unfocused
+signal focused
+
+@export var release_focus_on_outer_event := true
 
 var _in_focus := false:
 	set(value):
 		if value != _in_focus:
 			_in_focus = value
-			if not _in_focus:
-				focus_released.emit()
+			if _in_focus:
+				focused.emit()
+			else:
+				unfocused.emit()
 
 var _tree : Tree
 var _root : TreeItem
@@ -28,10 +33,14 @@ func _process(_delta = null) -> void:
 	_in_focus = in_focus()
 
 func _input(event: InputEvent) -> void:
-	if event.is_pressed() and 'position' in event:
-		if not get_rect().has_point(event.position):
-			if in_focus():
-				get_viewport().gui_get_focus_owner().release_focus()
+	if release_focus_on_outer_event:
+		if event.is_pressed() and 'position' in event:
+			if is_visible_in_tree():
+				var focus_owner := get_viewport().gui_get_focus_owner()
+				if focus_owner:
+					if has_focus() or focus_owner.has_focus():
+						if not get_global_rect().has_point(event.position):
+							focus_owner.release_focus()
 
 func _on_tree_item_pressed() -> void:
 	var item := _tree.get_selected()
