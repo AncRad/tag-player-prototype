@@ -224,6 +224,7 @@ func update() -> void:
 		var bracket := ExprNode.new(ExprNode.Type.BracketOpen)
 		bracket.virtual = true
 		insert(0, bracket)
+		bracket._changed = false
 	
 	pos = 0
 	while maxi(0, pos) < expressions.size():
@@ -274,9 +275,10 @@ func update() -> void:
 			if right:
 				if right.is_operand() or right.is_unary() or right.is_bracket_open():
 					right = ExprNode.new(ExprNode.Type.And)
+					right._changed = false
 					right.virtual = true
-					insert(right_pos, right)
 					right_pos = pos + 1
+					insert(right_pos, right)
 					pos = right_pos + 1
 					continue
 		

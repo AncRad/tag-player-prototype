@@ -268,12 +268,12 @@ func _on_line_edit_gui_input(event: InputEvent) -> void:
 						_menu_building = true
 					_menu.grab_focus()
 			
-			elif event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left'):
+			elif event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left') or event.is_action('ui_text_caret_line_start'):
 				if _line_edit.caret_column == 0:
 					_line_edit.accept_event()
 					grab_focus_neighbour(-1)
 			
-			elif event.is_action('ui_text_delete') or event.is_action('ui_text_caret_right'):
+			elif event.is_action('ui_text_delete') or event.is_action('ui_text_caret_right') or event.is_action('ui_text_caret_line_end'):
 				if _line_edit.caret_column == _line_edit.text.length():
 					_line_edit.accept_event()
 					grab_focus_neighbour(+1)
@@ -396,7 +396,7 @@ func _resort() -> void:
 	var item_separation: int = 15
 	#var line_separation: int = get_line_separation()
 	var line_interval: int = get_line_interval()
-	var line_max_size: float = size.x - item_separation
+	var line_max_size: float = size.x
 	#var line_max_count: int = get_line_max_count()
 	
 	var new_expr_to_item := {}
@@ -414,15 +414,14 @@ func _resort() -> void:
 	_expr_to_item = new_expr_to_item
 	_items = items
 	
-	if _focused_expr:
-		if not _focused_expr in _expr_to_item:
-			_focused_expr = null
+	if _focused_expr and not _focused_expr in _expr_to_item:
+		_focused_expr = null
 	
 	_lines.clear()
 	var line := [] as Array[Item]
-	var line_size: float
-	#var pack := [] as Array[Item]
-	#var pack_size: float
+	var line_size: float = -item_separation
+	var pack := [] as Array[Item]
+	var pack_size: float = -item_separation
 	for item in items:
 		var text := item.expr.to_text()
 		if item.expr == _focused_expr:
@@ -430,26 +429,33 @@ func _resort() -> void:
 		
 		var text_size := font.get_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, -1, font_size).x
 		text_size = maxf(text_size, _line_edit.get_combined_minimum_size().x)
-		var fit := line_size + text_size < line_max_size
-		if not fit and line:
-			_lines.append(line)
-			line_size = 0
-			line = []
-		line.append(item)
+		item.rect = Rect2(maxf(line_size, 0) + maxf(pack_size, 0) + (item_separation if pack or line else 0),
+				line_interval * _lines.size(), text_size, line_interval)
+		pack.append(item)
+		pack_size += item_separation + item.rect.size.x
+		if item.expr.is_operand() or item == items[-1] or item.expr.is_bracket_close():
+			for pack_item in pack:
+				if line_size + item_separation + pack_size > line_max_size:
+					_lines.append(line)
+					line_size = -item_separation
+					line = []
+				pack_item.rect.position = Vector2(line_size + item_separation, line_interval * _lines.size())
+				line_size += item_separation + pack_item.rect.size.x
+				line.append(pack_item)
+				pack_size -= item_separation + pack_item.rect.size.x
+			pack.clear()
+			pack_size = -item_separation
 		
-		item.rect = Rect2(line_size, line_interval * _lines.size(), text_size, line_interval)
-		
-		if item.expr == _focused_expr:
-			fit_child_in_rect(_line_edit, item.rect)
-			var item_global_rect := get_global_transform() * item.rect
-			_menu.set_global_position(Vector2(item_global_rect.position.x, item_global_rect.end.y))
-			_menu.size = Vector2(150, 250)
-			#fit_child_in_rect(_menu, Rect2(item.rect.position.x, item.rect.end.y, 150, 250))
-		
-		line_size += item.rect.size.x + item_separation
+	assert(not pack)
 	if line or not _lines:
 		_lines.append(line)
 	
+	if _focused_expr:
+		var item := _expr_to_item[_focused_expr] as Item
+		fit_child_in_rect(_line_edit, item.rect)
+		var item_global_rect := get_global_transform() * item.rect
+		_menu.set_global_position(Vector2(item_global_rect.position.x, item_global_rect.end.y))
+		_menu.size = Vector2(150, 250)
 	print(expression.to_text())
 	
 	queue_redraw()
