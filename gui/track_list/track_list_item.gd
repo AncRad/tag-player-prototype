@@ -44,6 +44,8 @@ var _find_expression_edit : FindExpressionEdit:
 
 var _deferred_scroll_to_track : DataBase.Track
 
+var _selection := {}
+
 
 func _notification(what: int) -> void:
 	match what:
@@ -51,13 +53,18 @@ func _notification(what: int) -> void:
 			_find_panel = %FindPanel as Control
 			_find_expression_edit = %FindExpressionEdit as FindExpressionEdit
 
-func get_scroll_max() -> float:
-	if source:
-		return maxf(0, source.size() - int((size.y + get_line_descent()) / get_line_interval()))
-	return 0
-
-func _unhandled_key_input(event: InputEvent) -> void:
-	if event.is_pressed() and has_focus():
+func _gui_input(event: InputEvent) -> void:
+	if event.is_pressed() and 'position' in event:
+		accept_event()
+		grab_focus()
+	
+	if event.is_pressed():
+		if event.is_action('track_list_start_find', true):
+			accept_event()
+			if not event.is_echo():
+				_find_panel.show()
+				_find_expression_edit.grab_focus()
+		
 		if event.is_action('track_list_current_track_focus', true):
 			accept_event()
 			var pos := get_global_mouse_position() * get_global_transform()
@@ -66,17 +73,32 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			else:
 				scroll_to_track(-0.5, highlighted_track, true)
 		
-		elif event.is_action('track_list_start_find', true):
+		if event.is_action('track_list_select_all', true):
 			accept_event()
-			_find_panel.show()
-			_find_expression_edit.grab_focus()
-
-func _gui_input(event: InputEvent) -> void:
-	if event.is_pressed() and 'position' in event:
-		grab_focus()
-	
-	if event is InputEventMouseButton:
-		if event.is_pressed() and not event.is_echo():
+			if not event.is_echo():
+				if source:
+					var tracks := source.get_tracks()
+					
+					var all := true
+					var compare := _selection.duplicate()
+					for track in tracks:
+						if track in compare:
+							compare.erase(track)
+						else:
+							all = false
+							break
+					all = all and not compare
+					
+					_selection.clear()
+					if not all:
+						for track in tracks:
+							_selection[track] = true
+				else:
+					_selection.clear()
+				queue_redraw()
+		
+		
+		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 					scroll -= 1
@@ -85,13 +107,19 @@ func _gui_input(event: InputEvent) -> void:
 			
 			elif event.button_index == MOUSE_BUTTON_LEFT:
 				var region := get_region_at_position(event.position)
-				#if OS.is_debug_build():
-					#set_meta('highlight_region', region.get('rect', Rect2()))
-				if region and playback:
-					if source:
-						playback.play(0, region.track, source)
-					else:
-						playback.play(0, region.track)
+				if region:
+					if Input.is_action_pressed('track_list_select_modifer'):
+						if region.track in _selection:
+							_selection.erase(region.track)
+						else:
+							_selection[region.track] = true
+						queue_redraw()
+					
+					elif playback:
+						if source:
+							playback.play(0, region.track, source)
+						else:
+							playback.play(0, region.track)
 
 #func _get_tooltip(at_position: Vector2) -> String:
 	#var region := get_region_at_position(at_position)
@@ -154,6 +182,9 @@ func _draw() -> void:
 		var line_rect := Rect2(main_rect.position.x, pos_y, main_rect.end.x - main_rect.position.x, line_interval)
 		var rect_left := Rect2(main_rect.position.x + margin_left, pos_y, creators_max_size, line_interval)
 		var region_rect := Rect2()
+		
+		if track in _selection:
+			draw_rect(line_rect, Color.WHITE.darkened(0.9))
 		
 		var creators : Array[DataBase.Tag]
 		if root:
@@ -219,6 +250,14 @@ func _draw() -> void:
 		set_meta("draw_counter", get_meta("draw_counter", 0) + 1)
 		var debug_string := "%4d draws %4d мкс" % [get_meta("draw_counter"), debug_time]
 		draw_string(font, Vector2(size.x - 110, 12), debug_string, HORIZONTAL_ALIGNMENT_RIGHT, -1, 10, Color(1,1,1,0.9))
+
+func get_scroll_max() -> float:
+	if source:
+		return maxf(0, source.size() - int((size.y + get_line_descent()) / get_line_interval()))
+	return 0
+
+func _get_minimum_size() -> Vector2:
+	return Vector2(get_line_height(), get_line_height())
 
 func set_highlighted_track(value : DataBase.Track) -> void:
 	if value != highlighted_track:
