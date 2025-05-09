@@ -142,4 +142,3 @@ static func find_files(dir_path : String) -> Array[String]:
 					files.push_back("%s/%s" % [dir_name, file_name])
 				file_name = dir.get_next()
 	return files
-

@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://tmk0xgu3rhtn" path="res://gui/player_panel/player_button.tscn" id="2_8pyg5"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_j72sd"]
-[ext_resource type="Script" path="res://gui/player_panel/player_buttons.gd" id="2_vxta0"]
+[ext_resource type="Script" uid="uid://bkybfqcubapib" path="res://gui/player_panel/player_buttons.gd" id="2_vxta0"]
 
 [node name="PlayerButtons" type="HBoxContainer"]
 size_flags_horizontal = 0

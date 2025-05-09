@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://cthxa6fyjqmsq"]
 
-[ext_resource type="Script" path="res://gui/menu_panel/menu_panel.gd" id="1_il4rt"]
+[ext_resource type="Script" uid="uid://du0fo4hkubkw0" path="res://gui/menu_panel/menu_panel.gd" id="1_il4rt"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6hhiv"]
 bg_color = Color(0.06, 0.06, 0.06, 1)

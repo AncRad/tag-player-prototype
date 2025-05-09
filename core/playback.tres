@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="Playback" load_steps=3 format=3 uid="uid://bn1oi81qkphlm"]
 
-[ext_resource type="Script" path="res://core/player/playback.gd" id="1_6xtj7"]
+[ext_resource type="Script" uid="uid://cu08h2edcv4f4" path="res://core/player/playback.gd" id="1_6xtj7"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="1_w743d"]
 
 [resource]

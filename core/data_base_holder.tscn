@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://dbitt37u6u746"]
 
-[ext_resource type="Script" path="res://core/data_base_holder.gd" id="1_xfwqk"]
+[ext_resource type="Script" uid="uid://dxovu2jl415jr" path="res://core/data_base_holder.gd" id="1_xfwqk"]
 [ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="2_3rr8s"]
 
 [node name="DataBaseHolder" type="Node"]

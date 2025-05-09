@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://cp0o32wj18o0x"]
 
-[ext_resource type="Script" path="res://gui/player_panel/player_panel.gd" id="1_spd74"]
+[ext_resource type="Script" uid="uid://ctkvms0cxd7di" path="res://gui/player_panel/player_panel.gd" id="1_spd74"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_ewovt"]
 [ext_resource type="Theme" uid="uid://slh6t1d4eoop" path="res://gui/player_panel/player_buttons.theme" id="2_kdfki"]
 [ext_resource type="PackedScene" uid="uid://dhly8qeol4gu6" path="res://gui/player_panel/player_buttons.tscn" id="2_poe4l"]

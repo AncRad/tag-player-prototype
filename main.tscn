@@ -1,12 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene load_steps=8 format=3 uid="uid://cwjb1imduvk04"]
 
-[ext_resource type="Script" path="res://core/player/player.gd" id="1_if8um"]
+[ext_resource type="Script" uid="uid://dc4pt45c60sys" path="res://core/player/player.gd" id="1_if8um"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="2_nwl3h"]
 [ext_resource type="PackedScene" uid="uid://dbitt37u6u746" path="res://core/data_base_holder.tscn" id="3_plvy5"]
-[ext_resource type="Script" path="res://gui/panel_control/panel_control.gd" id="5_4umh2"]
 [ext_resource type="PackedScene" uid="uid://cp0o32wj18o0x" path="res://gui/player_panel/player_panel.tscn" id="5_nwobq"]
 [ext_resource type="PackedScene" uid="uid://mqs6rjv3osx0" path="res://gui/track_list/track_list.tscn" id="6_cwg7h"]
-[ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="7_kni80"]
 
 [sub_resource type="GDScript" id="GDScript_pp3fc"]
 script/source = "extends Node
@@ -111,13 +109,6 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_7mijb")
 [node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
 layout_mode = 2
 theme_override_constants/separation = 8
-script = ExtResource("5_4umh2")
-
-[node name="TrackList2" parent="GUI/VBoxContainer" instance=ExtResource("6_cwg7h")]
-visible = false
-layout_mode = 2
-size_flags_vertical = 3
-size_flags_stretch_ratio = 99.5862
 
 [node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("5_nwobq")]
 layout_mode = 2
@@ -126,29 +117,4 @@ size_flags_stretch_ratio = 133.333
 [node name="TrackList" parent="GUI/VBoxContainer" instance=ExtResource("6_cwg7h")]
 layout_mode = 2
 size_flags_vertical = 3
-size_flags_stretch_ratio = 253.687
-
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/VBoxContainer"]
-layout_mode = 2
-size_flags_vertical = 3
-size_flags_stretch_ratio = 50.3125
-theme_override_constants/separation = 8
-script = ExtResource("5_4umh2")
-
-[node name="Control" type="Panel" parent="GUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 194.667
-theme_override_styles/panel = ExtResource("7_kni80")
-
-[node name="Control2" type="Panel" parent="GUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 194.667
-theme_override_styles/panel = ExtResource("7_kni80")
-
-[node name="Control3" type="Panel" parent="GUI/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 194.667
-theme_override_styles/panel = ExtResource("7_kni80")
+size_flags_stretch_ratio = 312.0
