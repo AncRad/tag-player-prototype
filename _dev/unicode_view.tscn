@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://vxehkijilqi3"]
 
-[ext_resource type="Script" path="res://_dev/unicode_view.gd" id="1_3e4yu"]
+[ext_resource type="Script" uid="uid://1agpdcejow52" path="res://_dev/unicode_view.gd" id="1_3e4yu"]
 
 [node name="UnicodeView" type="TextEdit"]
 anchors_preset = 15
