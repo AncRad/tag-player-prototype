@@ -84,6 +84,7 @@ func _on_close_requested() -> void:
 		get_tree().quit()
 
 func data_base_save(path : String) -> void:
+	##TODO: изучить способы использования PackedDataContainer
 	var temp_path := "%s/.%s" % [path.get_base_dir(), path.get_file()]
 	var file := FileAccess.open(temp_path, FileAccess.WRITE)
 	var err := FileAccess.get_open_error()
@@ -107,6 +108,7 @@ func data_base_save(path : String) -> void:
 						data_base._changes_cached = data_base._changes
 
 func data_base_load(path : String) -> void:
+	##TODO: изучить способы использования PackedDataContainer
 	var bytes := FileAccess.get_file_as_bytes(path)
 	var err := FileAccess.get_open_error()
 	assert(err == OK)
