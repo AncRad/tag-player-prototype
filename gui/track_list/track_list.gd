@@ -59,11 +59,53 @@ var _find_panel : Control
 
 func _notification(what: int) -> void:
 	match what:
+		NOTIFICATION_POSTINITIALIZE:
+			set_drag_forwarding(get_drag_data, can_drop_data, drop_data)
+		
 		NOTIFICATION_SCENE_INSTANTIATED, NOTIFICATION_READY:
 			_list = %List as TrackListItem
 			_find_expression_edit = %FindExpressionEdit as FindExpressionEdit
 			_find_panel = %FindPanel as Control
+			_list.set_drag_forwarding(Callable(), can_drop_data, drop_data)
 
 func _on_find_expression_edit_update_visibility() -> void:
 	if not _find_expression_edit.in_focus() and _find_expression_edit.is_empty():
 		_find_panel.hide()
+
+func get_drag_data(_at_position: Vector2) -> Variant:
+	var data := {}
+	data.from = self
+	data.track_list = self
+	
+	if source:
+		data.source = source
+	
+	if playback:
+		data.playback = playback
+		#if playback.current_track:
+			#data.track = playback.current_track
+	
+	return data
+
+func can_drop_data(_at_position: Vector2, data: Variant) -> bool:
+	if data is Dictionary:
+		if 'from' in data and data.from == self:
+			return false
+		
+		if 'source' in data and data.source is DataSource:
+			return true
+		
+		if 'playback' in data and data.playback is Playback:
+			return true
+	return false
+
+func drop_data(_at_position: Vector2, data: Variant) -> void:
+	if data is Dictionary:
+		if 'from' in data and data.from == self:
+			return
+		
+		if 'source' in data and data.source is DataSource:
+			source = data.source
+		
+		if 'playback' in data and data.playback is Playback:
+			playback = data.playback

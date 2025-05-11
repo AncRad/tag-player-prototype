@@ -63,7 +63,10 @@ focus_mode = 2
 script = ExtResource("6_x1fay")
 
 [node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/HBoxContainer2"]
+custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
+theme_override_styles/scroll = ExtResource("4_uabrd")
+theme_override_styles/scroll_focus = ExtResource("4_uabrd")
 max_value = 1.0
 step = 0.0001
 

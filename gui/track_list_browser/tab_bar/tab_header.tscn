@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://cn7sklr7p6d6g"]
+
+[ext_resource type="Script" uid="uid://brvv5v8wr1mu" path="res://gui/track_list_browser/tab_bar/tab_header.gd" id="1_pjhrr"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j4q80"]
+
+[node name="TabHeader" type="Label"]
+offset_right = 1.0
+offset_bottom = 23.0
+mouse_filter = 0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_j4q80")
+text = "unnamed"
+script = ExtResource("1_pjhrr")
+font_color = Color(0.5, 0.5, 0.5, 1)
+font_color_hover = Color(0.6, 0.6, 0.6, 1)
+font_color_enabled = Color(0.8, 0.8, 0.8, 1)

@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://c0212awyka7wq"]
+
+[ext_resource type="Script" uid="uid://bw51mlv7lmaao" path="res://gui/track_list_browser/tab_container/track_list_tab_container.gd" id="1_bs21a"]
+[ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="1_ialm0"]
+
+[node name="TrackListTabContainer" type="PanelContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+size_flags_vertical = 3
+theme_override_styles/panel = ExtResource("1_ialm0")
+script = ExtResource("1_bs21a")
