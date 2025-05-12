@@ -39,11 +39,8 @@ func _on_add_delete_button_pressed() -> void:
 			_on_tag_find_line_edit_complited()
 			_on_name_edit_complited()
 			_on_type_edit_complited()
-			var names := tag_find.text.split(',', false, 10)
-			names.append_array(name_edit.text.split(',', false, 10))
-			if names.size() > 10:
-				names = names.slice(0, 10)
-			elif not names:
+			var names := name_edit.text.split(',', false, 10)
+			if not names:
 				names.append('tag_unnamed')
 			var types := type_edit.text.split(',', false, 10)
 			selected_tag = data_base.tag_create(names, types)
@@ -59,9 +56,12 @@ func _on_tag_find_line_edit_text_changed() -> void:
 	pass
 
 func _on_tag_find_line_edit_complited() -> void:
-	var valid_text := validate_text(tag_find.text)
-	if tag_find.text != valid_text:
-		tag_find.text = valid_text
+	if not tag_find.text:
+		set_selected_tag(null)
+	else:
+		var valid_text := validate_text(tag_find.text)
+		if tag_find.text != valid_text:
+			tag_find.text = valid_text
 
 func _on_name_edit_text_changed() -> void:
 	pass
@@ -74,7 +74,7 @@ func _on_name_edit_complited() -> void:
 	if selected_tag:
 		selected_tag.set_names(names)
 	if names:
-		tag_find.text = names[0]
+		tag_find.text = selected_tag.get_name()
 	else:
 		tag_find.text = ''
 
@@ -97,7 +97,7 @@ func set_selected_tag(value : Tag) -> void:
 func get_drag_data() -> Variant:
 	if selected_tag:
 		return selected_tag
-	return false
+	return null
 
 func queuq_update() -> void:
 	if not _updating:

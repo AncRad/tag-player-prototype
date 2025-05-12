@@ -129,7 +129,7 @@ func header_get_drag_data(_at_position: Vector2, header : TabHeader) -> Variant:
 	
 	return data
 
-func can_drop_data(_at_position: Vector2, data: Variant, header : TabHeader = null) -> bool:
+func can_drop_data(_at_position: Vector2, data: Variant, _header : TabHeader = null) -> bool:
 	if not is_instance_valid(tab_container):
 		return false
 	if data is Dictionary:

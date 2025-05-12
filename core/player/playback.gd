@@ -31,7 +31,7 @@ func play(offset := 0, track := current_track, source := current_source) -> void
 			player.get_window().title = current_track.order_string
 		else:
 			player.stream = null
-			current_track = null
+			#current_track = null
 			player.get_window().title = ProjectSettings.get_setting('application/config/name', 'TagPlayer') as String
 			## TODO: добавить обработку ощибки загрузки
 		track_changed.emit(current_track)
@@ -166,15 +166,14 @@ static func find_track(source: DataSource, track: DataBase.Track, offset := 0) -
 	return null
 
 static func load_stream(file_path: String) -> AudioStream:
-	if FileAccess.file_exists(file_path):
-		var bytes := FileAccess.get_file_as_bytes(file_path)
-		var err := FileAccess.get_open_error()
-		if err == OK and bytes:
-			@warning_ignore("shadowed_variable_base_class")
-			var stream := AudioStreamMP3.new()
-			stream.data = bytes
-			if stream.get_length():
-				return stream
+	#if FileAccess.file_exists(file_path):
+	var bytes := FileAccess.get_file_as_bytes(file_path)
+	var err := FileAccess.get_open_error()
+	if err == OK and bytes:
+		@warning_ignore("shadowed_variable_base_class")
+		var stream := AudioStreamMP3.new()
+		stream.data = bytes
+		if stream.get_length():
+			return stream
 	
-	assert(false) # добавить обработчик ошибок
 	return null

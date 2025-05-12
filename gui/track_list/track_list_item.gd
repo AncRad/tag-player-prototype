@@ -146,10 +146,12 @@ func _draw() -> void:
 	font.set_cache_capacity(1000, 1000)
 	var font_size : int = get_font_size()
 	var font_ascent : int = get_line_ascent()
-	var font_color_default := Color.WHITE.darkened(0.5)
 	var font_color_light := Color.WHITE.darkened(0.2)
+	var font_color_default := Color.WHITE.darkened(0.5)
+	#var font_color_darkened := Color.WHITE.darkened(0.6)
 	var line_separation : int = get_line_separation()
 	var line_interval : int = get_line_interval()
+	var line_font_offset_v := Vector2(0, font_ascent + line_separation / 2.0)
 	var line_max_count : int = get_line_max_count()
 	var margin_left : int = 4
 	var tag_min_size : float = font.get_string_size('MMM', HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
@@ -172,32 +174,36 @@ func _draw() -> void:
 	var end : int = clampi(begin + line_max_count, begin, source.size())
 	var tracks := source.get_tracks().slice(begin, end) as Array[DataBase.Track]
 	
-	var draw_region := func draw_region(text : String, rect : Rect2, width := -1, color := font_color_default) -> Rect2:
-		font.draw_string(get_canvas_item(), rect.position + Vector2(0, font_ascent + line_separation / 2.0),
-				text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, color, TextServer.JUSTIFICATION_NONE)
-		rect.size.x = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, TextServer.JUSTIFICATION_NONE).x
-		return rect
+	#var draw_region := func draw_region(text : String, rect : Rect2, width := -1, color := font_color_default) -> Rect2:
+		#font.draw_string(get_canvas_item(), rect.position + line_font_offset_v,
+				#text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, color, TextServer.JUSTIFICATION_NONE)
+		#rect.size.x = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, width, font_size, TextServer.JUSTIFICATION_NONE).x
+		#return rect
 	
 	var main_rect := Rect2(0, 0, size.x, size.y)
 	var pos_y : int = int(-wrapf(scroll, 0, 1) * line_interval)
 	var root := source.get_root()
+	var rect_left : Rect2
+	var color : Color
 	for track : DataBase.Track in tracks:
-		var color := font_color_default
+		color = font_color_default
 		if track == highlighted_track:
 			color = font_color_light
 		
 		var line_regions : Array[Dictionary] = []
 		_line_regions.append(line_regions)
 		var line_rect := Rect2(main_rect.position.x, pos_y, main_rect.end.x - main_rect.position.x, line_interval)
-		var rect_left := Rect2(main_rect.position.x + margin_left, pos_y, creators_max_size, line_interval)
-		var region_rect := Rect2()
+		rect_left = Rect2(main_rect.position.x + margin_left, pos_y, creators_max_size, line_interval)
+		#var region_rect := Rect2()
 		
 		if track in _selection:
 			draw_rect(line_rect, Color.WHITE.darkened(0.9))
 		
 		var creators : Array[DataBase.Tag]
+		var versions : Array[DataBase.Tag]
 		if root:
 			creators = track.get_typed_tags('creator')
+			versions = track.get_typed_tags('version')
 		
 		if track.valid and creators and track.name:
 			var first := true
@@ -209,27 +215,61 @@ func _draw() -> void:
 					if rect_left.size.x < tag_min_size + tag_separator_size:
 						break
 					
-					region_rect = draw_region.call(', ', rect_left, rect_left.size.x, color)
-					line_regions.append({rect = region_rect, track = track, tag = creator})
-					rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+					#region_rect = draw_region.call(', ', rect_left, rect_left.size.x, color)
+					#line_regions.append({rect = region_rect, track = track, tag = creator})
+					#rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+					font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+							', ', HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+					rect_left = rect_left.grow_side(SIDE_LEFT, -font.get_string_size(', ', HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x,
+							font_size, TextServer.JUSTIFICATION_NONE).x)
 				
-				region_rect = draw_region.call('%s\n' % creator.names[0], rect_left, rect_left.size.x, color)
-				line_regions.append({rect = region_rect, track = track, tag = creator})
-				rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+				#region_rect = draw_region.call('%s\n' % creator.names[0], rect_left, rect_left.size.x, color)
+				#line_regions.append({rect = region_rect, track = track, tag = creator})
+				#rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+				var t := '%s\n' % creator.names[0]
+				font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+						t, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+				rect_left = rect_left.grow_side(SIDE_LEFT, -font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x,
+						font_size, TextServer.JUSTIFICATION_NONE).x)
 				
 				first = false
 			
 			rect_left.end.x = main_rect.end.x
 			
 			if rect_left.size.x >= separator_size:
-				region_rect = draw_region.call(' - ', rect_left, rect_left.size.x, color)
-				line_regions.append({rect = region_rect, track = track})
-				rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+				#region_rect = draw_region.call(' - ', rect_left, rect_left.size.x, color)
+				#line_regions.append({rect = region_rect, track = track})
+				#rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+				font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+						' - ', HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+				rect_left = rect_left.grow_side(SIDE_LEFT, -font.get_string_size(' - ', HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x,
+						font_size, TextServer.JUSTIFICATION_NONE).x)
+				
 				
 				if rect_left.size.x >= separator_size:
-					region_rect = draw_region.call(track.name, rect_left, rect_left.size.x, color)
-					line_regions.append({rect = region_rect, track = track})
-					rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+					#region_rect = draw_region.call(track.name, rect_left, rect_left.size.x, color)
+					#line_regions.append({rect = region_rect, track = track})
+					#rect_left = rect_left.grow_side(SIDE_LEFT, -region_rect.size.x)
+					font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+							track.name, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+					rect_left = rect_left.grow_side(SIDE_LEFT, -font.get_string_size(track.name, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x,
+							font_size, TextServer.JUSTIFICATION_NONE).x)
+			
+			first = true
+			for version in versions:
+				if first:
+					if rect_left.size.x < tag_min_size:
+						break
+				else:
+					if rect_left.size.x < tag_min_size + tag_separator_size:
+						break
+				
+				if rect_left.size.x >= separator_size:
+					var t := ' (%s)\n' % version.names[0]
+					font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+							t, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+					rect_left = rect_left.grow_side(SIDE_LEFT, -font.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x,
+							font_size, TextServer.JUSTIFICATION_NONE).x)
 		
 		else:
 			var text : String = '[Deleted]'
@@ -247,8 +287,10 @@ func _draw() -> void:
 					else:
 						text = '[Unnamed <%s>]' % track.key
 			
-			rect_left.end.x = main_rect.end.x
-			draw_region.call('%s *' % text, rect_left, rect_left.size.x, color)
+			font.draw_string(get_canvas_item(), rect_left.position + line_font_offset_v,
+					'%s *' % text, HORIZONTAL_ALIGNMENT_LEFT, rect_left.size.x, font_size, color, TextServer.JUSTIFICATION_NONE)
+			#rect_left.end.x = main_rect.end.x
+			#draw_region.call(text, rect_left, rect_left.size.x, color)
 		
 		line_regions.append({rect = line_rect, track = track})
 		pos_y += line_interval

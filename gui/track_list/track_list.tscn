@@ -16,9 +16,9 @@ script/source = "extends Node
 func _on_list_selection_changed() -> void:
 	var selection : Array = %List.get_selection()
 	if selection:
-		$'..'.selected_track = selection[0]
+		$'..'.set_tracks(selection.duplicate())
 	else:
-		$'..'.selected_track = null
+		$'..'.set_tracks()
 "
 
 [node name="TrackList" type="MarginContainer"]
