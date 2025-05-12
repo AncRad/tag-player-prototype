@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://mqs6rjv3osx0"]
+[gd_scene load_steps=10 format=3 uid="uid://mqs6rjv3osx0"]
 
 [ext_resource type="Script" uid="uid://c0qyyulngi1oa" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
@@ -6,6 +6,20 @@
 [ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="4_uabrd"]
 [ext_resource type="PackedScene" uid="uid://b0vibo33qrh4w" path="res://gui/find_panel/find_expression_edit.tscn" id="4_ued1a"]
 [ext_resource type="Script" uid="uid://ntl7fv8sx2xa" path="res://gui/track_list/track_list_item.gd" id="6_x1fay"]
+[ext_resource type="PackedScene" uid="uid://dtfxn5caavji6" path="res://gui/simple_track_editor/simple_track_editor.tscn" id="7_ayq2s"]
+[ext_resource type="PackedScene" uid="uid://cwt8ke6p7wo64" path="res://gui/simple_tag_editor/simple_tag_editor.tscn" id="7_qrco4"]
+
+[sub_resource type="GDScript" id="GDScript_ayq2s"]
+script/source = "extends Node
+
+
+func _on_list_selection_changed() -> void:
+	var selection : Array = %List.get_selection()
+	if selection:
+		$'..'.selected_track = selection[0]
+	else:
+		$'..'.selected_track = null
+"
 
 [node name="TrackList" type="MarginContainer"]
 anchors_preset = 15
@@ -36,7 +50,7 @@ visible = false
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Control" type="Control" parent="VBoxContainer/FindPanel"]
+[node name="Spacer" type="Control" parent="VBoxContainer/FindPanel"]
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 
@@ -44,17 +58,26 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Control2" type="Control" parent="VBoxContainer/FindPanel"]
+[node name="Spacer2" type="Control" parent="VBoxContainer/FindPanel"]
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = -150
+dragger_visibility = 2
+drag_area_margin_begin = 15
+drag_area_margin_end = 15
+drag_area_offset = -3
+
+[node name="ListPanel" type="HBoxContainer" parent="VBoxContainer/VSplitContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 
-[node name="List" type="Control" parent="VBoxContainer/HBoxContainer2"]
+[node name="List" type="Control" parent="VBoxContainer/VSplitContainer/ListPanel"]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
@@ -62,15 +85,70 @@ size_flags_horizontal = 3
 focus_mode = 2
 script = ExtResource("6_x1fay")
 
-[node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/HBoxContainer2"]
+[node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/VSplitContainer/ListPanel"]
 custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
 theme_override_styles/scroll = ExtResource("4_uabrd")
 theme_override_styles/scroll_focus = ExtResource("4_uabrd")
 max_value = 1.0
 step = 0.0001
+value = 0.2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+split_offset = -225
+dragger_visibility = 1
+drag_area_margin_begin = 15
+drag_area_margin_end = 15
+
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 3
+
+[node name="DownLeftContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="SimpleTrackEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer" instance=ExtResource("7_ayq2s")]
+layout_mode = 2
+
+[node name="Node" type="Node" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer/SimpleTrackEditor"]
+script = SubResource("GDScript_ayq2s")
+
+[node name="ScrollContainer2" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 3
+vertical_scroll_mode = 3
+
+[node name="DownRightContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="SimpleTagEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2/DownRightContainer" instance=ExtResource("7_qrco4")]
+layout_mode = 2
 
 [connection signal="empty" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
 [connection signal="unfocused" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
-[connection signal="scroll_progress_changed" from="VBoxContainer/HBoxContainer2/List" to="VBoxContainer/HBoxContainer2/VScrollBar" method="set_value_no_signal"]
-[connection signal="value_changed" from="VBoxContainer/HBoxContainer2/VScrollBar" to="VBoxContainer/HBoxContainer2/List" method="set_scroll_progress"]
+[connection signal="scroll_progress_changed" from="VBoxContainer/VSplitContainer/ListPanel/List" to="VBoxContainer/VSplitContainer/ListPanel/VScrollBar" method="set_value_no_signal"]
+[connection signal="selection_changed" from="VBoxContainer/VSplitContainer/ListPanel/List" to="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer/SimpleTrackEditor/Node" method="_on_list_selection_changed"]
+[connection signal="value_changed" from="VBoxContainer/VSplitContainer/ListPanel/VScrollBar" to="VBoxContainer/VSplitContainer/ListPanel/List" method="set_scroll_progress"]
+[connection signal="tag_selected" from="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer/SimpleTrackEditor" to="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2/DownRightContainer/SimpleTagEditor" method="set_selected_tag"]

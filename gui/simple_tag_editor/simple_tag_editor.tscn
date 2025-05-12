@@ -1,0 +1,184 @@
+[gd_scene load_steps=8 format=3 uid="uid://cwt8ke6p7wo64"]
+
+[ext_resource type="Script" uid="uid://bosukgwo4c7da" path="res://gui/simple_tag_editor/simple_tag_editor.gd" id="1_43lob"]
+[ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="2_7sl38"]
+[ext_resource type="Resource" uid="uid://6f7rj7uqakkt" path="res://core/data_base.tres" id="2_jjtvk"]
+[ext_resource type="Script" uid="uid://cslg02kyc0krf" path="res://gui/simple_tag_editor/add_delete_button.gd" id="2_nkkf6"]
+[ext_resource type="Texture2D" uid="uid://qhf4q0edd477" path="res://gui/icons/gui_radio_unchecked.tex" id="3_wu3gc"]
+[ext_resource type="Texture2D" uid="uid://dd25ywlya5fqs" path="res://gui/icons/warning.tex" id="6_qyku5"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b3l30"]
+
+[node name="SimpleTagEditor" type="MarginContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_43lob")
+data_base = ExtResource("2_jjtvk")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Control" type="Control" parent="VBoxContainer/HBoxContainer"]
+clip_contents = true
+custom_minimum_size = Vector2(1, 1)
+layout_mode = 2
+script = ExtResource("2_nkkf6")
+
+[node name="AddDeleteButton" type="Button" parent="VBoxContainer/HBoxContainer/Control"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+focus_mode = 0
+theme_override_colors/font_disabled_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.74, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(0.901961, 0.901961, 0.901961, 1)
+theme_override_colors/font_color = Color(0.701961, 0.701961, 0.701961, 1)
+theme_override_colors/font_pressed_color = Color(0.741176, 1, 1, 1)
+theme_override_styles/focus = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_b3l30")
+text = "+"
+flat = true
+
+[node name="GetDragData" type="TextureRect" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+texture = ExtResource("3_wu3gc")
+expand_mode = 2
+stretch_mode = 3
+
+[node name="TagFindLineEdit" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+placeholder_text = "поиск тега"
+clear_button_enabled = true
+select_all_on_focus = true
+caret_blink = true
+
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+theme_override_constants/minimum_grab_thickness = 6
+theme_override_constants/autohide = 1
+split_offset = -115
+drag_area_margin_begin = 10
+drag_area_margin_end = 10
+
+[node name="NameEdit" type="TextEdit" parent="VBoxContainer/HSplitContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = ExtResource("2_7sl38")
+theme_override_styles/focus = ExtResource("2_7sl38")
+theme_override_styles/read_only = ExtResource("2_7sl38")
+placeholder_text = "имена через запятую"
+wrap_mode = 1
+scroll_fit_content_height = true
+caret_blink = true
+
+[node name="TypeEdit" type="TextEdit" parent="VBoxContainer/HSplitContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = ExtResource("2_7sl38")
+theme_override_styles/focus = ExtResource("2_7sl38")
+theme_override_styles/read_only = ExtResource("2_7sl38")
+placeholder_text = "типы через запятую"
+wrap_mode = 1
+scroll_fit_content_height = true
+caret_blink = true
+
+[node name="DeleteDialogue" type="MarginContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+mouse_filter = 0
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="Panel" type="Panel" parent="DeleteDialogue"]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteDialogue"]
+layout_mode = 2
+alignment = 1
+
+[node name="Warning" type="TextureRect" parent="DeleteDialogue/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("6_qyku5")
+stretch_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeleteDialogue/HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="DeleteDialogue/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "УДАЛИТЬ ТЕГ?
+НЕЛЬЗЯ ОТМЕНИТЬ!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteDialogue/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="DeleteYesButton" type="Button" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Да"
+
+[node name="Separator" type="Control" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DeleteNoButton" type="Button" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Нет"
+
+[node name="Warning2" type="TextureRect" parent="DeleteDialogue/HBoxContainer"]
+layout_mode = 2
+texture = ExtResource("6_qyku5")
+stretch_mode = 3
+
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/Control/AddDeleteButton" to="." method="_on_add_delete_button_pressed"]
+[connection signal="focus_exited" from="VBoxContainer/HBoxContainer/TagFindLineEdit" to="." method="_on_tag_find_line_edit_complited"]
+[connection signal="text_changed" from="VBoxContainer/HBoxContainer/TagFindLineEdit" to="." method="_on_tag_find_line_edit_text_changed" unbinds=1]
+[connection signal="text_submitted" from="VBoxContainer/HBoxContainer/TagFindLineEdit" to="." method="_on_tag_find_line_edit_complited" unbinds=1]
+[connection signal="focus_exited" from="VBoxContainer/HSplitContainer/NameEdit" to="." method="_on_name_edit_complited"]
+[connection signal="text_changed" from="VBoxContainer/HSplitContainer/NameEdit" to="." method="_on_name_edit_text_changed"]
+[connection signal="focus_exited" from="VBoxContainer/HSplitContainer/TypeEdit" to="." method="_on_type_edit_complited"]
+[connection signal="text_changed" from="VBoxContainer/HSplitContainer/TypeEdit" to="." method="_on_type_edit_text_changed"]
+[connection signal="pressed" from="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer/DeleteYesButton" to="." method="_on_delete_yes_button_pressed"]
+[connection signal="pressed" from="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer/DeleteNoButton" to="DeleteDialogue" method="hide"]

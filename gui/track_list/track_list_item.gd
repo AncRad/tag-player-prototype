@@ -1,10 +1,16 @@
-extends List
+extends 'list.gd'
 
 const FindExpressionEdit = preload('res://gui/find_panel/find_expression_edit.gd')
+
+signal selection_changed
+signal source_changed
+signal source_pre_change
 
 @export var source : DataSource:
 	set(value):
 		if value != source:
+			source_pre_change.emit()
+			
 			if source:
 				source.data_changed.disconnect(queue_redraw)
 			
@@ -13,6 +19,7 @@ const FindExpressionEdit = preload('res://gui/find_panel/find_expression_edit.gd
 			if source:
 				source.data_changed.connect(queue_redraw)
 			
+			source_changed.emit()
 			queue_redraw()
 
 @export var playback : Playback:
@@ -44,7 +51,7 @@ var _find_expression_edit : FindExpressionEdit:
 
 var _deferred_scroll_to_track : DataBase.Track
 
-var _selection := {}
+var _selection : Dictionary[DataBase.Track, bool] = {}
 
 
 func _notification(what: int) -> void:
@@ -80,7 +87,7 @@ func _gui_input(event: InputEvent) -> void:
 					var tracks := source.get_tracks()
 					
 					var all := true
-					var compare := _selection.duplicate()
+					var compare : Dictionary[DataBase.Track, bool] = _selection.duplicate()
 					for track in tracks:
 						if track in compare:
 							compare.erase(track)
@@ -96,6 +103,7 @@ func _gui_input(event: InputEvent) -> void:
 				else:
 					_selection.clear()
 				queue_redraw()
+				selection_changed.emit()
 		
 		
 		if event is InputEventMouseButton:
@@ -114,6 +122,7 @@ func _gui_input(event: InputEvent) -> void:
 						else:
 							_selection[region.track] = true
 						queue_redraw()
+						selection_changed.emit()
 					
 					elif playback:
 						if source:
@@ -255,6 +264,9 @@ func get_scroll_max() -> float:
 	if source:
 		return maxf(0, source.size() - int((size.y + get_line_descent()) / get_line_interval()))
 	return 0
+
+func get_selection() -> Array[DataBase.Track]:
+	return _selection.keys()
 
 func _get_minimum_size() -> Vector2:
 	return Vector2(get_line_height(), get_line_height())

@@ -27,6 +27,11 @@ func _process(_delta) -> void:
 
 func _on_files_dropped(files : PackedStringArray) -> void:
 	if handle_files_dropped:
+		if files.size() == 1:
+			var file := files[0]
+			if file.get_extension() == 'tpdb':
+				data_base_load(file)
+		
 		var finded : Array[String] = []
 		for file in files:
 			if DirAccess.dir_exists_absolute(file):

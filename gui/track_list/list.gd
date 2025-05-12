@@ -1,4 +1,3 @@
-class_name List
 extends Control
 
 signal scroll_changed(scroll : float)

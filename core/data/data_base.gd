@@ -16,6 +16,7 @@ var _tags_array : Array[Tag] = []
 var _key_to_item := {}
 var _key_to_track := {}
 var _key_to_tag := {}
+var _changed_signals : Dictionary[Signal, bool]
 
 
 func set_source(_value : DataSource) -> void:
@@ -26,6 +27,11 @@ func size() -> int:
 
 func get_tracks() -> Array[Track]:
 	return _tracks_array
+
+func _update() -> void:
+	for p_signal in _changed_signals:
+		p_signal.emit()
+	_changed_signals.clear()
 
 
 func track_create(file : StringName) -> Track:
@@ -267,6 +273,7 @@ class Item:
 		if data_base.get_ref():
 			var db := data_base.get_ref() as DataBase
 			db.changes_up()
+			db._changed_signals[changed] = true
 	
 	func clear() -> void:
 		valid = false
@@ -276,6 +283,11 @@ class Item:
 		for signal_data in get_signal_list():
 			for connection : Dictionary in get_signal_connection_list(signal_data.name):
 				connection.signal.disconnect(connection.callable)
+	
+	func get_data_base() -> DataBase:
+		if data_base and is_instance_valid(data_base.get_ref()):
+			return data_base.get_ref()
+		return
 	
 	func to_bytes() -> PackedByteArray:
 		return PackedByteArray()
@@ -400,6 +412,7 @@ class Tag extends Item:
 		track_key_to_type[track.key] = type
 		
 		changes_up()
+		track.changes_up()
 		
 		tagged.emit()
 		track.tagged.emit()
@@ -408,7 +421,7 @@ class Tag extends Item:
 		assert(self in track.tag_to_type)
 		if self in track.tag_to_type:
 			var current_tag_type : StringName = track.tag_to_type[self]
-			var track_typed_tags : Array[Dictionary] = track.type_to_tags[current_tag_type]
+			var track_typed_tags : Array[Tag] = track.type_to_tags[current_tag_type]
 			if track_typed_tags.size() > 1:
 				track_typed_tags.erase(self)
 			else:
@@ -418,9 +431,24 @@ class Tag extends Item:
 			track_key_to_type.erase(track.key)
 			
 			changes_up()
+			track.changes_up()
 			
 			tagged.emit()
 			track.tagged.emit()
+	
+	func set_names(p_names : Array[StringName]) -> void:
+		names = p_names
+		changes_up()
+	
+	func get_names() -> Array[StringName]:
+		return names
+	
+	func set_types(p_types : Array[StringName]) -> void:
+		types = p_types
+		changes_up()
+	
+	func get_types() -> Array[StringName]:
+		return types
 	
 	func clear() -> void:
 		super()

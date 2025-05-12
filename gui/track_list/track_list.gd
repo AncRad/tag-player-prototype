@@ -11,7 +11,7 @@ const FindExpressionEdit = preload('res://gui/find_panel/find_expression_edit.gd
 			
 			if _list:
 				_list.source = source
-				
+			
 			if _find_expression_edit:
 				if source:
 					if source.get_not_ordered() is DataSourceFiltered:

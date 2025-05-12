@@ -27,8 +27,6 @@ gdscript/warnings/confusable_local_declaration=0
 
 [display]
 
-window/size/viewport_width=600
-window/size/viewport_height=400
 window/size/always_on_top=true
 window/energy_saving/keep_screen_on=false
 window/subwindows/embed_subwindows=false
