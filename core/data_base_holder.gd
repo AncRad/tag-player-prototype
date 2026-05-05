@@ -3,9 +3,22 @@ extends Node
 @export var data_base : DataBase
 @export var load_on_ready : bool = false
 @export var update_on_process : bool = false
+@export var save_on_changes : bool = false
 @export var handle_files_dropped : bool = false
 @export var handle_close_requested : bool = false
 
+
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_READY:
+			if load_on_ready:
+				if FileAccess.file_exists(get_default_data_base_file()):
+					data_base_load(get_default_data_base_file())
+					data_base.update()
+					#for track in data_base._tracks_array:
+						#var fp := track.file_path
+						#if track.file_path.begins_with('H'):
+							#track.file_path = track.file_path.replace('H:\\', 'G:\\_FROM_SSD_2\\')
 
 func _enter_tree() -> void:
 	get_window().files_dropped.connect(_on_files_dropped)
@@ -14,12 +27,6 @@ func _enter_tree() -> void:
 func _exit_tree() -> void:
 	get_window().files_dropped.disconnect(_on_files_dropped)
 	get_window().close_requested.disconnect(_on_close_requested)
-
-func _ready() -> void:
-	if load_on_ready:
-		if FileAccess.file_exists(get_default_data_base_file()):
-			data_base_load(get_default_data_base_file())
-			data_base.update()
 
 func _process(_delta) -> void:
 	if update_on_process:
@@ -43,11 +50,14 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 		if finded:
 			var tag_tagme := data_base.get_tag_or_create(['tagme'], ['system'], Color.BLUE_VIOLET)
 			var tag_instrumental := data_base.get_tag_or_create(['instrumental'], ['version'], Color.SKY_BLUE)
-			
+			var tag_last_drop := data_base.get_tag_or_create(['last_drop'], ['system'], Color.GRAY)
+			for track_key in tag_last_drop.track_key_to_type:
+				tag_last_drop.untag(tag_last_drop.get_data_base()._key_to_track[track_key])
 			
 			for file in finded:
 				var track := data_base.track_create(file)
 				tag_tagme.tag(track)
+				tag_last_drop.tag(track)
 				
 				var file_name := file.get_basename().get_file()
 				var file_name_split := file_name.split(' - ', false)
@@ -86,31 +96,45 @@ func _on_files_dropped(files : PackedStringArray) -> void:
 func _on_close_requested() -> void:
 	if handle_close_requested:
 		data_base_save(get_default_data_base_file())
-		get_tree().quit()
+	get_tree().quit.call_deferred()
 
 func data_base_save(path : String) -> void:
 	##TODO: изучить способы использования PackedDataContainer
-	var temp_path := "%s/.%s" % [path.get_base_dir(), path.get_file()]
-	var file := FileAccess.open(temp_path, FileAccess.WRITE)
-	var err := FileAccess.get_open_error()
-	assert(err == OK)
-	if file and err == OK:
-		file.store_buffer(data_base.to_bytes())
-		err = file.get_error()
+	if true:
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		var err := FileAccess.get_open_error()
 		assert(err == OK)
-		if err == OK:
-			file.flush()
+		if file and err == OK:
+			file.store_buffer(data_base.to_bytes())
 			err = file.get_error()
 			assert(err == OK)
 			if err == OK:
-				if FileAccess.file_exists(path):
-					err = DirAccess.remove_absolute(path)
+				file.flush()
+				err = file.get_error()
+				assert(err == OK)
+		
+	else:
+		var temp_path := "%s/.%s" % [path.get_base_dir(), path.get_file()]
+		var file := FileAccess.open(temp_path, FileAccess.WRITE)
+		var err := FileAccess.get_open_error()
+		assert(err == OK)
+		if file and err == OK:
+			file.store_buffer(data_base.to_bytes())
+			err = file.get_error()
+			assert(err == OK)
+			if err == OK:
+				file.flush()
+				err = file.get_error()
 				assert(err == OK)
 				if err == OK:
-					err = DirAccess.rename_absolute(temp_path, path)
+					if FileAccess.file_exists(path):
+						err = DirAccess.remove_absolute(path)
 					assert(err == OK)
 					if err == OK:
-						data_base._changes_cached = data_base._changes
+						err = DirAccess.rename_absolute(temp_path, path)
+						assert(err == OK)
+						if err == OK:
+							data_base._changes_cached = data_base._changes
 
 func data_base_load(path : String) -> void:
 	##TODO: изучить способы использования PackedDataContainer
@@ -149,3 +173,9 @@ static func find_files(dir_path : String) -> Array[String]:
 					files.push_back("%s/%s" % [dir_name, file_name])
 				file_name = dir.get_next()
 	return files
+
+
+func _on_save_timer_timeout() -> void:
+	if save_on_changes and data_base:
+		if data_base._changes_cached < data_base._changes:
+			data_base_save(get_default_data_base_file())

@@ -46,6 +46,11 @@ func _gui_input(event : InputEvent) -> void:
 			elif event.button_index == MOUSE_BUTTON_RIGHT:
 				if _grabbed and event.is_pressed():
 					_grabbed = false
+			
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				playback.player_volume = clampf(playback.player_volume * 0.9, 0, 1)
+			elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				playback.player_volume = clampf(playback.player_volume * 1.1, 0, 1)
 	
 	elif event is InputEventMouseMotion:
 		if _grabbed:

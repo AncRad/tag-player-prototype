@@ -13,9 +13,9 @@ var _changes_cached : int = 0
 var _items_array : Array[Item] = []
 var _tracks_array : Array[Track] = []
 var _tags_array : Array[Tag] = []
-var _key_to_item := {}
-var _key_to_track := {}
-var _key_to_tag := {}
+var _key_to_item : Dictionary[int, Item] = {}
+var _key_to_track : Dictionary[int, Track] = {}
+var _key_to_tag : Dictionary[int, Tag] = {}
 var _changed_signals : Dictionary[Signal, bool]
 
 
@@ -204,11 +204,11 @@ func from_bytes(bytes : PackedByteArray) -> void:
 
 
 func _track_create(file_path : StringName, key : int = 0) -> Track:
-	assert(not key in _key_to_item, 'ключ %d уже занят' % key)
+	#assert(not key in _key_to_item, 'ключ %d уже занят' % key)
 	
 	## ищем ключ
 	if key < KEY_MIN or key > KEY_MAX: ## если ключ вне диапазона
-		assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
+		#assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
 		## генерируем новый
 		key = randi_range(KEY_MIN, KEY_MAX)
 	while key in _key_to_item: ## если ключ уже используется, то ищем не используемый ключ
@@ -232,11 +232,11 @@ func _track_create(file_path : StringName, key : int = 0) -> Track:
 
 func _tag_create(names : Array[StringName], color := Color.WHITE,
 		types : Array[StringName] = ['default'], key : int = 0) -> Tag:
-	assert(not key in _key_to_item, 'ключ %d уже занят' % key)
+	#assert(not key in _key_to_item, 'ключ %d уже занят' % key)
 	
 	## ищем ключ
 	if key < KEY_MIN or key > KEY_MAX: ## если ключ вне диапазона
-		assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
+		#assert(not key, 'ключ %d вне диапазона [%d, %d]' % [key, KEY_MIN, KEY_MAX])
 		## генерируем новый
 		key = randi_range(KEY_MIN, KEY_MAX)
 	while key in _key_to_item: ## если ключ уже используется, то ищем не используемый ключ
@@ -279,10 +279,10 @@ class Item:
 		valid = false
 		data_base = null
 		key = 0
-		
-		for signal_data in get_signal_list():
-			for connection : Dictionary in get_signal_connection_list(signal_data.name):
-				connection.signal.disconnect(connection.callable)
+		#
+		#for signal_data in get_signal_list():
+			#for connection : Dictionary in get_signal_connection_list(signal_data.name):
+				#connection.signal.disconnect(connection.callable)
 	
 	func get_data_base() -> DataBase:
 		if data_base and is_instance_valid(data_base.get_ref()):

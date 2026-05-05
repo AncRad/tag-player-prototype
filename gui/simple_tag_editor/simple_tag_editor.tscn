@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://cwt8ke6p7wo64"]
+[gd_scene load_steps=9 format=3 uid="uid://cwt8ke6p7wo64"]
 
 [ext_resource type="Script" uid="uid://bosukgwo4c7da" path="res://gui/simple_tag_editor/simple_tag_editor.gd" id="1_43lob"]
 [ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="2_7sl38"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cslg02kyc0krf" path="res://gui/simple_tag_editor/add_delete_button.gd" id="2_nkkf6"]
 [ext_resource type="Texture2D" uid="uid://qhf4q0edd477" path="res://gui/icons/gui_radio_unchecked.tex" id="3_wu3gc"]
 [ext_resource type="Texture2D" uid="uid://dd25ywlya5fqs" path="res://gui/icons/warning.tex" id="6_qyku5"]
+[ext_resource type="PackedScene" uid="uid://cthxa6fyjqmsq" path="res://gui/menu_panel/menu_panel.tscn" id="7_5k5qb"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_b3l30"]
 
@@ -43,22 +44,22 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 focus_mode = 0
-theme_override_colors/font_disabled_color = Color(0.5, 0.5, 0.5, 1)
-theme_override_colors/font_hover_pressed_color = Color(0.74, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(0.901961, 0.901961, 0.901961, 1)
 theme_override_colors/font_color = Color(0.701961, 0.701961, 0.701961, 1)
 theme_override_colors/font_pressed_color = Color(0.741176, 1, 1, 1)
-theme_override_styles/focus = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/disabled = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_b3l30")
-theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_colors/font_hover_color = Color(0.901961, 0.901961, 0.901961, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.74, 1, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.5, 0.5, 0.5, 1)
 theme_override_styles/normal = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_pressed = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/disabled_mirrored = SubResource("StyleBoxEmpty_b3l30")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_b3l30")
 text = "+"
 flat = true
 
@@ -73,10 +74,10 @@ stretch_mode = 3
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.501961, 0.501961, 0.501961, 1)
 theme_override_font_sizes/font_size = 14
 placeholder_text = "поиск тега"
 clear_button_enabled = true
-select_all_on_focus = true
 caret_blink = true
 
 [node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer"]
@@ -85,7 +86,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 0
 theme_override_constants/minimum_grab_thickness = 6
 theme_override_constants/autohide = 1
-split_offset = -115
+split_offset = -170
 drag_area_margin_begin = 10
 drag_area_margin_end = 10
 
@@ -173,6 +174,16 @@ text = "Нет"
 layout_mode = 2
 texture = ExtResource("6_qyku5")
 stretch_mode = 3
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="MenuPanel" parent="CanvasLayer" instance=ExtResource("7_5k5qb")]
+unique_name_in_owner = true
+visible = false
+offset_left = 89.0
+offset_top = 131.0
+offset_right = 223.0
+offset_bottom = 235.0
 
 [connection signal="pressed" from="VBoxContainer/HBoxContainer/Control/AddDeleteButton" to="." method="_on_add_delete_button_pressed"]
 [connection signal="focus_exited" from="VBoxContainer/HBoxContainer/TagFindLineEdit" to="." method="_on_tag_find_line_edit_complited"]

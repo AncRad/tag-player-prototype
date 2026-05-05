@@ -26,7 +26,7 @@ func set_tracks(value : Array[Track] = []) -> void:
 	if value != tracks:
 		tracks = value
 		_tracks_updating = true
-		queuq_update()
+		queue_update()
 
 func can_drop_tag(_pos, data : Variant) -> bool:
 	if tracks:
@@ -38,32 +38,16 @@ func drop_tag(_pos, data : Variant) -> void:
 	if tracks:
 		if data is Tag and data.valid:
 			var tag : Tag = data as Tag
+			var type : StringName
+			if tag.get_types():
+				type = tag.get_types()[0]
 			for track in tracks:
-				if not tag in track.get_tags():
-					tag.tag(track)
+				tag.tag(track, type)
 
-func queuq_update() -> void:
+func queue_update() -> void:
 	if not _updating:
 		_updating = true
 		_update.call_deferred()
-
-func _on_line_edit_name_text_changed(text: String) -> void:
-	if tracks.size() == 1:
-		text = text.strip_escapes()
-		if _line_edit_name.text != text:
-			#TODO: сделать это с заботой
-			_line_edit_name.text = text
-		tracks[0].name = text
-		tracks[0].changes_up()
-
-func _on_tag_item_gui_input(event : InputEvent, tag_item : TagItem) -> void:
-	if event.is_pressed() and not event.is_echo():
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_MIDDLE:
-				var tag := tag_item.tag
-				for track in tracks:
-					if track.is_tagged(tag):
-						tag.untag(track)
 
 func _update() -> void:
 	if not _updating:
@@ -75,7 +59,7 @@ func _update() -> void:
 			_tag_items.remove_child(node)
 			node.queue_free()
 		
-		var tags_added : Dictionary[Tag, bool]
+		var tags_added : Dictionary[Tag, TagItem]
 		for track in tracks:
 			for tag in track.get_tags():
 				if not tag in tags_added:
@@ -84,7 +68,7 @@ func _update() -> void:
 					tag_item.pressed.connect(tag_selected.emit.bind(tag))
 					tag_item.gui_input.connect(_on_tag_item_gui_input.bind(tag_item))
 					_tag_items.add_child(tag_item)
-					tags_added[tag] = true
+					tags_added[tag] = tag_item
 		
 		if tracks:
 			if tracks.size() == 1:
@@ -111,6 +95,27 @@ func _update() -> void:
 	_tracks_updating = false
 	_updating = false
 
+func _on_line_edit_name_text_changed(text: String) -> void:
+	if tracks.size() == 1:
+		text = text.strip_escapes()
+		if _line_edit_name.text != text:
+			#TODO: сделать это с заботой
+			_line_edit_name.text = text
+		tracks[0].name = text
+		tracks[0].changes_up()
+
+func _on_tag_item_gui_input(event : InputEvent, tag_item : TagItem) -> void:
+	if event.is_pressed() and not event.is_echo():
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_MIDDLE:
+				var tag := tag_item.tag
+				for track in tracks:
+					if track.is_tagged(tag):
+						tag.untag(track)
+				for track in tracks:
+					if not track.tag_to_type:
+						track.clear()
+
 static func validate_text(text : String) -> String:
 	return ','.join(text.c_unescape().replace('\n', ',').strip_escapes().split(',', false, 10))
 
@@ -121,11 +126,11 @@ class TagItem:
 	var tag : Tag:
 		set(value):
 			if tag:
-				tag.changed.disconnect(queuq_update)
+				tag.changed.disconnect(queue_update)
 			tag = value
 			if tag:
-				tag.changed.connect(queuq_update)
-			queuq_update()
+				tag.changed.connect(queue_update)
+			queue_update()
 	
 	var _updating : bool
 	
@@ -138,7 +143,7 @@ class TagItem:
 		focus_mode = Control.FOCUS_NONE
 		flat = true
 	
-	func queuq_update() -> void:
+	func queue_update() -> void:
 		if not _updating:
 			_updating = true
 			_update.call_deferred()

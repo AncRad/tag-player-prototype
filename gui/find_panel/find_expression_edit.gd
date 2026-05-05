@@ -134,20 +134,20 @@ func _notification(what: int) -> void:
 			queue_redraw()
 
 func _input(event: InputEvent) -> void:
-	if is_visible_in_tree():
-		if event.is_pressed() and 'position' in event:
-			var focus_owner := get_viewport().gui_get_focus_owner()
-			if focus_owner:
-				if has_focus() or focus_owner.has_focus():
-					if not (get_global_rect().has_point(event.position)
-							or _menu.is_visible_in_tree() and _menu.get_global_rect().has_point(event.position)):
-						focus_owner.release_focus()
+	## нужно отпустить фокус, если кликнули вне self или вне _menu
+	if is_visible_in_tree() and event.is_pressed() and &'position' in event:
+		var focus_owner := get_viewport().gui_get_focus_owner()
+		if focus_owner:
+			if not (has_focus() and get_global_rect().has_point(event.position)
+					or _menu._tree.has_focus() and _menu._tree.get_global_rect().has_point(event.position)):
+				focus_owner.release_focus()
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_pressed():
 		if event is InputEventMouseButton:
 			if not event.is_echo():
 				if event.button_index == MOUSE_BUTTON_LEFT:
+					accept_event()
 					if _items:
 						for item in _items:
 							if item.rect.has_point(event.position):
@@ -157,16 +157,16 @@ func _gui_input(event: InputEvent) -> void:
 								text_line.alignment = HORIZONTAL_ALIGNMENT_CENTER
 								text_line.add_string(_line_edit.text, get_font(), get_font_size())
 								_line_edit.caret_column = text_line.hit_test(event.position.x - item.rect.position.x)
+								grab_focus()
 								return
 						_focused_expr = null
 					
-					else:
-						grab_focus()
-					
-					accept_event()
+					grab_focus()
 					return
 				
 				elif event.button_index == MOUSE_BUTTON_MIDDLE:
+					accept_event()
+					##WARNING: начальное значение _items.back() ???
 					var to_erase := _items.back() as ExprNode
 					for item in _items:
 						if item.rect.has_point(event.position):
@@ -176,8 +176,6 @@ func _gui_input(event: InputEvent) -> void:
 						if _focused_expr == to_erase:
 							_focused_expr = null
 						expression.erase(to_erase)
-					
-					accept_event()
 					return
 		
 		if event.is_action('find_expression_edit_selected_tag_scroll_left'):
@@ -231,6 +229,7 @@ func _draw() -> void:
 				var pos := Vector2(item.rect.position.x, item.rect.position.y + font_ascent + line_separation / 2.0)
 				font.draw_string(get_canvas_item(), pos, item.expr.to_text(), HORIZONTAL_ALIGNMENT_CENTER, item.rect.size.x, font_size, color)
 
+##WARNING: что за костыли? тут бы рефакторинг провести
 func _process(_delta = null) -> void:
 	if not _line_edit.visible:
 		_menu.hide()
@@ -258,7 +257,7 @@ func _on_line_edit_gui_input(event: InputEvent) -> void:
 					if not _menu.visible:
 						_menu.show()
 						_menu_building = true
-					_menu.grab_focus()
+					_menu._tree.grab_focus()
 			
 			elif event.is_action('ui_text_caret_up'):
 				#if _line_edit.caret_column == 0:
@@ -266,7 +265,7 @@ func _on_line_edit_gui_input(event: InputEvent) -> void:
 					if not _menu.visible:
 						_menu.show()
 						_menu_building = true
-					_menu.grab_focus()
+					_menu._tree.grab_focus()
 			
 			elif event.is_action('ui_text_backspace') or event.is_action('ui_text_caret_left') or event.is_action('ui_text_caret_line_start'):
 				if _line_edit.caret_column == 0:
@@ -455,7 +454,7 @@ func _resort() -> void:
 		fit_child_in_rect(_line_edit, item.rect)
 		var item_global_rect := get_global_transform() * item.rect
 		_menu.set_global_position(Vector2(item_global_rect.position.x, item_global_rect.end.y))
-		_menu.size = Vector2(150, 250)
+		_menu.size = Vector2(250, 300)
 	print(expression.to_text())
 	
 	queue_redraw()

@@ -1,9 +1,8 @@
 @tool
 extends TextEdit
 
-@export var update : bool:
-	set(_value):
-		generate()
+@export_tool_button('update')
+var update = generate
 #@export var from_int : int = 0
 #@export var from_hex : String = ""
 

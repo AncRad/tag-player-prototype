@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://dloeqiq75uibx"]
+
+[ext_resource type="Script" uid="uid://b08jx7xi4ufuh" path="res://gui/player_panel/playback_icon_texture/playback_icon_texture.gd" id="1_b2rfk"]
+
+[sub_resource type="Texture2D" id="Texture2D_7ul6q"]
+resource_local_to_scene = false
+resource_name = ""
+script = ExtResource("1_b2rfk")
+type = &"Stop"
+metadata/_custom_type_script = "uid://b08jx7xi4ufuh"
+
+[node name="Test" type="Node"]
+
+[node name="TextureButton" type="TextureButton" parent="."]
+offset_right = 16.0
+offset_bottom = 16.0
+texture_normal = SubResource("Texture2D_7ul6q")

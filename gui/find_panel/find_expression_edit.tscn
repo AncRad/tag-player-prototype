@@ -47,6 +47,8 @@ focus_neighbor_top = NodePath("../../LineEdit")
 focus_neighbor_bottom = NodePath("../../LineEdit")
 focus_next = NodePath("../../LineEdit")
 focus_previous = NodePath("../../LineEdit")
+focus_mode = 0
+mouse_filter = 2
 theme = ExtResource("5_2vi37")
 release_focus_on_outer_event = false
 

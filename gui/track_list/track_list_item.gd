@@ -86,20 +86,27 @@ func _gui_input(event: InputEvent) -> void:
 				if source:
 					var tracks := source.get_tracks()
 					
-					var all := true
-					var compare : Dictionary[DataBase.Track, bool] = _selection.duplicate()
-					for track in tracks:
-						if track in compare:
-							compare.erase(track)
+					if true:
+						if _selection:
+							_selection.clear()
 						else:
-							all = false
-							break
-					all = all and not compare
-					
-					_selection.clear()
-					if not all:
+							for track in tracks:
+								_selection[track] = true
+					else:
+						var all := true
+						var compare : Dictionary[DataBase.Track, bool] = _selection.duplicate()
 						for track in tracks:
-							_selection[track] = true
+							if track in compare:
+								compare.erase(track)
+							else:
+								all = false
+								break
+						all = all and not compare
+						
+						_selection.clear()
+						if not all:
+							for track in tracks:
+								_selection[track] = true
 				else:
 					_selection.clear()
 				queue_redraw()
@@ -315,31 +322,40 @@ func _get_minimum_size() -> Vector2:
 
 func set_highlighted_track(value : DataBase.Track) -> void:
 	if value != highlighted_track:
-		var old_track_line : int = -1
+		var old_track_index : int = -1
 		if highlighted_track and source:
-			old_track_line = source.get_tracks().find(highlighted_track)
+			old_track_index = source.get_tracks().find(highlighted_track)
 		
-		var new_track_line : int = -1
+		var new_track_index : int = -1
 		if value:
-			new_track_line = source.get_tracks().find(value)
+			new_track_index = source.get_tracks().find(value)
 		
 		highlighted_track = value
 		
 		var begin := int(scroll)
 		var end := begin + get_line_max_count()
-		var visible_befor := old_track_line >= begin and old_track_line < end
-		var visible_now := new_track_line >= begin and new_track_line < end
+		var visible_befor := old_track_index >= begin and old_track_index < end
+		var visible_now := new_track_index >= begin and new_track_index < end
 		
 		if visible_befor or visible_now:
 			queue_redraw()
 		
-		if old_track_line >= 0 or new_track_line >= 0:
+		## был ли один из треков в списке source
+		if old_track_index >= 0 or new_track_index >= 0:
 			
 			if visible_befor:
-				### Если проигрываемый тек сдвинулся на 1 единицу, то скроллим за ним.
-				var track_line_change := new_track_line - old_track_line
+				var margin := 2
+				margin = clampi(margin, 0, floori(get_line_max_count() / 2.0))
+				## Если проигрываемый тек сдвинулся на 1 единицу, то скроллим за ним.
+				var track_line_change := new_track_index - old_track_index
 				if absi(track_line_change) == 1:
-					scroll += track_line_change
+					var old_track_line_index := old_track_index - begin
+					if track_line_change > 0:
+						if old_track_line_index >= margin:
+							scroll += track_line_change
+					elif track_line_change < 0:
+						if old_track_line_index <= get_line_max_count() - 1 - margin:
+							scroll += track_line_change
 
 func scroll_to_track(offset : float = -0.5, track := highlighted_track, deferred := false) -> void:
 	if deferred:

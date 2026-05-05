@@ -1,11 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://ck2n7knvm5eh2"]
+[gd_scene format=3 uid="uid://ck2n7knvm5eh2"]
 
 [ext_resource type="Script" uid="uid://g5ggyk373u6g" path="res://gui/track_list_browser/track_list_browser.gd" id="1_pq08d"]
 [ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="1_skdjf"]
 [ext_resource type="PackedScene" uid="uid://ntu0vgoaa0hg" path="res://gui/track_list_browser/tab_bar/tab_bar.tscn" id="2_5hgal"]
 [ext_resource type="PackedScene" uid="uid://c0212awyka7wq" path="res://gui/track_list_browser/tab_container/track_list_tab_container.tscn" id="3_0y38q"]
 
-[node name="TrackListBrowser" type="MarginContainer"]
+[node name="TrackListBrowser" type="MarginContainer" unique_id=1847950798]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -19,17 +19,17 @@ theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 script = ExtResource("1_pq08d")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=807703904]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("1_skdjf")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=374464751]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="TabBar" parent="VBoxContainer" node_paths=PackedStringArray("tab_container") instance=ExtResource("2_5hgal")]
+[node name="TabBar" parent="VBoxContainer" unique_id=749501132 node_paths=PackedStringArray("tab_container") instance=ExtResource("2_5hgal")]
 layout_mode = 2
 tab_container = NodePath("../TrackListTabContainer")
 
-[node name="TrackListTabContainer" parent="VBoxContainer" instance=ExtResource("3_0y38q")]
+[node name="TrackListTabContainer" parent="VBoxContainer" unique_id=1237372802 instance=ExtResource("3_0y38q")]
 layout_mode = 2

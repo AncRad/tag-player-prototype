@@ -16,7 +16,15 @@ var player : Player:
 @export var current_source: DataSource = preload('res://core/data_base_ordered.tres')
 var current_track: DataBase.Track
 var progress_on_pause: float = 0
-
+var player_volume : float = 1.0:
+	set(value):
+		if player:
+			player.volume_linear = value
+		player_volume = player.volume_linear
+	get:
+		if player:
+			return player.volume_linear
+		return player_volume
 
 func play(offset := 0, track := current_track, source := current_source) -> void:
 	var finded_track := find_track(source, track, offset)
@@ -32,6 +40,7 @@ func play(offset := 0, track := current_track, source := current_source) -> void
 		else:
 			player.stream = null
 			#current_track = null
+			player.get_tree().create_timer(0.5).timeout.connect(play.bind(sign(offset) if offset else 1)) ## FIXME
 			player.get_window().title = ProjectSettings.get_setting('application/config/name', 'TagPlayer') as String
 			## TODO: добавить обработку ощибки загрузки
 		track_changed.emit(current_track)

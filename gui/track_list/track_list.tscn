@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://mqs6rjv3osx0"]
+[gd_scene load_steps=11 format=3 uid="uid://mqs6rjv3osx0"]
 
 [ext_resource type="Script" uid="uid://c0qyyulngi1oa" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
@@ -8,6 +8,18 @@
 [ext_resource type="Script" uid="uid://ntl7fv8sx2xa" path="res://gui/track_list/track_list_item.gd" id="6_x1fay"]
 [ext_resource type="PackedScene" uid="uid://dtfxn5caavji6" path="res://gui/simple_track_editor/simple_track_editor.tscn" id="7_ayq2s"]
 [ext_resource type="PackedScene" uid="uid://cwt8ke6p7wo64" path="res://gui/simple_tag_editor/simple_tag_editor.tscn" id="7_qrco4"]
+
+[sub_resource type="GDScript" id="GDScript_u6v8p"]
+script/source = "extends Button
+
+const DIR : String = 'G:\\\\_FROM_SSD_2\\\\from_lin\\\\Музыка\\\\out'
+
+@export var track_list : TrackList
+
+func _pressed() -> void:
+	for track in track_list.source.get_tracks():
+		DirAccess.copy_absolute(track.file_path, str(DIR, '\\\\', track.file_path.get_file()))
+"
 
 [sub_resource type="GDScript" id="GDScript_ayq2s"]
 script/source = "extends Node
@@ -65,7 +77,6 @@ layout_mode = 2
 [node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
-split_offset = -150
 dragger_visibility = 2
 drag_area_margin_begin = 15
 drag_area_margin_end = 15
@@ -85,6 +96,16 @@ size_flags_horizontal = 3
 focus_mode = 2
 script = ExtResource("6_x1fay")
 
+[node name="TracksExportButton" type="Button" parent="VBoxContainer/VSplitContainer/ListPanel/List" node_paths=PackedStringArray("track_list")]
+layout_mode = 0
+offset_left = 861.0
+offset_top = 204.0
+offset_right = 960.0
+offset_bottom = 273.0
+text = "export"
+script = SubResource("GDScript_u6v8p")
+track_list = NodePath("../../../../..")
+
 [node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/VSplitContainer/ListPanel"]
 custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
@@ -103,7 +124,7 @@ vertical_scroll_mode = 3
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-split_offset = -225
+split_offset = -350
 dragger_visibility = 1
 drag_area_margin_begin = 15
 drag_area_margin_end = 15

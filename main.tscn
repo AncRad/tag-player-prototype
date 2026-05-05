@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://cwjb1imduvk04"]
+[gd_scene format=3 uid="uid://cwjb1imduvk04"]
 
 [ext_resource type="Script" uid="uid://bnseqo1n868a8" path="res://core/user/user_data_holder.gd" id="1_272bh"]
 [ext_resource type="Script" uid="uid://dc4pt45c60sys" path="res://core/player/player.gd" id="1_if8um"]
@@ -10,24 +10,25 @@
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7mijb"]
 bg_color = Color(0.06, 0.06, 0.06, 1)
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node" unique_id=200461039]
 
-[node name="Player" type="AudioStreamPlayer" parent="."]
+[node name="Player" type="AudioStreamPlayer" parent="." unique_id=25661711]
 script = ExtResource("1_if8um")
 playback = ExtResource("2_nwl3h")
 
-[node name="DataBaseHolder" parent="." instance=ExtResource("3_plvy5")]
+[node name="DataBaseHolder" parent="." unique_id=1085489009 instance=ExtResource("3_plvy5")]
 load_on_ready = true
 update_on_process = true
+save_on_changes = true
 handle_files_dropped = true
 handle_close_requested = true
-metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"load_on_ready", &"handle_close_requested"]
+metadata/_edit_pinned_properties_ = [&"handle_files_dropped", &"update_on_process", &"handle_close_requested", &"save_on_changes", &"load_on_ready"]
 
-[node name="UserDataHolder" type="Node" parent="."]
+[node name="UserDataHolder" type="Node" parent="." unique_id=466562770]
 script = ExtResource("1_272bh")
 playback = ExtResource("2_nwl3h")
 
-[node name="GUI" type="MarginContainer" parent="."]
+[node name="GUI" type="MarginContainer" parent="." unique_id=2026433695]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -39,17 +40,17 @@ theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 metadata/_edit_lock_ = true
 
-[node name="Panel" type="Panel" parent="GUI"]
+[node name="Panel" type="Panel" parent="GUI" unique_id=483614220]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_7mijb")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GUI"]
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI" unique_id=950010815]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="PlayerPanel" parent="GUI/VBoxContainer" instance=ExtResource("5_nwobq")]
+[node name="PlayerPanel" parent="GUI/VBoxContainer" unique_id=435280770 instance=ExtResource("5_nwobq")]
 layout_mode = 2
 size_flags_stretch_ratio = 133.333
 
-[node name="TrackListBrowser" parent="GUI/VBoxContainer" instance=ExtResource("6_7mycd")]
+[node name="TrackListBrowser" parent="GUI/VBoxContainer" unique_id=1393276715 instance=ExtResource("6_7mycd")]
 layout_mode = 2

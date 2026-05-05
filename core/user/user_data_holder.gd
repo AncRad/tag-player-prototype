@@ -32,6 +32,8 @@ func _notification(what: int) -> void:
 							playback.set_progress(data.progress)
 							if not data.playing:
 								playback.pause()
+						if &'player_volume' in data:
+							playback.player_volume = data.player_volume
 		
 		NOTIFICATION_WM_CLOSE_REQUEST:
 			save()
@@ -60,6 +62,7 @@ func save() -> void:
 		track_key = track_key,
 		progress = progress,
 		playing = playing,
+		player_volume = playback.player_volume,
 	}
 	var f := FileAccess.open('%s/window_data' % OS.get_user_data_dir(), FileAccess.WRITE_READ)
 	f.store_buffer(var_to_bytes(data))
