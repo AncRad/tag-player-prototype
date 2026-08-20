@@ -48,7 +48,7 @@ func _gui_input(event : InputEvent) -> void:
 					_grabbed = false
 			
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				playback.player_volume = clampf(playback.player_volume * 0.9, 0, 1)
+				playback.player_volume = clampf(playback.player_volume * 0.9, 0.001, 1)
 			elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				playback.player_volume = clampf(playback.player_volume * 1.1, 0, 1)
 	

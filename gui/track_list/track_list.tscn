@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://mqs6rjv3osx0"]
+[gd_scene format=3 uid="uid://mqs6rjv3osx0"]
 
 [ext_resource type="Script" uid="uid://c0qyyulngi1oa" path="res://gui/track_list/track_list.gd" id="1_guvhr"]
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_t662t"]
@@ -33,7 +33,7 @@ func _on_list_selection_changed() -> void:
 		$'..'.set_tracks()
 "
 
-[node name="TrackList" type="MarginContainer"]
+[node name="TrackList" type="MarginContainer" unique_id=2110527222]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -48,33 +48,33 @@ source = ExtResource("2_t662t")
 playback = ExtResource("3_wa3m6")
 metadata/_edit_lock_ = true
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1005660726]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("4_uabrd")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1507208488]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="FindPanel" type="HBoxContainer" parent="VBoxContainer"]
+[node name="FindPanel" type="HBoxContainer" parent="VBoxContainer" unique_id=1745030062]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="Spacer" type="Control" parent="VBoxContainer/FindPanel"]
+[node name="Spacer" type="Control" parent="VBoxContainer/FindPanel" unique_id=35651574]
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 
-[node name="FindExpressionEdit" parent="VBoxContainer/FindPanel" instance=ExtResource("4_ued1a")]
+[node name="FindExpressionEdit" parent="VBoxContainer/FindPanel" unique_id=1003073368 instance=ExtResource("4_ued1a")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="Spacer2" type="Control" parent="VBoxContainer/FindPanel"]
+[node name="Spacer2" type="Control" parent="VBoxContainer/FindPanel" unique_id=384646057]
 custom_minimum_size = Vector2(30, 0)
 layout_mode = 2
 
-[node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer"]
+[node name="VSplitContainer" type="VSplitContainer" parent="VBoxContainer" unique_id=371612406]
 layout_mode = 2
 size_flags_vertical = 3
 dragger_visibility = 2
@@ -82,13 +82,13 @@ drag_area_margin_begin = 15
 drag_area_margin_end = 15
 drag_area_offset = -3
 
-[node name="ListPanel" type="HBoxContainer" parent="VBoxContainer/VSplitContainer"]
+[node name="ListPanel" type="HBoxContainer" parent="VBoxContainer/VSplitContainer" unique_id=1614505005]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 0
 
-[node name="List" type="Control" parent="VBoxContainer/VSplitContainer/ListPanel"]
+[node name="List" type="Control" parent="VBoxContainer/VSplitContainer/ListPanel" unique_id=1275191446]
 unique_name_in_owner = true
 clip_contents = true
 layout_mode = 2
@@ -96,7 +96,7 @@ size_flags_horizontal = 3
 focus_mode = 2
 script = ExtResource("6_x1fay")
 
-[node name="TracksExportButton" type="Button" parent="VBoxContainer/VSplitContainer/ListPanel/List" node_paths=PackedStringArray("track_list")]
+[node name="TracksExportButton" type="Button" parent="VBoxContainer/VSplitContainer/ListPanel/List" unique_id=2065616249 node_paths=PackedStringArray("track_list")]
 layout_mode = 0
 offset_left = 861.0
 offset_top = 204.0
@@ -106,7 +106,7 @@ text = "export"
 script = SubResource("GDScript_u6v8p")
 track_list = NodePath("../../../../..")
 
-[node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/VSplitContainer/ListPanel"]
+[node name="VScrollBar" type="VScrollBar" parent="VBoxContainer/VSplitContainer/ListPanel" unique_id=317187781]
 custom_minimum_size = Vector2(8, 0)
 layout_mode = 2
 theme_override_styles/scroll = ExtResource("4_uabrd")
@@ -115,27 +115,28 @@ max_value = 1.0
 step = 0.0001
 value = 0.2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer" unique_id=1669503895]
 layout_mode = 2
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
 
-[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer"]
+[node name="HSplitContainer" type="HSplitContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer" unique_id=507609157]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-split_offset = -350
+split_offsets = PackedInt32Array(-350)
 dragger_visibility = 1
 drag_area_margin_begin = 15
 drag_area_margin_end = 15
+split_offset = -350
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer" unique_id=1913588021]
 layout_mode = 2
 size_flags_horizontal = 3
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 3
 
-[node name="DownLeftContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer"]
+[node name="DownLeftContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer" unique_id=2098968455]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -144,18 +145,18 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 
-[node name="SimpleTrackEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer" instance=ExtResource("7_ayq2s")]
+[node name="SimpleTrackEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer" unique_id=536105907 instance=ExtResource("7_ayq2s")]
 layout_mode = 2
 
-[node name="Node" type="Node" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer/SimpleTrackEditor"]
+[node name="Node" type="Node" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer/DownLeftContainer/SimpleTrackEditor" unique_id=1990657188]
 script = SubResource("GDScript_ayq2s")
 
-[node name="ScrollContainer2" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer"]
+[node name="ScrollContainer2" type="ScrollContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer" unique_id=356516329]
 layout_mode = 2
 horizontal_scroll_mode = 3
 vertical_scroll_mode = 3
 
-[node name="DownRightContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2"]
+[node name="DownRightContainer" type="MarginContainer" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2" unique_id=1788363520]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -164,7 +165,7 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 
-[node name="SimpleTagEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2/DownRightContainer" instance=ExtResource("7_qrco4")]
+[node name="SimpleTagEditor" parent="VBoxContainer/VSplitContainer/ScrollContainer/HSplitContainer/ScrollContainer2/DownRightContainer" unique_id=130203255 instance=ExtResource("7_qrco4")]
 layout_mode = 2
 
 [connection signal="empty" from="VBoxContainer/FindPanel/FindExpressionEdit" to="." method="_on_find_expression_edit_update_visibility"]
