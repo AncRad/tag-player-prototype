@@ -1,13 +1,9 @@
 extends Control
 
-const TrackListTabContainer = preload('uid://bw51mlv7lmaao')
-const TabHeader = preload('uid://brvv5v8wr1mu')
+const TrackListTabContainer = preload('../tab_container/track_list_tab_container.gd')
+const TabHeader = preload('tab_header.gd')
 
-const TAB_HEADER = preload('uid://cn7sklr7p6d6g')
-const TRACK_LIST = preload('uid://mqs6rjv3osx0')
-
-@export
-var tab_container : TrackListTabContainer:
+@export var tab_container : TrackListTabContainer:
 	set(value):
 		if value != tab_container:
 			if is_instance_valid(tab_container):
@@ -19,12 +15,12 @@ var tab_container : TrackListTabContainer:
 			if is_instance_valid(tab_container):
 				tab_container.tabs_changed.connect(queue_update)
 				tab_container.main_tab_changed.connect(queue_update)
+@export var default_source : DataSource
+@export var default_playback : Playback
 
-@export
-var default_source : DataSource
-
-@export
-var default_playback : Playback
+@export_group('inner')
+@export var tab_header_scn : PackedScene
+@export var track_list_scn : PackedScene
 
 var _add_tab_button : Control
 var _updating : bool
@@ -53,7 +49,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_instance_valid(tab_container):
 		if event.is_pressed() and not event.is_echo():
 			if event.is_action('track_list_panel_create_find_list'):
-				var new_main_tab := TRACK_LIST.instantiate() as TrackList
+				var new_main_tab : TrackList = track_list_scn.instantiate()
 				var old_main_tab := get_main_tab()
 				if old_main_tab:
 					new_main_tab.playback = old_main_tab.playback
@@ -170,7 +166,7 @@ func drop_data(_at_position: Vector2, data: Variant) -> void:
 			if not playback:
 				playback = default_playback
 			if source and playback:
-				var tab : TrackList = TRACK_LIST.instantiate()
+				var tab : TrackList = track_list_scn.instantiate()
 				if Input.is_action_just_pressed('tab_bar_drop_as_child_modifer'):
 					tab.source = DataSourceFiltered.new(source.get_not_ordered()).get_ordered()
 				else:
@@ -181,7 +177,7 @@ func drop_data(_at_position: Vector2, data: Variant) -> void:
 
 func _on_add_tab_button_pressed() -> void:
 	if is_instance_valid(tab_container):
-		var tab : TrackList = TRACK_LIST.instantiate()
+		var tab : TrackList = track_list_scn.instantiate()
 		if default_source:
 			tab.source = DataSourceFiltered.new(default_source.get_not_ordered()).get_ordered()
 		if default_playback:
@@ -202,7 +198,7 @@ func _on_header_close_pressed(header : TabHeader) -> void:
 		queue_update()
 
 func _add_header(tab : TrackList) -> TabHeader:
-	var header : TabHeader = TAB_HEADER.instantiate()
+	var header : TabHeader = tab_header_scn.instantiate()
 	header.set_drag_forwarding(header_get_drag_data.bind(header), Callable(), Callable())
 	header.pressed.connect(_on_header_pressed.bind(header))
 	header.close_pressed.connect(_on_header_close_pressed.bind(header))

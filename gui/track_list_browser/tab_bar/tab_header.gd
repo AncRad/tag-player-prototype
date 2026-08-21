@@ -3,6 +3,10 @@ extends Label
 signal pressed
 signal close_pressed
 
+@export var font_color : Color
+@export var font_color_hover : Color
+@export var font_color_enabled : Color
+
 var tab : TrackList:
 	set(value):
 		if is_instance_valid(tab):
@@ -13,13 +17,6 @@ var tab : TrackList:
 		if tab:
 			tab.visibility_changed.connect(_update_color)
 		_update_color()
-
-@export
-var font_color : Color
-@export
-var font_color_hover : Color
-@export
-var font_color_enabled : Color
 
 var _click_holded : bool
 

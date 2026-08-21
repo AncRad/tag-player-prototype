@@ -1,10 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://cn7sklr7p6d6g"]
+[gd_scene format=3 uid="uid://cn7sklr7p6d6g"]
 
 [ext_resource type="Script" uid="uid://brvv5v8wr1mu" path="res://gui/track_list_browser/tab_bar/tab_header.gd" id="1_pjhrr"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_j4q80"]
 
-[node name="TabHeader" type="Label"]
+[node name="TabHeader" type="Label" unique_id=259960072]
 offset_right = 1.0
 offset_bottom = 23.0
 mouse_filter = 0

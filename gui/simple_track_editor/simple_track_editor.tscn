@@ -1,31 +1,33 @@
-[gd_scene load_steps=4 format=3 uid="uid://dtfxn5caavji6"]
+[gd_scene format=3 uid="uid://dtfxn5caavji6"]
 
 [ext_resource type="Script" uid="uid://dri80pe28ekwb" path="res://gui/simple_track_editor/simple_track_editor.gd" id="1_6576y"]
 [ext_resource type="StyleBox" uid="uid://cyvqocfgjh0ll" path="res://gui/background.stylebox" id="2_44g2w"]
+[ext_resource type="Texture2D" uid="uid://dd25ywlya5fqs" path="res://gui/icons/warning.tex" id="3_27f6l"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_44g2w"]
 
-[node name="SimpleTrackEditor" type="MarginContainer"]
+[node name="SimpleTrackEditor" type="MarginContainer" unique_id=1218924671 node_paths=PackedStringArray("delete_dialogue")]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6576y")
+delete_dialogue = NodePath("DeleteDialogue")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=1063897389]
 layout_mode = 2
 theme_override_styles/panel = ExtResource("2_44g2w")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=862895221]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=883107027]
 layout_mode = 2
 theme_override_constants/separation = 0
 
-[node name="LineEditName" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
+[node name="LineEditName" type="LineEdit" parent="VBoxContainer/HBoxContainer" unique_id=1360408020]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
@@ -37,35 +39,100 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_44g2w")
 flat = true
 caret_blink = true
 
-[node name="LabelOrder" type="Label" parent="VBoxContainer"]
+[node name="DeleteButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1827221844]
+layout_mode = 2
+focus_mode = 0
+text = "X"
+
+[node name="LabelOrder" type="Label" parent="VBoxContainer" unique_id=277463820]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.701961, 0.701961, 0.701961, 1)
 theme_override_font_sizes/font_size = 14
 
-[node name="LabelFind" type="Label" parent="VBoxContainer"]
+[node name="LabelFind" type="Label" parent="VBoxContainer" unique_id=859821694]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.701961, 0.701961, 0.701961, 1)
 theme_override_font_sizes/font_size = 14
 
-[node name="LabelPath" type="Label" parent="VBoxContainer"]
+[node name="LabelPath" type="Label" parent="VBoxContainer" unique_id=1595553432]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_colors/font_color = Color(0.701961, 0.701961, 0.701961, 1)
 theme_override_font_sizes/font_size = 14
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer" unique_id=2050025691]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="TagItems" type="HFlowContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="TagItems" type="HFlowContainer" parent="VBoxContainer/ScrollContainer" unique_id=118053281]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
+[node name="DeleteDialogue" type="MarginContainer" parent="." unique_id=257559559]
+visible = false
+layout_mode = 2
+mouse_filter = 0
+theme_override_constants/margin_left = 0
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 0
+theme_override_constants/margin_bottom = 0
+
+[node name="Panel" type="Panel" parent="DeleteDialogue" unique_id=1474042676]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteDialogue" unique_id=989932181]
+layout_mode = 2
+alignment = 1
+
+[node name="Warning" type="TextureRect" parent="DeleteDialogue/HBoxContainer" unique_id=1453057120]
+layout_mode = 2
+texture = ExtResource("3_27f6l")
+stretch_mode = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DeleteDialogue/HBoxContainer" unique_id=3800582]
+layout_mode = 2
+alignment = 1
+
+[node name="Label" type="Label" parent="DeleteDialogue/HBoxContainer/VBoxContainer" unique_id=385782024]
+layout_mode = 2
+text = "УДАЛИТЬ ТРЕК(и)?
+НЕЛЬЗЯ ОТМЕНИТЬ!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="DeleteDialogue/HBoxContainer/VBoxContainer" unique_id=1830591358]
+layout_mode = 2
+alignment = 1
+
+[node name="DeleteYesButton" type="Button" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer" unique_id=1045084063]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Да"
+
+[node name="Separator" type="Control" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer" unique_id=392539106]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DeleteNoButton" type="Button" parent="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer" unique_id=98149961]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+text = "Нет"
+
+[node name="Warning2" type="TextureRect" parent="DeleteDialogue/HBoxContainer" unique_id=1682257036]
+layout_mode = 2
+texture = ExtResource("3_27f6l")
+stretch_mode = 3
+
 [connection signal="text_changed" from="VBoxContainer/HBoxContainer/LineEditName" to="." method="_on_line_edit_name_text_changed"]
+[connection signal="pressed" from="VBoxContainer/HBoxContainer/DeleteButton" to="." method="_on_delete_button_pressed"]
+[connection signal="pressed" from="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer/DeleteYesButton" to="." method="_on_delete_yes_button_pressed"]
+[connection signal="pressed" from="DeleteDialogue/HBoxContainer/VBoxContainer/HBoxContainer/DeleteNoButton" to="DeleteDialogue" method="hide"]

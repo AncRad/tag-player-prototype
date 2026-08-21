@@ -1,7 +1,5 @@
 extends Control
 
-const TRACK_LIST = preload('uid://mqs6rjv3osx0')
-
 signal tabs_changed
 signal main_tab_changed
 

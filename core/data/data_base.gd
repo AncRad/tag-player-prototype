@@ -45,10 +45,12 @@ func track_remove(track : Track) -> void:
 		tag.untag(track)
 	
 	_key_to_item.erase(track.key)
-	_items_array.erase(track.key)
+	_items_array.erase(track)
 	_key_to_track.erase(track.key)
 	_tracks_array.erase(track)
 	track.clear()
+	
+	changes_up()
 
 
 func tag_create(names : Array[StringName], types : Array[StringName] = [], color := Color.WHITE) -> Tag:

@@ -5,6 +5,9 @@ const Tag = DataBase.Tag
 
 signal tag_selected(tag : Tag)
 
+@export_group('inner')
+@export var delete_dialogue : Control
+
 var tracks : Array[Track]:
 	set = set_tracks
 
@@ -84,8 +87,11 @@ func _update() -> void:
 				%LabelPath.text = ''
 				%LabelOrder.text = ''
 				%LabelFind.text = ''
-			
+		
 		else:
+			if delete_dialogue.visible:
+				delete_dialogue.hide()
+			
 			_line_edit_name.text = ''
 			_line_edit_name.editable = false
 			%LabelPath.text = ''
@@ -115,6 +121,18 @@ func _on_tag_item_gui_input(event : InputEvent, tag_item : TagItem) -> void:
 				for track in tracks:
 					if not track.tag_to_type:
 						track.clear()
+
+func _on_delete_button_pressed() -> void:
+	if tracks:
+		delete_dialogue.show()
+
+func _on_delete_yes_button_pressed() -> void:
+	delete_dialogue.hide()
+	for track : Track in tracks:
+		var database : DataBase = track.get_data_base()
+		if database:
+			database.track_remove(track)
+	tracks = [] as Array[Track]
 
 static func validate_text(text : String) -> String:
 	return ','.join(text.c_unescape().replace('\n', ',').strip_escapes().split(',', false, 10))

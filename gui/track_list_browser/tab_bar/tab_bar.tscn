@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://ntu0vgoaa0hg"]
+[gd_scene format=3 uid="uid://ntu0vgoaa0hg"]
 
 [ext_resource type="PackedScene" uid="uid://butxpsot3w1yq" path="res://gui/track_list_browser/tab_bar/add_tab_button.tscn" id="1_i482l"]
 [ext_resource type="Script" uid="uid://x2xafaju2d4d" path="res://gui/track_list_browser/tab_bar/tab_bar.gd" id="1_kriti"]
@@ -7,8 +7,9 @@
 [ext_resource type="Resource" uid="uid://chtu6phxcxi1j" path="res://core/data_base_ordered.tres" id="2_vudp7"]
 [ext_resource type="Resource" uid="uid://bn1oi81qkphlm" path="res://core/playback.tres" id="3_eawgy"]
 [ext_resource type="Theme" uid="uid://dth1glssy4o5f" path="res://gui/track_list_browser/tab_bar/invisible_h_scroll_bar.theme.tres" id="3_kkjn4"]
+[ext_resource type="PackedScene" uid="uid://mqs6rjv3osx0" path="res://gui/track_list/track_list.tscn" id="5_eawgy"]
 
-[node name="TabBar" type="MarginContainer"]
+[node name="TabBar" type="MarginContainer" unique_id=1416014787]
 anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 23.0
@@ -20,18 +21,21 @@ theme_override_constants/margin_bottom = 0
 script = ExtResource("1_kriti")
 default_source = ExtResource("2_vudp7")
 default_playback = ExtResource("3_eawgy")
+tab_header_scn = ExtResource("2_5epua")
+track_list_scn = ExtResource("5_eawgy")
+metadata/_edit_pinned_properties_ = [&"tab_header_scn", &"track_list_scn"]
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=69453399]
 layout_mode = 2
 mouse_filter = 2
 theme_override_styles/panel = ExtResource("2_hyy8w")
 
-[node name="HBoxContainer" type="HBoxContainer" parent="."]
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1759325116]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="HBoxContainer" unique_id=1800370766]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
@@ -40,7 +44,7 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 
-[node name="InvisibleTabHeader" parent="HBoxContainer/MarginContainer" instance=ExtResource("2_5epua")]
+[node name="InvisibleTabHeader" parent="HBoxContainer/MarginContainer" unique_id=1652776246 instance=ExtResource("2_5epua")]
 modulate = Color(1, 1, 1, 0)
 show_behind_parent = true
 layout_mode = 2
@@ -48,25 +52,25 @@ size_flags_horizontal = 0
 mouse_filter = 2
 text = "A"
 
-[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/MarginContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="HBoxContainer/MarginContainer" unique_id=59711957]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 theme = ExtResource("3_kkjn4")
 vertical_scroll_mode = 0
 
-[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/MarginContainer/ScrollContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="HBoxContainer/MarginContainer/ScrollContainer" unique_id=1427831700]
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
-[node name="Headers" type="HBoxContainer" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer"]
+[node name="Headers" type="HBoxContainer" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer" unique_id=1072681390]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 8
 
-[node name="RightFloatingPlace" type="MarginContainer" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer"]
+[node name="RightFloatingPlace" type="MarginContainer" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer" unique_id=997746845]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
@@ -75,11 +79,11 @@ theme_override_constants/margin_top = 0
 theme_override_constants/margin_right = 0
 theme_override_constants/margin_bottom = 0
 
-[node name="AddTabButton" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer/RightFloatingPlace" instance=ExtResource("1_i482l")]
+[node name="AddTabButton" parent="HBoxContainer/MarginContainer/ScrollContainer/HBoxContainer/RightFloatingPlace" unique_id=1782068151 instance=ExtResource("1_i482l")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="RightSidePlace" type="MarginContainer" parent="HBoxContainer"]
+[node name="RightSidePlace" type="MarginContainer" parent="HBoxContainer" unique_id=1709926235]
 unique_name_in_owner = true
 layout_mode = 2
 mouse_filter = 2
